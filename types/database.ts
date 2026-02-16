@@ -1,0 +1,33 @@
+export interface Project {
+  id: number;
+  title: string;
+  era_location: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectData {
+  project_id: number;
+  research_text: string | null;
+  script_30min: string | null;
+  script_90min: string | null;
+  description: string | null;
+  shorts: string | null;
+  titles_json: string | null;
+  metadata_json: string | null;
+  image_prompt: string | null;
+}
+
+export interface ProjectStatus {
+  project_id: number;
+  script_30min_generated: boolean;
+  script_90min_generated: boolean;
+  description_generated: boolean;
+  shorts_generated: boolean;
+  metadata_generated: boolean;
+  image_prompt_generated: boolean;
+}
+
+export interface ProjectWithStatus extends Project {
+  status: ProjectStatus;
+}

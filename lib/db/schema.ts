@@ -1,0 +1,68 @@
+import Database from "better-sqlite3";
+import path from "path";
+import { existsSync, mkdirSync } from "fs";
+
+const DB_DIR = path.join(process.cwd(), "data");
+const DB_PATH = path.join(DB_DIR, "cozycrime.db");
+
+// Ensure data directory exists
+if (!existsSync(DB_DIR)) {
+  mkdirSync(DB_DIR, { recursive: true });
+}
+
+let db: Database.Database | null = null;
+
+export function getDatabase(): Database.Database {
+  if (db) {
+    return db;
+  }
+
+  db = new Database(DB_PATH);
+  db.pragma("journal_mode = WAL");
+
+  // Create tables
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS projects (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      era_location TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS project_data (
+      project_id INTEGER PRIMARY KEY,
+      research_text TEXT,
+      script_30min TEXT,
+      script_90min TEXT,
+      description TEXT,
+      shorts TEXT,
+      titles_json TEXT,
+      metadata_json TEXT,
+      image_prompt TEXT,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS project_status (
+      project_id INTEGER PRIMARY KEY,
+      script_30min_generated INTEGER DEFAULT 0,
+      script_90min_generated INTEGER DEFAULT 0,
+      description_generated INTEGER DEFAULT 0,
+      shorts_generated INTEGER DEFAULT 0,
+      metadata_generated INTEGER DEFAULT 0,
+      image_prompt_generated INTEGER DEFAULT 0,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_projects_updated_at ON projects(updated_at DESC);
+  `);
+
+  return db;
+}
+
+export function closeDatabase() {
+  if (db) {
+    db.close();
+    db = null;
+  }
+}

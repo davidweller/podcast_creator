@@ -1,0 +1,30 @@
+{
+  "name": "cozycrime",
+  "version": "1.0.0",
+  "description": "Cozy Crime Creator Suite - Transform historical research into publish-ready scripts",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.2.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.24",
+    "better-sqlite3": "^12.6.2",
+    "next": "^16.1.6",
+    "postcss": "^8.5.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3",
+    "use-debounce": "^10.1.0"
+  }
+}
