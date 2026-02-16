@@ -19,14 +19,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { title, era_location } = body;
 
-    if (!title || !era_location) {
+    if (!title) {
       return NextResponse.json(
-        { error: "Title and era_location are required" },
+        { error: "Title is required" },
         { status: 400 }
       );
     }
 
-    const projectId = createProject(title, era_location);
+    const projectId = createProject(title, era_location || "");
     return NextResponse.json({ id: projectId }, { status: 201 });
   } catch (error) {
     console.error("Error creating project:", error);

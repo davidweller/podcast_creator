@@ -9,7 +9,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newEraLocation, setNewEraLocation] = useState("");
 
   useEffect(() => {
     loadProjects();
@@ -28,8 +27,8 @@ export default function Home() {
   }
 
   async function handleCreateProject() {
-    if (!newTitle.trim() || !newEraLocation.trim()) {
-      alert("Please fill in both title and era/location");
+    if (!newTitle.trim()) {
+      alert("Please fill in the title");
       return;
     }
 
@@ -39,14 +38,13 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newTitle.trim(),
-          era_location: newEraLocation.trim(),
+          era_location: "",
         }),
       });
 
       if (res.ok) {
         setShowCreateModal(false);
         setNewTitle("");
-        setNewEraLocation("");
         loadProjects();
       } else {
         alert("Failed to create project");
@@ -235,18 +233,6 @@ export default function Home() {
                     autoFocus
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Era / Location
-                  </label>
-                  <input
-                    type="text"
-                    value={newEraLocation}
-                    onChange={(e) => setNewEraLocation(e.target.value)}
-                    placeholder="e.g., Victorian London, 1888"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                  />
-                </div>
               </div>
               <div className="flex gap-3 mt-6">
                 <button
@@ -259,7 +245,6 @@ export default function Home() {
                   onClick={() => {
                     setShowCreateModal(false);
                     setNewTitle("");
-                    setNewEraLocation("");
                   }}
                   className="flex-1 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
                 >

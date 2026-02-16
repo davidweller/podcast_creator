@@ -61,14 +61,25 @@ export async function POST(
     });
   } catch (error: any) {
     console.error("Error generating script:", error);
+    console.error("Error details:", {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+    });
+    
+    // Provide more specific error messages
+    let errorMessage = "Failed to generate script. Please try again.";
+    
+    if (error?.message?.includes("ANTHROPIC_API_KEY") || error?.message?.includes("api key") || error?.message?.includes("Invalid API key")) {
+      errorMessage = error.message || "Claude API key not configured or invalid. Please check your ANTHROPIC_API_KEY in the .env file and restart your server.";
+    } else if (error?.message?.includes("authentication_error") || error?.message?.includes("invalid x-api-key")) {
+      errorMessage = "Invalid API key. Please verify your ANTHROPIC_API_KEY in the .env file is correct and restart your server.";
+    } else if (error?.message) {
+      errorMessage = `Error: ${error.message}`;
+    }
+    
     return NextResponse.json(
-      {
-        error:
-          error.message?.includes("ANTHROPIC_API_KEY") ||
-          error.message?.includes("api key")
-            ? "Claude API key not configured. Please set ANTHROPIC_API_KEY in your .env file."
-            : "Failed to generate script. Please try again.",
-      },
+      { error: errorMessage },
       { status: 500 }
     );
   }

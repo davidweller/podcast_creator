@@ -1,11 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 function getAnthropicClient() {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY environment variable is not set");
   }
   return new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
+    apiKey: apiKey,
   });
 }
 
@@ -25,8 +26,8 @@ export async function callClaude(
   try {
     const anthropic = getAnthropicClient();
     const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: options?.maxTokens || 4096,
+      model: "claude-opus-4-5-20251101",
+      max_tokens: options?.maxTokens || 16384,
       temperature: options?.temperature || 0.7,
       system: options?.system || "",
       messages: [
@@ -43,8 +44,19 @@ export async function callClaude(
     }
 
     throw new Error("Unexpected response format from Claude");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Claude API error:", error);
+    
+    // Handle authentication errors specifically
+    if (error?.status === 401 || error?.message?.includes("authentication_error") || error?.message?.includes("invalid x-api-key")) {
+      throw new Error("Invalid API key. Please check your ANTHROPIC_API_KEY in the .env file and ensure it's correct. You may need to restart your server after updating it.");
+    }
+    
+    // Handle model not found errors
+    if (error?.status === 404 || error?.message?.includes("not_found_error") || error?.message?.includes("model:")) {
+      throw new Error("Model not found. The model identifier may have changed. Please check the Anthropic API documentation for the correct model name.");
+    }
+    
     throw error;
   }
 }
@@ -61,8 +73,8 @@ export async function callClaudeStreaming(
   try {
     const anthropic = getAnthropicClient();
     const stream = await anthropic.messages.stream({
-      model: "claude-3-5-sonnet-20241022",
-      max_tokens: options?.maxTokens || 4096,
+      model: "claude-opus-4-5-20251101",
+      max_tokens: options?.maxTokens || 16384,
       temperature: options?.temperature || 0.7,
       system: options?.system || "",
       messages: [
@@ -78,8 +90,19 @@ export async function callClaudeStreaming(
         onChunk(event.delta.text);
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Claude API streaming error:", error);
+    
+    // Handle authentication errors specifically
+    if (error?.status === 401 || error?.message?.includes("authentication_error") || error?.message?.includes("invalid x-api-key")) {
+      throw new Error("Invalid API key. Please check your ANTHROPIC_API_KEY in the .env file and ensure it's correct. You may need to restart your server after updating it.");
+    }
+    
+    // Handle model not found errors
+    if (error?.status === 404 || error?.message?.includes("not_found_error") || error?.message?.includes("model:")) {
+      throw new Error("Model not found. The model identifier may have changed. Please check the Anthropic API documentation for the correct model name.");
+    }
+    
     throw error;
   }
 }
