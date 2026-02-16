@@ -33,38 +33,41 @@ TARGET SPECIFICATIONS
 
 Word count: 4,500 to 5,500 words.
 Runtime: 25 to 35 minutes at 160 to 170 words per minute.
-Chapters: 5 to 6 (Opening, Chapters 1 to 5).
+Chapters: 5 to 6 (opening prose, then Chapter 1. through Chapter 5. or 6.).
 
 SCRIPT STRUCTURE
 
-Write the script in the following order. Output only the narration text, with chapter titles as plain headings (no numbering labels, no formatting codes). Do not include any stage directions, notes, or metadata.
+Write the script in the following order. Output only the narration text. Use the heading "Chapter 1.", "Chapter 2.", and so on (number and full stop only; no descriptive titles). Do not include any stage directions, notes, or metadata. Do not begin the script with an "OPENING:" label; the script begins with the opening prose below.
 
-OPENING: THE LISTENER PREFACE (200 to 250 words)
+OPENING (200 to 250 words)
 
-Five beats in this exact order:
-1. Welcome. One or two sentences. Acknowledge the listener. Set the tone of companionship.
-2. Reassurance. A quiet promise: no sudden sounds, no raised voices, gentle throughout.
-3. Historical Preview and Mystery Seed. Name the era and the place. Offer one sensory detail. Then plant the curiosity thread: something happened, something was found, someone vanished. This must arrive within the first 60 seconds of narration.
-4. Subscription Mention. One sentence, maximum. Framed as companionship, not marketing. Placed here because the listener is curious and settled.
-5. Permission. Close your eyes. Drift off. The story will be here.
+The script opens with the following four beats in this exact order. Do not write "OPENING:" as a heading; begin with the story hook prose.
 
-CHAPTER 1: THE WORLD AND THE PERSON (1,000 to 1,200 words)
+1. Story hook. One or two paragraphs. Name the era and the place. Offer one or two sensory details (the landscape, the air, the light). Then plant the curiosity thread: something was found, someone vanished, a mystery that would grip the nation. The listener must feel the pull of the story within the first 60 seconds. Example shape: "Tonight, we travel to [era and place]. Picture, if you will, [sensory detail]. It was here that [discovery or vanishing]. A [person] had [vanished or been found], and the circumstances would prove far stranger than anyone could have imagined."
+
+2. Welcome. One or two short sentences. For example: "Good evening, and welcome."
+
+3. Reassurance and CTA. A quiet promise: no sudden sounds, no raised voices, gentle throughout. The story unfolds slowly. Then one sentence inviting return, framed as companionship: if they find comfort in these stories and wish to return, we shall always have a tale waiting.
+
+4. Permission. Close your eyes whenever you wish. Let your breathing slow; let your thoughts settle. The story will be here whether they listen or drift away. Then write the heading: Chapter 1.
+
+Chapter 1. (1,000 to 1,200 words)
 
 Open with a concrete sensory image of the place. Expand outward to the era and the setting. Then narrow to the individual: their appearance, habits, reputation. The mystery seed should appear naturally within the atmospheric material. End with a sense that this person's world is about to change.
 
-CHAPTER 2: THE TENSIONS (800 to 1,000 words)
+Chapter 2. (800 to 1,000 words)
 
 Introduce the relationships and conflicts. Show the daily life that made the crime possible. Humanise all parties. Use period detail: the economics, the hierarchies, the expectations. If the accused is known, introduce them as a person with a history, not as a monster. End with the last ordinary moment: the final sighting, the last diary entry, the last conversation. Then silence.
 
-CHAPTER 3: THE QUIET DISRUPTION (800 to 1,000 words)
+Chapter 3. (800 to 1,000 words)
 
 The crime surfaces. Focus on discovery, not on the act itself. Set the discovery scene with atmospheric care. Describe the place first, then what was found. Violence remains offstage. If the method is known, describe it in one or two understated sentences. Focus on the silence that followed: the bed unoccupied, the neighbours who did not raise an alarm, the systems that failed to notice.
 
-CHAPTER 4: THE INQUIRY (1,000 to 1,200 words)
+Chapter 4. (1,000 to 1,200 words)
 
 The investigation, the evidence, the suspects. Introduce the investigators as characters. Present forensic findings through the conditions of the period. If suspects were examined, present the case for and against each with restraint. Do not build a case for any particular theory. Where sources conflict, acknowledge the disagreement. End with the outcome: conviction, acquittal, or the frustration of an unsolved case.
 
-CHAPTER 5: WHAT REMAINS (800 to 1,000 words)
+Chapter 5. (800 to 1,000 words)
 
 Visit each key location as it exists today. Note where the case files rest. Mention any modern developments briefly. Then return to the victim: a quiet passage that remembers them as a person, not as a case. End with an atmospheric image that mirrors the opening of Chapter 1.
 
@@ -117,60 +120,62 @@ TARGET SPECIFICATIONS
 
 Word count: 14,000 to 16,000 words.
 Runtime: 80 to 100 minutes at 160 to 170 words per minute.
-Chapters: 10 plus the Opening (Opening, Chapters 1 to 10).
+Chapters: 10 (opening prose, then Chapter 1. through Chapter 10.).
 
 SCRIPT STRUCTURE
 
-Write the script in the following order. Output only the narration text, with chapter titles as plain headings (no numbering labels, no formatting codes). Do not include any stage directions, notes, or metadata.
+Write the script in the following order. Output only the narration text. Use the heading "Chapter 1.", "Chapter 2.", and so on (number and full stop only; no descriptive titles). Do not include any stage directions, notes, or metadata. Do not begin the script with an "OPENING:" label; the script begins with the opening prose below.
 
-OPENING: THE LISTENER PREFACE (300 to 400 words)
+OPENING (300 to 400 words)
 
-Six beats in this exact order:
-1. Welcome. Brief, warm greeting. One or two sentences.
-2. Reassurance. A quiet promise about the experience ahead.
-3. Historical Preview. A fuller sketch of the era and place. Name the period, the city, the landscape. Offer two or three sensory details.
-4. Mystery Seed. A single sentence or image that hints at the mystery without naming it. Something was discovered. Something was never explained. This must arrive within the first 90 seconds.
-5. Subscription Mention. One to two sentences, placed here because the listener is curious and settled.
-6. Permission. Close your eyes. Drift off. The story will be here.
+The script opens with the following four beats in this exact order. Do not write "OPENING:" as a heading; begin with the story hook prose.
+
+1. Story hook. One or two paragraphs. Name the era and the place. Offer two or three sensory details (the landscape, the air, the light). Then plant the curiosity thread: something was found, someone vanished, a mystery that would grip the nation. The listener must feel the pull of the story within the first 90 seconds. Example shape: "Tonight, we travel to [era and place]. Picture, if you will, [sensory details]. It was here that [discovery or vanishing]. A [person] had [vanished or been found], and the circumstances would prove far stranger than anyone could have imagined."
+
+2. Welcome. Brief, warm greeting. One or two sentences. For example: "Good evening, and welcome."
+
+3. Reassurance and CTA. A quiet promise about the experience ahead: no sudden sounds, no raised voices. The story unfolds slowly. Then one or two sentences inviting return, framed as companionship: if they find comfort in these stories and wish to return, we shall always have a tale waiting.
+
+4. Permission. Close your eyes whenever you wish. Let your breathing slow; let your thoughts settle. The story will be here whether they listen or drift away. Then write the heading: Chapter 1.
 
 PART ONE: THE WORLD
 
-Chapter 1: The Setting (1,500 to 2,000 words)
+Chapter 1. (1,500 to 2,000 words)
 Immerse the listener in a specific place and time. Begin with a single sensory image and expand outward from the intimate to the panoramic. This is world-building with the mystery seed woven through naturally, not announced separately. End with a gentle indication that this place holds a story.
 
-Chapter 2: The Social World (1,500 to 2,000 words)
+Chapter 2. (1,500 to 2,000 words)
 The human landscape: class, economics, daily rhythms. Move from the general to the particular. The emotional spine of the episode receives its fullest treatment in this chapter.
 
-Chapter 3: The People (1,200 to 1,500 words)
+Chapter 3. (1,200 to 1,500 words)
 Introduce the victim and central figures as individuals. Humanise them with whatever biographical detail survives. Read each description against the dignity check: would it feel respectful if a descendant heard it?
 
 PART TWO: DAILY LIFE AND DISAPPEARANCE
 
-Chapter 4: An Ordinary Day (1,200 to 1,500 words)
+Chapter 4. (1,200 to 1,500 words)
 The daily rhythms of survival. Follow a single day. Show the fragile connections that linked people: partners, siblings, landlords.
 
-Chapter 5: The Last Ordinary Day (1,000 to 1,200 words)
+Chapter 5. (1,000 to 1,200 words)
 The final confirmed sightings and the silence that followed. Do not describe the crime itself. The violence happens offstage, in a gap between paragraphs. If Chapter 2 established the emotional spine, do not restate it here. Let the facts carry the weight.
 
 PART THREE: THE CRIME AND ITS TRACES
 
-Chapter 6: The Discovery (1,200 to 1,500 words)
+Chapter 6. (1,200 to 1,500 words)
 How the crime came to light. Set each discovery scene with atmospheric care. If there were multiple discoveries, give each its own passage. Describe the place first, then what was found.
 
-Chapter 7: The Geography and the Evidence (1,500 to 2,000 words)
+Chapter 7. (1,500 to 2,000 words)
 The spatial logic of the crime: routes, tides, access points. Forensic evidence presented through period eyes. Present competing theories without favouring either. Cozy Crime does not solve mysteries; it contemplates them.
 
 PART FOUR: THE INVESTIGATION
 
-Chapter 8: The Investigators (1,500 to 2,000 words)
+Chapter 8. (1,500 to 2,000 words)
 The detectives, their methods, the suspects, the institutional context. Present each suspect with restraint. Do not lead the listener toward a conclusion.
 
-Chapter 9: The Wider Context (1,200 to 1,500 words)
+Chapter 9. (1,200 to 1,500 words)
 Place the crime within its broader historical moment. Press coverage, public reaction, what the response reveals about the era. Competing events.
 
 PART FIVE: THE CLOSE
 
-Chapter 10: What Remains (1,200 to 1,500 words)
+Chapter 10. (1,200 to 1,500 words)
 Visit each key location as it exists today. Note the archival record. End with a passage that honours the victim and eases the listener toward sleep. The final image should be peaceful and should mirror the opening of Chapter 1.
 
 IN CLOSING (80 to 120 words)

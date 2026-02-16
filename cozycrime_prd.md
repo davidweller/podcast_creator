@@ -211,13 +211,25 @@ Clean narration-only script returned.
 
 ---
 
-## 7.3 Hard Enforcement Rules
+## 7.3 Script Structure (Opening and Chapters)
+
+Scripts follow a fixed opening order and chapter format:
+
+**Opening (no "OPENING:" label in output).** The script begins with prose in this order:
+1. Story hook: era, place, sensory detail(s), then the curiosity thread (something was found, someone vanished). The listener must feel the pull of the story within the first 60 seconds (30-min) or 90 seconds (90-min).
+2. Welcome: brief greeting (e.g. "Good evening, and welcome.").
+3. Reassurance and CTA: quiet promise (no sudden sounds, gentle throughout), then invitation to return framed as companionship.
+4. Permission: close your eyes, the story will be here. Then the first chapter heading.
+
+**Chapter headings.** Number and full stop only; no descriptive titles. Format: "Chapter 1.", "Chapter 2.", and so on. 30-min scripts have 5 to 6 chapters; 90-min scripts have 10 chapters.
+
+## 7.4 Hard Enforcement Rules
 
 Generation will auto-correct until compliant:
 
 * Word count within spec
-* Chapter count correct
-* Opening structure correct
+* Chapter count correct (5–6 for 30-min, 10 for 90-min; headings as "Chapter N.")
+* Opening structure correct (story hook first, then welcome, CTA, permission)
 * Closing ritual exact
 * Two CTA mentions only
 * No em-dashes

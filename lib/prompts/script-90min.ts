@@ -36,56 +36,58 @@ Chapters: 10 plus the Opening (Opening, Chapters 1 to 10).
 
 SCRIPT STRUCTURE
 
-Write the script in the following order. Output only the narration text, with chapter titles as plain headings (no numbering labels, no formatting codes). Do not include any stage directions, notes, or metadata.
+Write the script in the following order. Output only the narration text. Use the heading "Chapter 1.", "Chapter 2.", and so on (number and full stop only; no descriptive titles). Do not include any stage directions, notes, or metadata. Do not begin the script with an "OPENING:" label; the script begins with the opening prose below.
 
-OPENING: THE LISTENER PREFACE (300 to 400 words)
+OPENING (300 to 400 words)
 
-Six beats in this exact order:
-1. Welcome. Brief, warm greeting. One or two sentences.
-2. Reassurance. A quiet promise about the experience ahead.
-3. Historical Preview. A fuller sketch of the era and place. Name the period, the city, the landscape. Offer two or three sensory details.
-4. Mystery Seed. A single sentence or image that hints at the mystery without naming it. Something was discovered. Something was never explained. This must arrive within the first 90 seconds.
-5. Subscription Mention. One to two sentences, placed here because the listener is curious and settled.
-6. Permission. Close your eyes. Drift off. The story will be here.
+The script opens with the following four beats in this exact order. Do not write "OPENING:" as a heading; begin with the story hook prose.
+
+1. Story hook. One or two paragraphs. Name the era and the place. Offer two or three sensory details (the landscape, the air, the light). Then plant the curiosity thread: something was found, someone vanished, a mystery that would grip the nation. The listener must feel the pull of the story within the first 90 seconds. Example shape: "Tonight, we travel to [era and place]. Picture, if you will, [sensory details]. It was here that [discovery or vanishing]. A [person] had [vanished or been found], and the circumstances would prove far stranger than anyone could have imagined."
+
+2. Welcome. Brief, warm greeting. One or two sentences. For example: "Good evening, and welcome."
+
+3. Reassurance and CTA. A quiet promise about the experience ahead: no sudden sounds, no raised voices. The story unfolds slowly. Then one or two sentences inviting return, framed as companionship: if they find comfort in these stories and wish to return, we shall always have a tale waiting.
+
+4. Permission. Close your eyes whenever you wish. Let your breathing slow; let your thoughts settle. The story will be here whether they listen or drift away. Then write the heading: Chapter 1.
 
 PART ONE: THE WORLD
 
-Chapter 1: The Setting (1,500 to 2,000 words)
+Chapter 1. (1,500 to 2,000 words)
 Immerse the listener in a specific place and time. Begin with a single sensory image and expand outward from the intimate to the panoramic. This is world-building with the mystery seed woven through naturally, not announced separately. End with a gentle indication that this place holds a story.
 
-Chapter 2: The Social World (1,500 to 2,000 words)
+Chapter 2. (1,500 to 2,000 words)
 The human landscape: class, economics, daily rhythms. Move from the general to the particular. The emotional spine of the episode receives its fullest treatment in this chapter.
 
-Chapter 3: The People (1,200 to 1,500 words)
+Chapter 3. (1,200 to 1,500 words)
 Introduce the victim and central figures as individuals. Humanise them with whatever biographical detail survives. Read each description against the dignity check: would it feel respectful if a descendant heard it?
 
 PART TWO: DAILY LIFE AND DISAPPEARANCE
 
-Chapter 4: An Ordinary Day (1,200 to 1,500 words)
+Chapter 4. (1,200 to 1,500 words)
 The daily rhythms of survival. Follow a single day. Show the fragile connections that linked people: partners, siblings, landlords.
 
-Chapter 5: The Last Ordinary Day (1,000 to 1,200 words)
+Chapter 5. (1,000 to 1,200 words)
 The final confirmed sightings and the silence that followed. Do not describe the crime itself. The violence happens offstage, in a gap between paragraphs. If Chapter 2 established the emotional spine, do not restate it here. Let the facts carry the weight.
 
 PART THREE: THE CRIME AND ITS TRACES
 
-Chapter 6: The Discovery (1,200 to 1,500 words)
+Chapter 6. (1,200 to 1,500 words)
 How the crime came to light. Set each discovery scene with atmospheric care. If there were multiple discoveries, give each its own passage. Describe the place first, then what was found.
 
-Chapter 7: The Geography and the Evidence (1,500 to 2,000 words)
+Chapter 7. (1,500 to 2,000 words)
 The spatial logic of the crime: routes, tides, access points. Forensic evidence presented through period eyes. Present competing theories without favouring either. Cozy Crime does not solve mysteries; it contemplates them.
 
 PART FOUR: THE INVESTIGATION
 
-Chapter 8: The Investigators (1,500 to 2,000 words)
+Chapter 8. (1,500 to 2,000 words)
 The detectives, their methods, the suspects, the institutional context. Present each suspect with restraint. Do not lead the listener toward a conclusion.
 
-Chapter 9: The Wider Context (1,200 to 1,500 words)
+Chapter 9. (1,200 to 1,500 words)
 Place the crime within its broader historical moment. Press coverage, public reaction, what the response reveals about the era. Competing events.
 
 PART FIVE: THE CLOSE
 
-Chapter 10: What Remains (1,200 to 1,500 words)
+Chapter 10. (1,200 to 1,500 words)
 Visit each key location as it exists today. Note the archival record. End with a passage that honours the victim and eases the listener toward sleep. The final image should be peaceful and should mirror the opening of Chapter 1.
 
 IN CLOSING (80 to 120 words)

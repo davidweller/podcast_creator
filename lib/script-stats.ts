@@ -7,21 +7,19 @@ export function countWords(text: string): number {
 }
 
 /**
- * Chapter count for 30-min script: OPENING: + CHAPTER 1:, CHAPTER 2:, etc.
+ * Chapter count for 30-min script: Chapter 1., Chapter 2., etc. (number and full stop only).
  */
 export function countChapters30(script: string): number {
-  const opening = script.match(/^OPENING:/gim);
-  const chapters = script.match(/^CHAPTER\s+\d+:/gim);
-  return (opening?.length ?? 0) + (chapters?.length ?? 0);
+  const chapters = script.match(/^Chapter\s+\d+\./gm);
+  return chapters?.length ?? 0;
 }
 
 /**
- * Chapter count for 90-min script: OPENING: + Chapter 1:, Chapter 2:, etc.
+ * Chapter count for 90-min script: Chapter 1., Chapter 2., etc. (number and full stop only).
  */
 export function countChapters90(script: string): number {
-  const opening = script.match(/^OPENING:/gim);
-  const chapters = script.match(/^Chapter\s+\d+:/gim);
-  return (opening?.length ?? 0) + (chapters?.length ?? 0);
+  const chapters = script.match(/^Chapter\s+\d+\./gm);
+  return chapters?.length ?? 0;
 }
 
 export function getScriptStats30(script: string): { wordCount: number; chapterCount: number } {

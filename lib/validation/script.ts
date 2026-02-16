@@ -69,13 +69,12 @@ export function validateScript30Min(script: string): ValidationResult {
     );
   }
 
-  // Chapter count check (should have Opening + 5-6 chapters)
-  const chapterMatches = script.match(/^CHAPTER\s+\d+:/gim);
-  const openingMatches = script.match(/^OPENING:/gim);
-  const chapterCount = (chapterMatches?.length || 0) + (openingMatches?.length || 0);
-  if (chapterCount < 5 || chapterCount > 7) {
+  // Chapter count check (should have 5-6 chapters: Chapter 1., Chapter 2., etc.)
+  const chapterMatches = script.match(/^Chapter\s+\d+\./gm);
+  const chapterCount = chapterMatches?.length || 0;
+  if (chapterCount < 5 || chapterCount > 6) {
     violations.push(
-      `Script should have 5-6 chapters plus opening, found ${chapterCount} sections`
+      `Script should have 5-6 chapters (Chapter 1., Chapter 2., etc.), found ${chapterCount}`
     );
   }
 
@@ -163,13 +162,12 @@ export function validateScript90Min(script: string): ValidationResult {
     );
   }
 
-  // Chapter count check (should have Opening + 10 chapters)
-  const chapterMatches = script.match(/^Chapter\s+\d+:/gim);
-  const openingMatches = script.match(/^OPENING:/gim);
-  const chapterCount = (chapterMatches?.length || 0) + (openingMatches?.length || 0);
-  if (chapterCount < 10 || chapterCount > 12) {
+  // Chapter count check (should have 10 chapters: Chapter 1., Chapter 2., etc.)
+  const chapterMatches = script.match(/^Chapter\s+\d+\./gm);
+  const chapterCount = chapterMatches?.length || 0;
+  if (chapterCount !== 10) {
     violations.push(
-      `Script should have 10 chapters plus opening, found ${chapterCount} sections`
+      `Script should have 10 chapters (Chapter 1., Chapter 2., etc.), found ${chapterCount}`
     );
   }
 
