@@ -75,18 +75,4 @@ Four beats, always in this order:
 3. Thanks and return: a warm thank-you and a quiet invitation to return.
 4. The goodnight: "Rest well. A peaceful night to you." This sign-off is identical in every episode. Do not vary it.
 
-QUALITY CHECKS BEFORE OUTPUT
-
-Before completing your response, verify:
-- The mystery seed appears within the first 60 seconds of narration.
-- Every chapter contains at least one reference to the crime or mystery.
-- No chapter exceeds 1,200 words or falls below 600 words.
-- Total word count is between 4,500 and 5,500.
-- The script contains exactly two subscription mentions (preface and closing) and no others.
-- No em-dashes appear anywhere.
-- No passage reduces a victim to their victimhood.
-- Violence remains offstage throughout.
-- No modern slang, no contemporary framing, no stage directions, no markers.
-- The closing ritual ends with "Rest well. A peaceful night to you."
-
 Now write the complete script using the fact clusters provided below.`;

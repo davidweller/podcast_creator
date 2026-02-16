@@ -76,20 +76,6 @@ Four beats, always in this order:
 3. Thanks and return: a warm thank-you and a quiet invitation to return.
 4. The goodnight: "Rest well. A peaceful night to you." This sign-off is identical in every episode. Do not vary it.
 
-QUALITY CHECKS BEFORE OUTPUT
-
-Before completing your response, verify:
-- The mystery seed appears within the first 60 seconds of narration.
-- Every chapter contains at least one reference to the crime or mystery.
-- No chapter exceeds 1,200 words or falls below 600 words.
-- Total word count is between 4,500 and 5,500.
-- The script contains exactly two subscription mentions (preface and closing) and no others.
-- No em-dashes appear anywhere.
-- No passage reduces a victim to their victimhood.
-- Violence remains offstage throughout.
-- No modern slang, no contemporary framing, no stage directions, no markers.
-- The closing ritual ends with "Rest well. A peaceful night to you."
-
 Now write the complete script using the fact clusters provided below.
 
 
@@ -194,24 +180,6 @@ Four beats, always in this order:
 2. The acknowledgement: a single sentence honouring the act of remembering.
 3. Thanks and return: a warm thank-you and a quiet invitation to return.
 4. The goodnight: "Rest well. A peaceful night to you." This sign-off is identical in every episode. Do not vary it.
-
-QUALITY CHECKS BEFORE OUTPUT
-
-Before completing your response, verify:
-- The mystery seed appears within the first 90 seconds of narration.
-- Every chapter contains at least one reference to the crime or mystery.
-- No chapter exceeds 2,500 words or falls below 1,000 words.
-- Total word count is between 14,000 and 16,000.
-- World-building chapters (Parts One and Two) are at least as long in total as investigation chapters (Part Four).
-- The emotional spine is stated fully in one anchor chapter and nowhere else.
-- No refrain appears more than three times.
-- The script contains exactly two subscription mentions (preface and closing) and no others.
-- No em-dashes appear anywhere.
-- No passage reduces a victim to their victimhood.
-- Violence remains offstage throughout.
-- No modern slang, no contemporary framing, no stage directions, no markers.
-- Where sources conflict, the script acknowledges the disagreement.
-- The closing ritual ends with "Rest well. A peaceful night to you."
 
 Now write the complete script using the fact clusters provided below.
 
