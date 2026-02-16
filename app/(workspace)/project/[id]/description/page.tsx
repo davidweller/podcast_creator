@@ -91,7 +91,7 @@ export default function DescriptionPage() {
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold text-slate-900 mb-4">
-          YouTube Description, Titles & Metadata
+          YouTube
         </h2>
         <p className="text-sm text-slate-600 mb-6">
           Generate the YouTube description (with SEO, hashtags, timestamps if script is available),

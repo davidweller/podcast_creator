@@ -1,22 +1,44 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { ImprovementAnalysis } from "@/types/improvements";
+import { formatElapsed } from "@/lib/format-time";
+import { getScriptStats30 } from "@/lib/script-stats";
+
+const ESTIMATE_30MIN = "1–3 min";
 
 export default function Script30MinPage() {
   const params = useParams();
   const projectId = params.id as string;
   const [script, setScript] = useState("");
   const [loading, setLoading] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [improvements, setImprovements] = useState<ImprovementAnalysis | null>(null);
   const [loadingImprovements, setLoadingImprovements] = useState(false);
   const [applyingImprovements, setApplyingImprovements] = useState(false);
+  const startTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     loadScript();
   }, [projectId]);
+
+  // Update elapsed time every second while generating
+  useEffect(() => {
+    if (!loading) {
+      startTimeRef.current = null;
+      return;
+    }
+    startTimeRef.current = Date.now();
+    setElapsedSeconds(0);
+    const interval = setInterval(() => {
+      if (startTimeRef.current !== null) {
+        setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   async function loadScript() {
     try {
@@ -167,6 +189,11 @@ export default function Script30MinPage() {
               </button>
             )}
           </div>
+          {loading && (
+            <p className="text-sm text-slate-600">
+              Elapsed: {formatElapsed(elapsedSeconds)} • Approx. {ESTIMATE_30MIN} remaining
+            </p>
+          )}
           {script && (
             <div className="flex gap-2">
               <button
@@ -228,7 +255,13 @@ export default function Script30MinPage() {
 
       {script && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-bold text-slate-900 mb-4">30-Minute Script</h3>
+          <h3 className="text-xl font-bold text-slate-900 mb-1">30-Minute Script</h3>
+          <p className="text-sm text-slate-600 mb-4">
+            {(() => {
+              const { wordCount, chapterCount } = getScriptStats30(script);
+              return `${wordCount.toLocaleString()} words • ${chapterCount} chapters`;
+            })()}
+          </p>
           <div className="max-h-[600px] overflow-y-auto border border-slate-200 rounded p-4 bg-slate-50">
             <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900">
               {script}

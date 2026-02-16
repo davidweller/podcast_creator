@@ -8,9 +8,8 @@ import type { Project } from "@/types/database";
 const tabs = [
   { id: "research", label: "Research", href: (id: string) => `/project/${id}/research` },
   { id: "scripts", label: "Script Generator", href: (id: string) => `/project/${id}/scripts` },
-  { id: "description", label: "YouTube Description, Titles & Metadata", href: (id: string) => `/project/${id}/description` },
-  { id: "shorts", label: "Shorts Generator", href: (id: string) => `/project/${id}/shorts` },
-  { id: "image-prompt", label: "Background Image Prompt", href: (id: string) => `/project/${id}/image-prompt` },
+  { id: "description", label: "YouTube", href: (id: string) => `/project/${id}/description` },
+  { id: "image-prompt", label: "Image", href: (id: string) => `/project/${id}/image-prompt` },
 ];
 
 export default function ProjectLayout({
