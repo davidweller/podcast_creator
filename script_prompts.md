@@ -68,7 +68,7 @@ CHAPTER 5: WHAT REMAINS (800 to 1,000 words)
 
 Visit each key location as it exists today. Note where the case files rest. Mention any modern developments briefly. Then return to the victim: a quiet passage that remembers them as a person, not as a case. End with an atmospheric image that mirrors the opening of Chapter 1.
 
-THE CLOSING RITUAL (80 to 120 words)
+IN CLOSING (80 to 120 words)
 
 Four beats, always in this order:
 1. The scene closes: two or three image-based sentences returning to the location.
@@ -173,7 +173,7 @@ PART FIVE: THE CLOSE
 Chapter 10: What Remains (1,200 to 1,500 words)
 Visit each key location as it exists today. Note the archival record. End with a passage that honours the victim and eases the listener toward sleep. The final image should be peaceful and should mirror the opening of Chapter 1.
 
-THE CLOSING RITUAL (80 to 120 words)
+IN CLOSING (80 to 120 words)
 
 Four beats, always in this order:
 1. The scene closes: two or three image-based sentences returning to the location.

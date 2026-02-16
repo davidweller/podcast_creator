@@ -1,4 +1,4 @@
-import { callClaude } from "@/lib/claude/client";
+import { callClaude, SCRIPT_MODEL } from "@/lib/claude/client";
 import { PROMPT_30MIN } from "@/lib/prompts/script-30min";
 import { PROMPT_90MIN } from "@/lib/prompts/script-90min";
 import { validateScript30Min, validateScript90Min } from "@/lib/validation/script";
@@ -23,6 +23,7 @@ export async function generateScript30Min(researchText: string): Promise<{
         script = await callClaude(fullPrompt, {
           maxTokens: 8192,
           temperature: 0.7,
+          model: SCRIPT_MODEL,
         });
       } else {
         // Regenerate with correction prompt
@@ -30,6 +31,7 @@ export async function generateScript30Min(researchText: string): Promise<{
         script = await callClaude(correctionPrompt, {
           maxTokens: 8192,
           temperature: 0.7,
+          model: SCRIPT_MODEL,
         });
       }
 
@@ -71,6 +73,7 @@ export async function generateScript90Min(researchText: string): Promise<{
         script = await callClaude(fullPrompt, {
           maxTokens: 16384,
           temperature: 0.7,
+          model: SCRIPT_MODEL,
         });
       } else {
         // Regenerate with correction prompt
@@ -78,6 +81,7 @@ export async function generateScript90Min(researchText: string): Promise<{
         script = await callClaude(correctionPrompt, {
           maxTokens: 16384,
           temperature: 0.7,
+          model: SCRIPT_MODEL,
         });
       }
 
