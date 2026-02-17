@@ -6,6 +6,16 @@ import { buildCorrectionPrompt } from "@/lib/prompts/correction";
 
 const MAX_RETRIES = 3;
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isOverloadedError(error: any): boolean {
+  return error?.message?.includes("overloaded") || 
+         error?.message?.includes("Overloaded") ||
+         error?.error?.type === "overloaded_error";
+}
+
 export async function generateScript30Min(researchText: string): Promise<{
   script: string;
   attempts: number;
@@ -17,8 +27,10 @@ export async function generateScript30Min(researchText: string): Promise<{
   let violations: string[] = [];
 
   for (let i = 0; i < MAX_RETRIES; i++) {
-    attempts++;
+    let shouldRetry = false;
+    
     try {
+      attempts++;
       if (i === 0) {
         script = await callClaude(fullPrompt, {
           maxTokens: 8192,
@@ -46,9 +58,21 @@ export async function generateScript30Min(researchText: string): Promise<{
       }
     } catch (error) {
       console.error(`Error generating script (attempt ${i + 1}):`, error);
-      if (i === MAX_RETRIES - 1) {
+      
+      // If it's an overloaded error and not the last retry, wait with exponential backoff
+      if (isOverloadedError(error) && i < MAX_RETRIES - 1) {
+        const waitTime = Math.min(1000 * Math.pow(2, i), 10000); // Max 10 seconds
+        console.log(`API overloaded, waiting ${waitTime}ms before retry...`);
+        await sleep(waitTime);
+        i--; // Retry the same attempt by decrementing i
+        shouldRetry = true;
+      } else if (i === MAX_RETRIES - 1) {
         throw error;
       }
+    }
+    
+    if (shouldRetry) {
+      continue; // Retry the same iteration
     }
   }
 
@@ -67,8 +91,10 @@ export async function generateScript90Min(researchText: string): Promise<{
   let violations: string[] = [];
 
   for (let i = 0; i < MAX_RETRIES; i++) {
-    attempts++;
+    let shouldRetry = false;
+    
     try {
+      attempts++;
       if (i === 0) {
         script = await callClaude(fullPrompt, {
           maxTokens: 16384,
@@ -96,9 +122,21 @@ export async function generateScript90Min(researchText: string): Promise<{
       }
     } catch (error) {
       console.error(`Error generating script (attempt ${i + 1}):`, error);
-      if (i === MAX_RETRIES - 1) {
+      
+      // If it's an overloaded error and not the last retry, wait with exponential backoff
+      if (isOverloadedError(error) && i < MAX_RETRIES - 1) {
+        const waitTime = Math.min(1000 * Math.pow(2, i), 10000); // Max 10 seconds
+        console.log(`API overloaded, waiting ${waitTime}ms before retry...`);
+        await sleep(waitTime);
+        i--; // Retry the same attempt by decrementing i
+        shouldRetry = true;
+      } else if (i === MAX_RETRIES - 1) {
         throw error;
       }
+    }
+    
+    if (shouldRetry) {
+      continue; // Retry the same iteration
     }
   }
 

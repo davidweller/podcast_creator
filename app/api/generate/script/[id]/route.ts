@@ -69,18 +69,22 @@ export async function POST(
     
     // Provide more specific error messages
     let errorMessage = "Failed to generate script. Please try again.";
+    let statusCode = 500;
     
     if (error?.message?.includes("ANTHROPIC_API_KEY") || error?.message?.includes("api key") || error?.message?.includes("Invalid API key")) {
       errorMessage = error.message || "Claude API key not configured or invalid. Please check your ANTHROPIC_API_KEY in the .env file and restart your server.";
     } else if (error?.message?.includes("authentication_error") || error?.message?.includes("invalid x-api-key")) {
       errorMessage = "Invalid API key. Please verify your ANTHROPIC_API_KEY in the .env file is correct and restart your server.";
+    } else if (error?.message?.includes("overloaded") || error?.message?.includes("Overloaded") || error?.error?.type === "overloaded_error") {
+      errorMessage = error.message || "Claude API is currently overloaded. Please wait a moment and try again. The service is experiencing high demand.";
+      statusCode = 503; // Service Unavailable
     } else if (error?.message) {
       errorMessage = `Error: ${error.message}`;
     }
     
     return NextResponse.json(
       { error: errorMessage },
-      { status: 500 }
+      { status: statusCode }
     );
   }
 }

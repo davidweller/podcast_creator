@@ -65,6 +65,14 @@ export async function callClaude(
       throw new Error("Model not found. The model identifier may have changed. Please check the Anthropic API documentation for the correct model name.");
     }
     
+    // Handle overloaded/rate limit errors (529, 429, or overloaded_error)
+    if (error?.status === 529 || error?.status === 429 || 
+        error?.error?.type === "overloaded_error" || 
+        error?.message?.includes("overloaded_error") ||
+        error?.message?.includes("Overloaded")) {
+      throw new Error("Claude API is currently overloaded. Please wait a moment and try again. The service is experiencing high demand.");
+    }
+    
     throw error;
   }
 }
@@ -111,6 +119,14 @@ export async function callClaudeStreaming(
     // Handle model not found errors
     if (error?.status === 404 || error?.message?.includes("not_found_error") || error?.message?.includes("model:")) {
       throw new Error("Model not found. The model identifier may have changed. Please check the Anthropic API documentation for the correct model name.");
+    }
+    
+    // Handle overloaded/rate limit errors (529, 429, or overloaded_error)
+    if (error?.status === 529 || error?.status === 429 || 
+        error?.error?.type === "overloaded_error" || 
+        error?.message?.includes("overloaded_error") ||
+        error?.message?.includes("Overloaded")) {
+      throw new Error("Claude API is currently overloaded. Please wait a moment and try again. The service is experiencing high demand.");
     }
     
     throw error;
