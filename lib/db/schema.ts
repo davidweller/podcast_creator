@@ -54,7 +54,18 @@ export function getDatabase(): Database.Database {
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS project_images (
+      project_id INTEGER NOT NULL,
+      slot TEXT NOT NULL,
+      prompt TEXT,
+      image_path TEXT,
+      thumbnail_title TEXT,
+      PRIMARY KEY (project_id, slot),
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    );
+
     CREATE INDEX IF NOT EXISTS idx_projects_updated_at ON projects(updated_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_project_images_project_id ON project_images(project_id);
   `);
 
   return db;

@@ -31,3 +31,15 @@ export interface ProjectStatus {
 export interface ProjectWithStatus extends Project {
   status: ProjectStatus;
 }
+
+export type ImageSlot = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12" | "13" | "14" | "15" | "16" | "17" | "18" | "19" | "20" | "thumbnail";
+
+export interface ProjectImage {
+  project_id: number;
+  slot: ImageSlot;
+  prompt: string | null;
+  image_path: string | null;
+  thumbnail_title: string | null;
+}
+
+export const IMAGE_SLOTS: ImageSlot[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "thumbnail"];

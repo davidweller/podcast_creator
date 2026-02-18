@@ -9,7 +9,7 @@ const tabs = [
   { id: "research", label: "Research", href: (id: string) => `/project/${id}/research` },
   { id: "scripts", label: "Script Generator", href: (id: string) => `/project/${id}/scripts` },
   { id: "description", label: "YouTube", href: (id: string) => `/project/${id}/description` },
-  { id: "image-prompt", label: "Image", href: (id: string) => `/project/${id}/image-prompt` },
+  { id: "images", label: "Images", href: (id: string) => `/project/${id}/images` },
 ];
 
 export default function ProjectLayout({
