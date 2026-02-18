@@ -12,6 +12,18 @@ The tone is reflective, respectful, and atmospheric. Crime is never treated as s
 
 Language must feel: measured, period-appropriate, slightly literary, calm, and unhurried.
 
+DIRECTNESS AND CLARITY
+
+Combine this tone with clear, direct prose. Directness is not sensationalism; state facts calmly and without sensational adjectives.
+
+State facts plainly when the record is clear: where sources agree (e.g. poison, murder, conviction), name it. No euphemism for the sake of softness.
+Use short, declarative sentences at key moments: discoveries, deaths, arrests, verdicts. One short sentence can carry the weight; then expand with context.
+Clear cause-and-effect: after a significant event, one sentence that states the consequence (e.g. "With the insurance paid, she left.").
+Strong topic sentences: each paragraph should open with the point or the event so the listener knows what the paragraph is about.
+Names and dates: use them when the sources provide them; avoid unnecessary hedging.
+
+Example phrasing: Prefer "The cause of death was arsenic." / "She was convicted of murder." / "Five days later, he was dead." Avoid long circumlocution when the record is clear (e.g. "It was suggested that something other than natural causes might have been involved."). Still avoid sensational framing ("The chilling truth was…", "In a horrifying twist…").
+
 NON-NEGOTIABLE STYLE RULES
 
 These rules are absolute. Do not break them under any circumstance.
@@ -39,11 +51,13 @@ SCRIPT STRUCTURE
 
 Write the script in the following order. Output only the narration text. Use the heading "Chapter 1.", "Chapter 2.", and so on (number and full stop only; no descriptive titles). Do not include any stage directions, notes, or metadata. Do not begin the script with an "OPENING:" label; the script begins with the opening prose below.
 
+Each chapter should open with a clear topic sentence or narrative beat so the listener knows the chapter's focus.
+
 OPENING (200 to 250 words)
 
 The script opens with the following four beats in this exact order. Do not write "OPENING:" as a heading; begin with the story hook prose.
 
-1. Story hook. One or two paragraphs. Name the era and the place. Offer one or two sensory details (the landscape, the air, the light). Then plant the curiosity thread: something was found, someone vanished, a mystery that would grip the nation. The listener must feel the pull of the story within the first 60 seconds. Example shape: "Tonight, we travel to [era and place]. Picture, if you will, [sensory detail]. It was here that [discovery or vanishing]. A [person] had [vanished or been found], and the circumstances would prove far stranger than anyone could have imagined."
+1. Story hook. One or two paragraphs. Name the era and the place. Offer one or two sensory details (the landscape, the air, the light). Then plant the curiosity thread: something was found, someone vanished, a mystery that would grip the nation. Include one clear, direct sentence that frames the story (e.g. what was found, who vanished, or what question the episode will hold) without sensational language; for example: "This is the story of [person or place] and the mystery that followed." The listener must feel the pull of the story within the first 60 seconds. Example shape: "Tonight, we travel to [era and place]. Picture, if you will, [sensory detail]. It was here that [discovery or vanishing]. A [person] had [vanished or been found], and the circumstances would prove far stranger than anyone could have imagined."
 
 2. Welcome. One or two short sentences. For example: "Good evening, and welcome."
 
@@ -103,18 +117,28 @@ NON-NEGOTIABLE STYLE RULES
 
 These rules are absolute. Do not break them under any circumstance.
 
-No gore or graphic description. No clinical terminology for injuries.
 No sensational language.
 No modern true-crime tropes (no cliffhangers, no "and then things took a dark turn").
 No abrupt tonal shifts.
 No modern slang or contemporary framing.
 No em-dashes under any circumstance. Use commas, semicolons, or restructure the sentence.
 No markers in the text (e.g. [pause], [music], [SFX]). The script is clean prose only.
-Violence happens offstage, in a gap between paragraphs. The listener feels the absence, not the act.
 The victim is introduced as a person first, always. Apply the Mother Test: would the victim's family find this account dignified?
 Maintain at least a 3:1 ratio of world-building and context to crime description.
 Never say "subscribe," "like," "bell icon," "content," or "algorithm." Use "return," "join us," "you are welcome," "you will find us here."
 In every chapter, weave in at least one reference to the crime or mystery. The listener should never go more than a few minutes without a reminder of why they are hearing what they are hearing.
+
+DIRECTNESS AND CLARITY
+
+Combine this tone with clear, direct prose. Directness is not sensationalism; state facts calmly and without sensational adjectives.
+
+State facts plainly when the record is clear: where sources agree (e.g. poison, murder, conviction), name it. No euphemism for the sake of softness.
+Use short, declarative sentences at key moments: discoveries, deaths, arrests, verdicts. One short sentence can carry the weight; then expand with context.
+Clear cause-and-effect: after a significant event, one sentence that states the consequence (e.g. "With the insurance paid, she left.").
+Strong topic sentences: each paragraph should open with the point or the event so the listener knows what the paragraph is about.
+Names and dates: use them when the sources provide them; avoid unnecessary hedging.
+
+Example phrasing: Prefer "The cause of death was arsenic." / "She was convicted of murder." / "Five days later, he was dead." Avoid long circumlocution when the record is clear (e.g. "It was suggested that something other than natural causes might have been involved."). Still avoid sensational framing ("The chilling truth was…", "In a horrifying twist…").
 
 TARGET SPECIFICATIONS
 
@@ -126,11 +150,13 @@ SCRIPT STRUCTURE
 
 Write the script in the following order. Output only the narration text. Use the heading "Chapter 1.", "Chapter 2.", and so on (number and full stop only; no descriptive titles). Do not include any stage directions, notes, or metadata. Do not begin the script with an "OPENING:" label; the script begins with the opening prose below.
 
+Each chapter should open with a clear topic sentence or narrative beat so the listener knows the chapter's focus.
+
 OPENING (300 to 400 words)
 
 The script opens with the following four beats in this exact order. Do not write "OPENING:" as a heading; begin with the story hook prose.
 
-1. Story hook. One or two paragraphs. Name the era and the place. Offer two or three sensory details (the landscape, the air, the light). Then plant the curiosity thread: something was found, someone vanished, a mystery that would grip the nation. The listener must feel the pull of the story within the first 90 seconds. Example shape: "Tonight, we travel to [era and place]. Picture, if you will, [sensory details]. It was here that [discovery or vanishing]. A [person] had [vanished or been found], and the circumstances would prove far stranger than anyone could have imagined."
+1. Story hook. One or two paragraphs. Name the era and the place. Offer two or three sensory details (the landscape, the air, the light). Then plant the curiosity thread: something was found, someone vanished, a mystery that would grip the nation. Include one clear, direct sentence that frames the story (e.g. what was found, who vanished, or what question the episode will hold) without sensational language; for example: "This is the story of [person or place] and the mystery that followed." The listener must feel the pull of the story within the first 90 seconds. Example shape: "Tonight, we travel to [era and place]. Picture, if you will, [sensory details]. It was here that [discovery or vanishing]. A [person] had [vanished or been found], and the circumstances would prove far stranger than anyone could have imagined."
 
 2. Welcome. Brief, warm greeting. One or two sentences. For example: "Good evening, and welcome."
 
@@ -163,7 +189,7 @@ Chapter 6. (1,200 to 1,500 words)
 How the crime came to light. Set each discovery scene with atmospheric care. If there were multiple discoveries, give each its own passage. Describe the place first, then what was found.
 
 Chapter 7. (1,500 to 2,000 words)
-The spatial logic of the crime: routes, tides, access points. Forensic evidence presented through period eyes. Present competing theories without favouring either. Cozy Crime does not solve mysteries; it contemplates them.
+The spatial logic of the crime: routes, tides, access points. Forensic evidence presented through period eyes. Present competing theories without favouring either. Cozy Crime does not solve mysteries; it contemplates them. Where the method or context is central to the case (e.g. a poison, forensic techniques of the era), this chapter may focus on explaining it in calm, period-appropriate prose, then return to the narrative.
 
 PART FOUR: THE INVESTIGATION
 
