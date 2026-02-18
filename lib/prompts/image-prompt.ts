@@ -5,9 +5,10 @@ export const PROMPT_IMAGE_PROMPT = `You are generating an image prompt for a loo
 
 You will be given research about a historical crime case. Generate a single, master image prompt optimized for ChatGPT image generation and Gemini image generation systems.
 
-The prompt should describe:
-- An oil painting or painted illustration style
-- Calm, atmospheric scene
+The prompt must describe an image in this exact style:
+"A calm atmospheric illustrated scene in a cozy historical graphic-novel style. Clean ink linework with painterly digital shading, soft cinematic lighting, and a muted blue-grey and amber colour palette. Evening or twilight setting with warm glowing lamps reflecting in water. Gentle, quiet mood suitable for a historical mystery or cozy crime story. Stylised realism, not photorealistic, with simplified but elegant architectural detail. Soft clouded sky, subtle texture brushwork, and smooth gradients. Wide cinematic composition, balanced and uncluttered, designed for long-form YouTube background visuals. High detail, polished illustration, professional book-illustration quality."
+
+Additional requirements:
 - Period-accurate setting (era, location, architecture, clothing)
 - Suitable for long looping video (consider what elements could loop naturally)
 - No characters staring directly at viewer
