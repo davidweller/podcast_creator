@@ -11,7 +11,7 @@ STYLE (all images):
 
 SLOTS 1–20: Scene and atmosphere images. Vary the scenes across the case: locations (street, interior, landscape), time of day, key moments or moods (e.g. detective at desk, newspaper headline, period street scene, courtroom, harbour). No characters staring directly at the viewer. No violence.
 
-SLOT 21 (thumbnail): A single YouTube thumbnail prompt. It should be eye-catching, include space or composition that allows for a title overlay, and reference the episode's theme. Also provide a short thumbnail title (a few words) suitable for overlay on the thumbnail.
+SLOT 21 (thumbnail): A single YouTube thumbnail prompt. It should be eye-catching, include space or composition that allows for a title overlay, and reference the episode's theme. The thumbnail must feature a person or item as the main focus (e.g., a key figure from the case, a significant object, or a central character). Also provide a short thumbnail title (a few words) suitable for overlay on the thumbnail.
 
 OUTPUT FORMAT: Respond with a single JSON object, no other text. Use this exact structure:
 {
