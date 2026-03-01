@@ -46,6 +46,16 @@ Word count: 4,500 to 5,500 words.
 Runtime: 25 to 35 minutes at 160 to 170 words per minute.
 Chapters: 5 to 6 (Opening, Chapters 1 to 5).
 
+REQUIREMENTS (must all be met)
+
+- Total word count: between 4,500 and 5,500 words.
+- Use exactly 5 or 6 chapter headings: "Chapter 1.", "Chapter 2.", and so on (number and full stop only).
+- The script must contain exactly two invitation-to-return phrases in total (e.g. one in the opening reassurance, one in the closing). Use only: return, join us, you are welcome, you will find us here.
+- Within the first 250 words, include at least one of: disappeared, vanished, found, discovered, mystery, mysterious, unexplained.
+- The script must end with the exact phrase: "Rest well. A peaceful night to you."
+- No em-dashes or en-dashes; use commas, semicolons, or restructure.
+- Do not use any of: subscribe, like, bell icon, content, algorithm, or bracketed markers such as [pause], [music], [SFX]. Do not use brackets for stage directions or notes.
+
 SCRIPT STRUCTURE
 
 Write the script in the following order. Output only the narration text. Use the heading "Chapter 1.", "Chapter 2.", and so on (number and full stop only; no descriptive titles). Do not include any stage directions, notes, or metadata. Do not begin the script with an "OPENING:" label; the script begins with the opening prose below.
@@ -56,11 +66,11 @@ OPENING (200 to 250 words)
 
 The script opens with the following four beats in this exact order. Do not write "OPENING:" as a heading; begin with the story hook prose.
 
-1. Story hook. One or two paragraphs. Name the era and the place. Offer one or two sensory details (the landscape, the air, the light). Then plant the curiosity thread: something was found, someone vanished, a mystery that would grip the nation. Include one clear, direct sentence that frames the story (e.g. what was found, who vanished, or what question the episode will hold) without sensational language; for example: "This is the story of [person or place] and the mystery that followed." The listener must feel the pull of the story within the first 60 seconds. Example shape: "Tonight, we travel to [era and place]. Picture, if you will, [sensory detail]. It was here that [discovery or vanishing]. A [person] had [vanished or been found], and the circumstances would prove far stranger than anyone could have imagined."
+1. Story hook. Use this exact structure. First sentence: "Tonight, we travel to [LOCATION] in [YEAR/PERIOD], where [BRIEF SCENE OR IMAGE, one sentence]." Then one or two sentences: [CENTRAL QUESTION OR MYSTERY, introducing the case and why it lingers]. Fill the placeholders from the case. Do not add "Picture, if you will" or other variants; use only this template shape.
 
-2. Welcome. One or two short sentences. For example: "Good evening, and welcome."
+2. Welcome block (verbatim). Copy this paragraph exactly, with no changes: "Good evening, and welcome. You have found your way to a place of calm. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, we shall always have a tale waiting for you. The night is yours, and so is this story."
 
-3. Reassurance and CTA. A quiet promise: no sudden sounds, no raised voices, gentle throughout. The story unfolds slowly. Then one sentence inviting return, framed as companionship: if they find comfort in these stories and wish to return, we shall always have a tale waiting.
+3. Closing line (verbatim). Write exactly: "Good evening, and welcome."
 
 4. Permission. Close your eyes whenever you wish. Let your breathing slow; let your thoughts settle. The story will be here whether they listen or drift away. Then write the heading: Chapter 1.
 

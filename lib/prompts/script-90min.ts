@@ -56,11 +56,11 @@ OPENING (300 to 400 words)
 
 The script opens with the following four beats in this exact order. Do not write "OPENING:" as a heading; begin with the story hook prose.
 
-1. Story hook. One or two paragraphs. Name the era and the place. Offer two or three sensory details (the landscape, the air, the light). Then plant the curiosity thread: something was found, someone vanished, a mystery that would grip the nation. Include one clear, direct sentence that frames the story (e.g. what was found, who vanished, or what question the episode will hold) without sensational language; for example: "This is the story of [person or place] and the mystery that followed." The listener must feel the pull of the story within the first 90 seconds. Example shape: "Tonight, we travel to [era and place]. Picture, if you will, [sensory details]. It was here that [discovery or vanishing]. A [person] had [vanished or been found], and the circumstances would prove far stranger than anyone could have imagined."
+1. Story hook. Use this exact structure. First sentence: "Tonight, we travel to [LOCATION] in [YEAR/PERIOD], where [BRIEF SCENE OR IMAGE, one sentence]." Then one or two sentences: [CENTRAL QUESTION OR MYSTERY, introducing the case and why it lingers]. Fill the placeholders from the case. Do not add "Picture, if you will" or other variants; use only this template shape.
 
-2. Welcome. Brief, warm greeting. One or two sentences. For example: "Good evening, and welcome."
+2. Welcome block (verbatim). Copy this paragraph exactly, with no changes: "Good evening, and welcome. You have found your way to a place of calm. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, we shall always have a tale waiting for you. The night is yours, and so is this story."
 
-3. Reassurance and CTA. A quiet promise about the experience ahead: no sudden sounds, no raised voices. The story unfolds slowly. Then one or two sentences inviting return, framed as companionship: if they find comfort in these stories and wish to return, we shall always have a tale waiting.
+3. Closing line (verbatim). Write exactly: "Good evening, and welcome."
 
 4. Permission. Close your eyes whenever you wish. Let your breathing slow; let your thoughts settle. The story will be here whether they listen or drift away. Then write the heading: Chapter 1.
 
