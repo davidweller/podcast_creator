@@ -154,14 +154,9 @@ export default function Home() {
                 </div>
 
                 <div className="mb-4 flex flex-wrap gap-2">
-                  {project.status.script_30min_generated && (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                      30-min
-                    </span>
-                  )}
                   {project.status.script_90min_generated && (
                     <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                      90-min
+                      Script
                     </span>
                   )}
                   {project.status.description_generated && (

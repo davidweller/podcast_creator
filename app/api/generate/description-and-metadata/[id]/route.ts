@@ -24,9 +24,8 @@ export async function POST(
 
     let prompt = `${PROMPT_DESCRIPTION_AND_METADATA}\n\nResearch:\n${projectData.research_text}`;
 
-    if (projectData.script_30min || projectData.script_90min) {
-      const script = projectData.script_30min || projectData.script_90min;
-      prompt += `\n\nScript (for timestamps):\n${script}`;
+    if (projectData.script_90min) {
+      prompt += `\n\nScript (for timestamps):\n${projectData.script_90min}`;
     }
 
     const response = await callClaude(prompt, {

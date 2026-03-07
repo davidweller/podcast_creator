@@ -9,15 +9,6 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
-    const body = await request.json();
-    const { type } = body;
-
-    if (type !== "30min" && type !== "90min") {
-      return NextResponse.json(
-        { error: "Invalid script type. Must be '30min' or '90min'" },
-        { status: 400 }
-      );
-    }
 
     // Get script text
     const projectData = getProjectData(projectId);
@@ -28,19 +19,17 @@ export async function POST(
       );
     }
 
-    const script = type === "30min" 
-      ? projectData.script_30min 
-      : projectData.script_90min;
+    const script = projectData.script_90min;
 
     if (!script) {
       return NextResponse.json(
-        { error: `No ${type} script found. Please generate a script first.` },
+        { error: "No script found. Please generate a script first." },
         { status: 400 }
       );
     }
 
     // Analyze script for improvements
-    const analysis = await analyzeScript(script, type);
+    const analysis = await analyzeScript(script, "90min");
 
     return NextResponse.json(analysis);
   } catch (error: any) {

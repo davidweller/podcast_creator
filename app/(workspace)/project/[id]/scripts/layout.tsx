@@ -4,7 +4,6 @@ import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
 
 const scriptTabs = [
-  { id: "30min", label: "30-Minute Script", href: (id: string) => `/project/${id}/scripts/30min` },
   { id: "90min", label: "90-Minute Script", href: (id: string) => `/project/${id}/scripts/90min` },
   { id: "shorts", label: "YouTube Short", href: (id: string) => `/project/${id}/scripts/shorts` },
 ];
@@ -18,7 +17,7 @@ export default function ScriptsLayout({
   const pathname = usePathname();
   const projectId = params.id as string;
 
-  const currentTab = scriptTabs.find((tab) => pathname?.includes(`/scripts/${tab.id}`))?.id || "30min";
+  const currentTab = scriptTabs.find((tab) => pathname?.includes(`/scripts/${tab.id}`))?.id || "90min";
 
   return (
     <>

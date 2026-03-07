@@ -162,7 +162,7 @@ export default function Script90MinPage() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-xl font-semibold text-slate-900 mb-2">90-Minute Script</h3>
         <p className="text-sm text-slate-600 mb-4">
-          14,000-16,000 words • 10 chapters
+          10,800-11,700 words • 5 phases (Descending Spiral)
         </p>
 
         {error && (

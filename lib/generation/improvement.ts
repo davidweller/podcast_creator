@@ -1,30 +1,14 @@
 import { callClaude } from "@/lib/claude/client";
 import { buildImprovementPrompt, buildApplyImprovementsPrompt } from "@/lib/prompts/improvement";
-import { validateScript30Min, validateScript90Min } from "@/lib/validation/script";
 import type { ImprovementAnalysis, ImprovementSuggestion } from "@/types/improvements";
 
 export async function analyzeScript(
   script: string,
-  type: "30min" | "90min"
+  _type?: string
 ): Promise<ImprovementAnalysis> {
-  // First, run validation to get quality check violations
-  const validation = type === "30min" 
-    ? validateScript30Min(script)
-    : validateScript90Min(script);
+  const improvementPrompt = buildImprovementPrompt(script);
 
-  // Build quality check suggestions from validation violations
-  const qualityCheckSuggestions: ImprovementSuggestion[] = validation.violations.map(
-    (violation) => ({
-      type: "quality_check" as const,
-      description: violation,
-      suggestion: `Address this quality check violation: ${violation}`,
-    })
-  );
-
-  // Call Claude for copyediting and style suggestions
-  const improvementPrompt = buildImprovementPrompt(script, type);
-  
-  let claudeSuggestions: ImprovementSuggestion[] = [];
+  let suggestions: ImprovementSuggestion[] = [];
   let summary = "";
 
   try {
@@ -33,21 +17,18 @@ export async function analyzeScript(
       temperature: 0.3,
     });
 
-    // Parse JSON response
     try {
       const parsed = JSON.parse(response) as ImprovementAnalysis;
-      claudeSuggestions = parsed.suggestions || [];
+      suggestions = parsed.suggestions || [];
       summary = parsed.summary || "";
-    } catch (parseError) {
-      // If JSON parsing fails, try to extract JSON from markdown code blocks
+    } catch {
       const jsonMatch = response.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[1]) as ImprovementAnalysis;
-        claudeSuggestions = parsed.suggestions || [];
+        suggestions = parsed.suggestions || [];
         summary = parsed.summary || "";
       } else {
-        // Fallback: create a single suggestion from the raw response
-        claudeSuggestions = [{
+        suggestions = [{
           type: "copyedit",
           description: "AI analysis completed",
           suggestion: response,
@@ -57,22 +38,19 @@ export async function analyzeScript(
     }
   } catch (error) {
     console.error("Error getting Claude suggestions:", error);
-    summary = "Quality checks completed. Claude analysis unavailable.";
+    summary = "Analysis unavailable.";
   }
 
-  // Combine quality check suggestions with Claude suggestions
-  const allSuggestions = [...qualityCheckSuggestions, ...claudeSuggestions];
-
   return {
-    suggestions: allSuggestions,
-    summary: summary || `Found ${allSuggestions.length} improvement suggestions.`,
+    suggestions,
+    summary: summary || `Found ${suggestions.length} improvement suggestions.`,
   };
 }
 
 export async function applyImprovements(
   script: string,
   suggestions: ImprovementSuggestion[],
-  type: "30min" | "90min"
+  _type?: string
 ): Promise<string> {
   // Format suggestions for the prompt
   const suggestionsText = suggestions
@@ -96,7 +74,7 @@ export async function applyImprovements(
 
   try {
     const improvedScript = await callClaude(prompt, {
-      maxTokens: type === "30min" ? 8192 : 16384,
+      maxTokens: 16384,
       temperature: 0.3,
     });
 

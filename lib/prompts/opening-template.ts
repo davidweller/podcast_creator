@@ -1,4 +1,4 @@
-// Canonical opening template for all Cozy Crime scripts (30-min and 90-min).
+// Canonical opening template for Cozy Crime scripts.
 // The script must begin with the story-hook shape, then this exact welcome block.
 
 /** Story-hook sentence pattern. Fill [LOCATION], [YEAR/PERIOD], [BRIEF SCENE OR IMAGE], [CENTRAL QUESTION OR MYSTERY]. */

@@ -1,12 +1,7 @@
 // Prompt for analyzing scripts and generating improvement suggestions
 
-export function buildImprovementPrompt(
-  script: string,
-  type: "30min" | "90min"
-): string {
-  const qualityChecks = type === "30min" 
-    ? get30MinQualityChecks()
-    : get90MinQualityChecks();
+export function buildImprovementPrompt(script: string): string {
+  const qualityChecks = get90MinQualityChecks();
 
   return `You are an editor for the Cozy Crime YouTube channel. Your task is to analyze a script and provide improvement suggestions.
 
@@ -53,36 +48,41 @@ ${script}
 Now analyze this script and provide improvement suggestions in the JSON format specified above.`;
 }
 
-function get30MinQualityChecks(): string {
-  return `SCRIPT REQUIREMENTS CHECKLIST (flag any deviation and suggest fixes):
-
-- The script opens with the story-hook template: first sentence must begin "Tonight, we travel to [location] in [year/period], where..." followed by one or two sentences stating the central question or mystery. Then the exact welcome block (verbatim): "Good evening, and welcome. You have found your way to a place of calm. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, we shall always have a tale waiting for you. The night is yours, and so is this story." Then exactly: "Good evening, and welcome."
-- Total word count is between 4,500 and 5,500.
-- Exactly 5 or 6 chapter headings: "Chapter 1.", "Chapter 2.", etc. (number and full stop only).
-- Exactly two invitation-to-return (CTA) phrases in the whole script; use only: return, join us, you are welcome, you will find us here.
-- The mystery seed (e.g. disappeared, vanished, found, discovered, mystery, mysterious, unexplained) appears within the first 250 words.
-- The script ends with the exact phrase: "Rest well. A peaceful night to you."
-- No em-dashes or en-dashes anywhere (use commas, semicolons, or restructure).
-- No banned words or bracketed markers: subscribe, like, bell icon, content, algorithm, [pause], [music], [SFX]. No stage directions in brackets.
-- Every chapter contains at least one reference to the crime or mystery.
-- No passage reduces a victim to their victimhood. Violence remains offstage throughout.
-- No modern slang, no contemporary framing.`;
-}
-
 function get90MinQualityChecks(): string {
-  return `SCRIPT REQUIREMENTS CHECKLIST (flag any deviation and suggest fixes):
+  return `SCRIPT REQUIREMENTS CHECKLIST (Descending Spiral Template) - flag any deviation and suggest fixes:
 
-- The script opens with the story-hook template: first sentence must begin "Tonight, we travel to [location] in [year/period], where..." followed by one or two sentences stating the central question or mystery. Then the exact welcome block (verbatim): "Good evening, and welcome. You have found your way to a place of calm. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, we shall always have a tale waiting for you. The night is yours, and so is this story." Then exactly: "Good evening, and welcome."
-- Total word count is between 14,000 and 16,000.
-- Exactly 10 chapter headings: "Chapter 1." through "Chapter 10." (number and full stop only).
-- Exactly two invitation-to-return (CTA) phrases in the whole script; use only: return, join us, you are welcome, you will find us here.
-- The mystery seed (e.g. disappeared, vanished, found, discovered, mystery, mysterious, unexplained) appears within the first 400 words.
-- The script ends with the exact phrase: "Rest well. A peaceful night to you."
+OPENING (Phase 1 - Draw In):
+- The script opens with a physical image in a specific place: first sentence must begin "Tonight, we travel to [location] in [year/period]..." followed by a specific scene or image, not a general description.
+- The central event or mystery is present within the first few sentences.
+- The exact welcome block must appear (verbatim): "Good evening, and welcome. You have found your way to a place of calm. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, we shall always have a tale waiting for you. The night is yours, and so is this story."
+- Then exactly: "Good evening, and welcome."
+- Then permission to rest, then "Chapter 1."
+
+STRUCTURE:
+- Total word count is between 10,800 and 11,700 (90 minutes at 120-130 wpm).
+- Between 4 and 7 chapter headings: "Chapter 1.", "Chapter 2.", etc. (number and full stop only, no topic titles).
+- Chapter breaks occur at emotional completions, not topic changes.
+
+STYLE RULES:
 - No em-dashes or en-dashes anywhere (use commas, semicolons, or restructure).
+- No gore or graphic description. Violence happens offstage.
+- No sensational language or modern true crime tropes.
+- No exclamation marks. The narrator never raises their voice.
+- No modern slang or contemporary framing.
 - No banned words or bracketed markers: subscribe, like, bell icon, content, algorithm, [pause], [music], [SFX]. No stage directions in brackets.
-- Every chapter contains at least one reference to the crime or mystery.
-- No passage reduces a victim to their victimhood. Violence remains offstage throughout.
-- No modern slang, no contemporary framing. Where sources conflict, the script acknowledges the disagreement.`;
+
+CONTENT:
+- Every phase contains at least one reference to the crime or mystery (the crime as thread).
+- People are introduced with specific human details, not just roles.
+- Context arrives through people, not as standalone information.
+- Theories are presented without hierarchy or insistence.
+- No passage reduces a victim to their victimhood.
+
+CLOSING (Phase 5 - Rest):
+- The closing honours the people by name.
+- There is a physical, still image at the close.
+- The farewell is three sentences or fewer.
+- The script must end with exactly: "Rest well. A peaceful night to you."`;
 }
 
 export function buildApplyImprovementsPrompt(

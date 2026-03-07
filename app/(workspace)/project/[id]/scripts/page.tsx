@@ -9,7 +9,7 @@ export default function ScriptsPage() {
   const projectId = params.id as string;
 
   useEffect(() => {
-    router.replace(`/project/${projectId}/scripts/30min`);
+    router.replace(`/project/${projectId}/scripts/90min`);
   }, [projectId, router]);
 
   return (

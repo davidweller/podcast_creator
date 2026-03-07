@@ -29,7 +29,6 @@ export function getAllProjects(): ProjectWithStatus[] {
   const db = getDatabase();
   const projects = db.prepare(`
     SELECT p.*, 
-           ps.script_30min_generated,
            ps.script_90min_generated,
            ps.description_generated,
            ps.shorts_generated,
@@ -48,7 +47,6 @@ export function getAllProjects(): ProjectWithStatus[] {
     updated_at: p.updated_at,
     status: {
       project_id: p.id,
-      script_30min_generated: Boolean(p.script_30min_generated),
       script_90min_generated: Boolean(p.script_90min_generated),
       description_generated: Boolean(p.description_generated),
       shorts_generated: Boolean(p.shorts_generated),
@@ -140,10 +138,6 @@ export function updateProjectData(projectId: number, data: Partial<ProjectData>)
     updates.push("research_text = ?");
     values.push(data.research_text);
   }
-  if (data.script_30min !== undefined) {
-    updates.push("script_30min = ?");
-    values.push(data.script_30min);
-  }
   if (data.script_90min !== undefined) {
     updates.push("script_90min = ?");
     values.push(data.script_90min);
@@ -200,10 +194,6 @@ export function updateProjectStatus(projectId: number, status: Partial<ProjectSt
   const updates: string[] = [];
   const values: (number | boolean)[] = [];
 
-  if (status.script_30min_generated !== undefined) {
-    updates.push("script_30min_generated = ?");
-    values.push(status.script_30min_generated ? 1 : 0);
-  }
   if (status.script_90min_generated !== undefined) {
     updates.push("script_90min_generated = ?");
     values.push(status.script_90min_generated ? 1 : 0);

@@ -33,7 +33,6 @@ export function getDatabase(): Database.Database {
     CREATE TABLE IF NOT EXISTS project_data (
       project_id INTEGER PRIMARY KEY,
       research_text TEXT,
-      script_30min TEXT,
       script_90min TEXT,
       description TEXT,
       shorts TEXT,
@@ -45,7 +44,6 @@ export function getDatabase(): Database.Database {
 
     CREATE TABLE IF NOT EXISTS project_status (
       project_id INTEGER PRIMARY KEY,
-      script_30min_generated INTEGER DEFAULT 0,
       script_90min_generated INTEGER DEFAULT 0,
       description_generated INTEGER DEFAULT 0,
       shorts_generated INTEGER DEFAULT 0,
