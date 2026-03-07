@@ -16,8 +16,27 @@ export function getProjectImages(projectId: number): ProjectImage[] {
     return getProjectImages(projectId);
   }
 
+  // Ensure all slots exist in the database (for projects created before slots were added)
   const bySlot = new Map(rows.map((r) => [r.slot, r]));
-  return IMAGE_SLOTS.map((slot) => bySlot.get(slot) ?? { project_id: projectId, slot, prompt: null, image_path: null, thumbnail_title: null });
+  const insert = db.prepare(`INSERT INTO project_images (project_id, slot) VALUES (?, ?)`);
+  const select = db.prepare(`SELECT project_id, slot, prompt, image_path, thumbnail_title FROM project_images WHERE project_id = ? AND slot = ?`);
+  
+  const result: ProjectImage[] = [];
+  for (const slot of IMAGE_SLOTS) {
+    let row = bySlot.get(slot);
+    if (!row) {
+      // Slot doesn't exist, create it
+      insert.run(projectId, slot);
+      row = select.get(projectId, slot) as ProjectImage | undefined;
+      if (!row) {
+        // Fallback to placeholder if select fails
+        row = { project_id: projectId, slot, prompt: null, image_path: null, thumbnail_title: null };
+      }
+    }
+    result.push(row);
+  }
+  
+  return result;
 }
 
 function initProjectImages(projectId: number): void {

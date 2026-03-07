@@ -73,6 +73,9 @@ export default function ResearchPage() {
       <p className="text-sm text-slate-600 mb-4">
         Paste your historical research fact clusters here. This will be used as the source material for all generated content.
       </p>
+      <p className="text-sm text-slate-500 mb-4">
+        For best script quality, include: at least 500 words; era or period (e.g. Victorian, century); named people and places.
+      </p>
       <textarea
         value={researchText}
         onChange={handleTextChange}

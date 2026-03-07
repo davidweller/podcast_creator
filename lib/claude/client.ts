@@ -1,10 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 /** Model for script generation (long-form, high quality). */
-export const SCRIPT_MODEL = "claude-opus-4-5-20251101";
+export const SCRIPT_MODEL = "claude-sonnet-4-6";
 
 /** Model for non-script activities (improvements, metadata, descriptions, etc.). */
-export const DEFAULT_MODEL = "claude-sonnet-4-5-20250929";
+export const DEFAULT_MODEL = "claude-sonnet-4-6";
 
 function getAnthropicClient() {
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
@@ -27,7 +27,7 @@ export async function callClaude(
     maxTokens?: number;
     temperature?: number;
     system?: string;
-    /** Use SCRIPT_MODEL for script generation; omit for DEFAULT_MODEL (Claude Sonnet 4.5). */
+    /** Use SCRIPT_MODEL for script generation; omit for DEFAULT_MODEL (Claude Sonnet 4.6). */
     model?: string;
   }
 ): Promise<string> {
@@ -84,7 +84,7 @@ export async function callClaudeStreaming(
     maxTokens?: number;
     temperature?: number;
     system?: string;
-    /** Use SCRIPT_MODEL for script generation; omit for DEFAULT_MODEL (Claude Sonnet 4.5). */
+    /** Use SCRIPT_MODEL for script generation; omit for DEFAULT_MODEL (Claude Sonnet 4.6). */
     model?: string;
   }
 ): Promise<void> {

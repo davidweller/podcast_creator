@@ -14,6 +14,8 @@ Additional requirements:
 - No characters staring directly at viewer
 - No violence depiction
 - Atmospheric and peaceful, matching the Cozy Crime tone
+- You may optionally include one figure in the scene when it fits the case (e.g. silhouette, from behind, or small in frame) to add human interest; the figure must not stare at the viewer and the scene must remain calm and loop-friendly.
+- The image is 16:9 widescreen and must fill the full frame—wide cinematic composition, no letterboxing, no empty margins or square crop with blank sides.
 
 The prompt should be detailed enough for AI image generation but focused on creating a calm, period-appropriate background suitable for a long-form narration video.
 

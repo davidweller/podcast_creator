@@ -1,5 +1,4 @@
 // Shorts Prompt
-// Exact prompt from script_prompts.md
 
 export const PROMPT_SHORTS = `You are writing a 30 to 60 second YouTube Short for the Cozy Crime channel. This Short is a trailer for a longer video.
 

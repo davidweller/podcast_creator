@@ -6,6 +6,7 @@ import { callClaude } from "@/lib/claude/client";
 import { PROMPT_IMAGE_SET } from "@/lib/prompts/image-set";
 
 interface ImageSetResponse {
+  characters?: { name: string; appearance: string }[];
   images: { slot: string; prompt: string }[];
   thumbnail: { slot: string; prompt: string; title: string };
 }
@@ -48,7 +49,7 @@ Research:
 ${projectData.research_text}`;
 
     const raw = await callClaude(prompt, {
-      maxTokens: 8192,
+      maxTokens: 16384, // Increased to ensure all 36 prompts fit
       temperature: 0.6,
     });
 
@@ -75,6 +76,18 @@ ${projectData.research_text}`;
         { error: "Could not parse image set from Claude response" },
         { status: 500 }
       );
+    }
+
+    // Log what we received
+    const sceneSlots = items.filter((i) => i.slot !== "thumbnail").map((i) => i.slot).sort((a, b) => {
+      const aNum = parseInt(a);
+      const bNum = parseInt(b);
+      return isNaN(aNum) || isNaN(bNum) ? a.localeCompare(b) : aNum - bNum;
+    });
+    console.log(`Generated prompts for ${items.length} slots. Scene slots: ${sceneSlots.join(", ")}`);
+    
+    if (sceneSlots.length < 36) {
+      console.warn(`Warning: Only ${sceneSlots.length} scene slots generated, expected 36. Missing slots may not have prompts.`);
     }
 
     setProjectImagesPrompts(projectId, items);

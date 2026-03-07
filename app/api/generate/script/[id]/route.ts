@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectData } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
-import { generateScript90MinChunked } from "@/lib/generation/generator-90min-chunked";
+import { generateScript90Min } from "@/lib/generation/generator-90min";
 
 export async function POST(
   request: NextRequest,
@@ -21,7 +21,7 @@ export async function POST(
     }
 
     // Generate 90-minute script
-    const result = await generateScript90MinChunked(projectData.research_text);
+    const result = await generateScript90Min(projectData.research_text);
     updateProjectData(projectId, { script_90min: result.script });
     updateProjectStatus(projectId, { script_90min_generated: true });
 

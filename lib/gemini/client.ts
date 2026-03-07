@@ -21,7 +21,7 @@ export async function generateImage(prompt: string): Promise<Buffer> {
     contents: prompt,
     config: {
       responseModalities: ["IMAGE"],
-      imageConfig: { aspectRatio: "16:9" },
+      imageConfig: { aspectRatio: "16:9", imageSize: "2K" },
     },
   });
 

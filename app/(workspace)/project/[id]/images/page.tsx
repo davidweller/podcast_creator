@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import type { ProjectImage } from "@/types/database";
-import { IMAGE_SLOTS } from "@/types/database";
+import { IMAGE_SLOTS, DOCUMENTARY_SLOTS, ILLUSTRATED_SLOTS } from "@/types/database";
 
 export default function ImagesPage() {
   const params = useParams();
@@ -14,6 +14,12 @@ export default function ImagesPage() {
   const [loadingSlot, setLoadingSlot] = useState<string | null>(null);
   const [loadingAll, setLoadingAll] = useState(false);
   const [generateAllProgress, setGenerateAllProgress] = useState<number | null>(null);
+  const [promptsElapsedTime, setPromptsElapsedTime] = useState(0);
+  const [imagesElapsedTime, setImagesElapsedTime] = useState(0);
+  const [loadingDocPrompts, setLoadingDocPrompts] = useState(false);
+  const [loadingDocImages, setLoadingDocImages] = useState(false);
+  const [docPromptsElapsedTime, setDocPromptsElapsedTime] = useState(0);
+  const [docImagesElapsedTime, setDocImagesElapsedTime] = useState(0);
 
   const loadImages = useCallback(async () => {
     try {
@@ -30,6 +36,76 @@ export default function ImagesPage() {
   useEffect(() => {
     loadImages();
   }, [loadImages]);
+
+  // Timer for prompts generation
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (loadingPrompts) {
+      setPromptsElapsedTime(0);
+      interval = setInterval(() => {
+        setPromptsElapsedTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setPromptsElapsedTime(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loadingPrompts]);
+
+  // Timer for images generation
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (loadingAll) {
+      setImagesElapsedTime(0);
+      interval = setInterval(() => {
+        setImagesElapsedTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setImagesElapsedTime(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loadingAll]);
+
+  // Timer for documentary prompts generation
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (loadingDocPrompts) {
+      setDocPromptsElapsedTime(0);
+      interval = setInterval(() => {
+        setDocPromptsElapsedTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setDocPromptsElapsedTime(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loadingDocPrompts]);
+
+  // Timer for documentary images generation
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (loadingDocImages) {
+      setDocImagesElapsedTime(0);
+      interval = setInterval(() => {
+        setDocImagesElapsedTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setDocImagesElapsedTime(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [loadingDocImages]);
+
+  function formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  }
 
   async function generateAllPrompts() {
     setLoadingPrompts(true);
@@ -63,6 +139,10 @@ export default function ImagesPage() {
   }
 
   async function generateOne(slot: string, prompt: string) {
+    if (!prompt?.trim()) {
+      setError(`No prompt for slot ${slot}. Please add a prompt first.`);
+      return;
+    }
     setLoadingSlot(slot);
     setError(null);
     try {
@@ -75,10 +155,14 @@ export default function ImagesPage() {
       if (res.ok) {
         await loadImages();
       } else {
-        setError(data.error || "Failed to generate image");
+        const errorMsg = data.error || `Failed to generate image for slot ${slot}`;
+        console.error(`Error generating image for slot ${slot}:`, errorMsg, data);
+        setError(errorMsg);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to generate image");
+      const errorMsg = err.message || `Failed to generate image for slot ${slot}`;
+      console.error(`Error generating image for slot ${slot}:`, err);
+      setError(errorMsg);
     } finally {
       setLoadingSlot(null);
     }
@@ -102,6 +186,42 @@ export default function ImagesPage() {
     } finally {
       setLoadingAll(false);
       setGenerateAllProgress(null);
+    }
+  }
+
+  async function generateDocumentaryPrompts() {
+    setLoadingDocPrompts(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/generate/image-prompts-documentary/${projectId}`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        await loadImages();
+      } else {
+        setError(data.error || "Failed to generate documentary prompts");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to generate documentary prompts");
+    } finally {
+      setLoadingDocPrompts(false);
+    }
+  }
+
+  async function generateDocumentaryImages() {
+    setLoadingDocImages(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/generate/images-documentary/${projectId}`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        await loadImages();
+      } else {
+        setError(data.error || "Failed to generate documentary images");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to generate documentary images");
+    } finally {
+      setLoadingDocImages(false);
     }
   }
 
@@ -142,15 +262,18 @@ export default function ImagesPage() {
   }
 
   const imagesWithFiles = images.filter((i) => i.image_path);
-  const sceneSlots = IMAGE_SLOTS.filter((s) => s !== "thumbnail");
+  const sceneSlots = ILLUSTRATED_SLOTS.filter((s) => s !== "thumbnail");
   const thumbnailRow = images.find((i) => i.slot === "thumbnail");
+  const documentaryImages = images.filter((i) => DOCUMENTARY_SLOTS.includes(i.slot as any));
+  const docImagesWithPrompts = documentaryImages.filter((i) => i.prompt?.trim());
+  const docImagesWithFiles = documentaryImages.filter((i) => i.image_path);
 
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold text-slate-900 mb-2">Images</h2>
         <p className="text-sm text-slate-600 mb-6">
-          20 illustrated scene images plus a YouTube thumbnail. Style: period-accurate, Rick and Morty–esque illustrated. Generate prompts with Claude, then generate images with Gemini.
+          36 illustrated scene images plus a YouTube thumbnail. Style: period-accurate, Rick and Morty–esque illustrated. Generate prompts with Claude, then generate images with Gemini.
         </p>
 
         {error && (
@@ -165,14 +288,14 @@ export default function ImagesPage() {
             disabled={loadingPrompts}
             className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
           >
-            {loadingPrompts ? "Generating…" : "Generate all prompts"}
+            {loadingPrompts ? `Generating… (${formatTime(promptsElapsedTime)})` : "Generate all prompts"}
           </button>
           <button
             onClick={generateAllImages}
             disabled={loadingAll || images.every((i) => !i.prompt?.trim())}
             className="px-6 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
           >
-            {loadingAll ? (generateAllProgress != null ? `Generating ${generateAllProgress}/21…` : "Generating…") : "Generate all images"}
+            {loadingAll ? (generateAllProgress != null ? `Generating ${generateAllProgress}/37… (${formatTime(imagesElapsedTime)})` : `Generating… (${formatTime(imagesElapsedTime)})`) : "Generate all images"}
           </button>
           <button
             onClick={downloadAllImages}
@@ -251,9 +374,9 @@ export default function ImagesPage() {
         </div>
       </div>
 
-      {/* 20 scene images */}
+      {/* 36 scene images */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-slate-900 mb-4">Scene images (1–20)</h3>
+        <h3 className="text-xl font-bold text-slate-900 mb-4">Scene images (1–36)</h3>
         <div className="space-y-6">
           {sceneSlots.map((slot) => {
             const row = images.find((i) => i.slot === slot);
@@ -264,7 +387,7 @@ export default function ImagesPage() {
                 key={slot}
                 className="border border-slate-200 rounded-lg p-4 flex flex-col md:flex-row gap-4"
               >
-                <div className="flex-shrink-0 w-32 h-24 flex items-center justify-center bg-slate-100 rounded overflow-hidden">
+                <div className="flex-shrink-0 w-full md:w-80 aspect-video flex items-center justify-center bg-slate-100 rounded overflow-hidden">
                   {hasImage ? (
                     <img
                       src={`/api/projects/${projectId}/images/${slot}`}
@@ -275,10 +398,10 @@ export default function ImagesPage() {
                     <span className="text-slate-400 text-xs">#{slot}</span>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Prompt</label>
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <label className="block text-xs font-medium text-slate-500 mb-1 flex-shrink-0">Prompt</label>
                   <textarea
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 text-sm min-h-[80px]"
+                    className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 text-sm flex-1 min-h-0 resize-y"
                     placeholder={`Prompt for image ${slot}…`}
                     value={prompt}
                     onChange={(e) => {
@@ -289,18 +412,101 @@ export default function ImagesPage() {
                     onBlur={(e) => savePrompt(slot, e.target.value || null)}
                   />
                 </div>
-                <div className="flex-shrink-0 flex items-end gap-2">
+                <div className="flex-shrink-0 flex flex-col items-end gap-2">
                   <button
                     onClick={() => generateOne(slot, prompt)}
                     disabled={loadingSlot === slot || loadingAll || !prompt.trim()}
-                    className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-sm whitespace-nowrap"
+                    className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-sm whitespace-nowrap w-full md:w-auto"
                   >
                     {loadingSlot === slot ? "…" : "Generate"}
                   </button>
                   {hasImage && (
                     <button
                       onClick={() => downloadImage(slot)}
-                      className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 text-sm whitespace-nowrap"
+                      className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 text-sm whitespace-nowrap w-full md:w-auto"
+                    >
+                      Download
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Documentary-style images */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-xl font-bold text-slate-900 mb-2">Documentary-style images</h3>
+        <p className="text-sm text-slate-600 mb-6">
+          10 Victorian photographic/archival-style images: portraits, mugshots, newspapers, street scenes, interiors, maps, courtrooms, weather, objects, and graves. These use a monochrome, period-authentic photographic aesthetic.
+        </p>
+
+        <div className="flex flex-wrap gap-4 mb-6">
+          <button
+            onClick={generateDocumentaryPrompts}
+            disabled={loadingDocPrompts}
+            className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
+          >
+            {loadingDocPrompts ? `Generating… (${formatTime(docPromptsElapsedTime)})` : "Generate documentary prompts"}
+          </button>
+          <button
+            onClick={generateDocumentaryImages}
+            disabled={loadingDocImages || docImagesWithPrompts.length === 0}
+            className="px-6 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+          >
+            {loadingDocImages ? `Generating… (${formatTime(docImagesElapsedTime)})` : `Generate documentary images (${docImagesWithPrompts.length}/10 prompts)`}
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {DOCUMENTARY_SLOTS.map((slot) => {
+            const row = images.find((i) => i.slot === slot);
+            const prompt = row?.prompt ?? "";
+            const hasImage = !!row?.image_path;
+            const slotLabel = slot.replace("doc-", "").replace(/-/g, " ");
+            return (
+              <div
+                key={slot}
+                className="border border-slate-200 rounded-lg p-4 flex flex-col md:flex-row gap-4"
+              >
+                <div className="flex-shrink-0 w-full md:w-80 aspect-video flex items-center justify-center bg-slate-100 rounded overflow-hidden">
+                  {hasImage ? (
+                    <img
+                      src={`/api/projects/${projectId}/images/${slot}`}
+                      alt={slotLabel}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-slate-400 text-xs capitalize">{slotLabel}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <label className="block text-xs font-medium text-slate-500 mb-1 flex-shrink-0 capitalize">{slotLabel}</label>
+                  <textarea
+                    className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 text-sm flex-1 min-h-0 resize-y"
+                    placeholder={`Prompt for ${slotLabel}…`}
+                    value={prompt}
+                    onChange={(e) => {
+                      setImages((prev) =>
+                        prev.map((i) => (i.slot === slot ? { ...i, prompt: e.target.value } : i))
+                      );
+                    }}
+                    onBlur={(e) => savePrompt(slot, e.target.value || null)}
+                  />
+                </div>
+                <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                  <button
+                    onClick={() => generateOne(slot, prompt)}
+                    disabled={loadingSlot === slot || loadingDocImages || !prompt.trim()}
+                    className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-sm whitespace-nowrap w-full md:w-auto"
+                  >
+                    {loadingSlot === slot ? "…" : "Generate"}
+                  </button>
+                  {hasImage && (
+                    <button
+                      onClick={() => downloadImage(slot)}
+                      className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 text-sm whitespace-nowrap w-full md:w-auto"
                     >
                       Download
                     </button>

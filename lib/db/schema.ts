@@ -62,8 +62,29 @@ export function getDatabase(): Database.Database {
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     );
 
+    CREATE TABLE IF NOT EXISTS real_images (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      source TEXT NOT NULL,
+      source_id TEXT NOT NULL,
+      title TEXT,
+      thumbnail_url TEXT NOT NULL,
+      full_url TEXT NOT NULL,
+      rights_info TEXT,
+      attribution TEXT,
+      local_path TEXT,
+      scene_slot TEXT,
+      flagged INTEGER DEFAULT 0,
+      downloaded INTEGER DEFAULT 0,
+      metadata_json TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+      UNIQUE(project_id, source, source_id)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_projects_updated_at ON projects(updated_at DESC);
     CREATE INDEX IF NOT EXISTS idx_project_images_project_id ON project_images(project_id);
+    CREATE INDEX IF NOT EXISTS idx_real_images_project_id ON real_images(project_id);
   `);
 
   return db;

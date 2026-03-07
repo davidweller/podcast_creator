@@ -82,7 +82,7 @@ If validation fails, the system automatically regenerates the script up to 3 tim
 
 ## Prompts
 
-All prompts are locked and stored in `lib/prompts/`. The 30-minute, 90-minute, and Shorts prompts are exact copies from `script_prompts.md`.
+All prompts are locked and stored in `lib/prompts/`. The 90-minute script uses a two-stage pipeline: narrative architecture planning followed by full script generation, both based on the Descending Spiral template in `cozy_crime_template.md`.
 
 ## Building for Production
 

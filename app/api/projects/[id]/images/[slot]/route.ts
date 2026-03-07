@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProject } from "@/lib/db/projects";
 import { readProjectImage } from "@/lib/images/storage";
+import { IMAGE_SLOTS, type ImageSlot } from "@/types/database";
 
-const VALID_SLOTS = new Set(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "thumbnail"]);
+const VALID_SLOTS = new Set<ImageSlot>(IMAGE_SLOTS);
 
 export async function GET(
   request: NextRequest,
@@ -11,14 +12,15 @@ export async function GET(
   try {
     const { id, slot } = await params;
     const projectId = parseInt(id);
-    if (!VALID_SLOTS.has(slot)) {
+    if (!VALID_SLOTS.has(slot as ImageSlot)) {
       return NextResponse.json({ error: "Invalid slot" }, { status: 400 });
     }
+    const slotKey = slot as ImageSlot;
     const project = getProject(projectId);
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
-    const buffer = readProjectImage(projectId, slot);
+    const buffer = readProjectImage(projectId, slotKey);
     if (!buffer) {
       return NextResponse.json({ error: "Image not found" }, { status: 404 });
     }
