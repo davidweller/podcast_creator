@@ -7,6 +7,7 @@ import { PROMPT_DOCUMENTARY_IMAGE_SET, DOCUMENTARY_IMAGE_TYPES, DocumentarySlotI
 
 interface DocumentaryImageSetResponse {
   decade?: string;
+  thumbnail?: { slot: string; prompt: string; title: string };
   images: { slot: string; prompt: string }[];
 }
 
@@ -57,7 +58,16 @@ ${projectData.research_text}`;
     });
 
     const parsed = parseDocumentaryResponse(raw);
-    const items: { slot: string; prompt: string }[] = [];
+    const items: { slot: string; prompt: string; thumbnail_title?: string | null }[] = [];
+
+    // Handle thumbnail separately (it has a title)
+    if (parsed.thumbnail?.slot === "doc-thumbnail" && typeof parsed.thumbnail.prompt === "string") {
+      items.push({
+        slot: "doc-thumbnail",
+        prompt: parsed.thumbnail.prompt,
+        thumbnail_title: parsed.thumbnail.title ?? null,
+      });
+    }
 
     if (Array.isArray(parsed.images)) {
       for (const item of parsed.images) {
@@ -77,8 +87,8 @@ ${projectData.research_text}`;
     const receivedSlots = items.map((i) => i.slot).sort();
     console.log(`Generated ${items.length} documentary prompts. Slots: ${receivedSlots.join(", ")}`);
 
-    if (items.length < 10) {
-      console.warn(`Warning: Only ${items.length} documentary prompts generated, expected 10.`);
+    if (items.length < 11) {
+      console.warn(`Warning: Only ${items.length} documentary prompts generated, expected 11.`);
     }
 
     setProjectImagesPrompts(projectId, items);

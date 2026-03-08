@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProjectData } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
 import { generateScript90Min } from "@/lib/generation/generator-90min";
+import { CLAUDE_MODELS, type ClaudeModelId, type ScriptModelConfig } from "@/lib/claude/client";
 
 export async function POST(
   request: NextRequest,
@@ -10,6 +11,17 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
+    const body = await request.json();
+
+    // Parse model configuration from request body
+    let modelConfig: ScriptModelConfig | undefined;
+    if (body.modelId && body.modelId in CLAUDE_MODELS) {
+      modelConfig = {
+        modelId: body.modelId as ClaudeModelId,
+        useThinking: body.useThinking ?? false,
+        thinkingBudget: body.thinkingBudget ?? 10000,
+      };
+    }
 
     // Get research text
     const projectData = getProjectData(projectId);
@@ -21,7 +33,7 @@ export async function POST(
     }
 
     // Generate 90-minute script
-    const result = await generateScript90Min(projectData.research_text);
+    const result = await generateScript90Min(projectData.research_text, { modelConfig });
     updateProjectData(projectId, { script_90min: result.script });
     updateProjectStatus(projectId, { script_90min_generated: true });
 

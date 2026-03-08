@@ -18,6 +18,7 @@ export default function ImagesPage() {
   const [imagesElapsedTime, setImagesElapsedTime] = useState(0);
   const [loadingDocPrompts, setLoadingDocPrompts] = useState(false);
   const [loadingDocImages, setLoadingDocImages] = useState(false);
+  const [loadingDocThumbnailPrompt, setLoadingDocThumbnailPrompt] = useState(false);
   const [docPromptsElapsedTime, setDocPromptsElapsedTime] = useState(0);
   const [docImagesElapsedTime, setDocImagesElapsedTime] = useState(0);
 
@@ -225,6 +226,24 @@ export default function ImagesPage() {
     }
   }
 
+  async function generateDocThumbnailPrompt() {
+    setLoadingDocThumbnailPrompt(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/generate/image-prompt-doc-thumbnail/${projectId}`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        await loadImages();
+      } else {
+        setError(data.error || "Failed to generate documentary thumbnail prompt");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to generate documentary thumbnail prompt");
+    } finally {
+      setLoadingDocThumbnailPrompt(false);
+    }
+  }
+
   function downloadImage(slot: string) {
     const url = `/api/projects/${projectId}/images/${slot}`;
     const filename = slot === "thumbnail" ? "thumbnail.png" : `image-${slot}.png`;
@@ -258,6 +277,31 @@ export default function ImagesPage() {
       URL.revokeObjectURL(url);
     } catch (err: any) {
       setError(err.message || "Failed to download images");
+    }
+  }
+
+  async function downloadDocumentaryImages() {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/images/download-documentary`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Failed to download documentary images");
+        return;
+      }
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition");
+      const match = disposition?.match(/filename="?([^";\n]+)"?/);
+      const filename = match?.[1] ?? "documentary-images.zip";
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.message || "Failed to download documentary images");
     }
   }
 
@@ -439,7 +483,7 @@ export default function ImagesPage() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-xl font-bold text-slate-900 mb-2">Documentary-style images</h3>
         <p className="text-sm text-slate-600 mb-6">
-          10 Victorian photographic/archival-style images: portraits, mugshots, newspapers, street scenes, interiors, maps, courtrooms, weather, objects, and graves. These use a monochrome, period-authentic photographic aesthetic.
+          11 Victorian photographic/archival-style images: 1 YouTube thumbnail plus portraits, mugshots, newspapers, street scenes, interiors, maps, courtrooms, weather, objects, and graves. These use a monochrome, period-authentic photographic aesthetic.
         </p>
 
         <div className="flex flex-wrap gap-4 mb-6">
@@ -455,12 +499,100 @@ export default function ImagesPage() {
             disabled={loadingDocImages || docImagesWithPrompts.length === 0}
             className="px-6 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
           >
-            {loadingDocImages ? `Generating… (${formatTime(docImagesElapsedTime)})` : `Generate documentary images (${docImagesWithPrompts.length}/10 prompts)`}
+            {loadingDocImages ? `Generating… (${formatTime(docImagesElapsedTime)})` : `Generate documentary images (${docImagesWithPrompts.length}/11 prompts)`}
+          </button>
+          <button
+            onClick={downloadDocumentaryImages}
+            disabled={docImagesWithFiles.length === 0}
+            className="px-6 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+          >
+            Download all ({docImagesWithFiles.length})
           </button>
         </div>
 
+        {/* Documentary YouTube thumbnail */}
+        <div className="mb-8">
+          <h4 className="text-lg font-semibold text-slate-900 mb-4">Documentary YouTube thumbnail</h4>
+          {(() => {
+            const docThumbnailRow = images.find((i) => i.slot === "doc-thumbnail");
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">Title (for overlay)</label>
+                  <input
+                    type="text"
+                    className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900"
+                    placeholder="Thumbnail title"
+                    value={docThumbnailRow?.thumbnail_title ?? ""}
+                    onChange={(e) => {
+                      const next = images.map((i) =>
+                        i.slot === "doc-thumbnail" ? { ...i, thumbnail_title: e.target.value } : i
+                      );
+                      setImages(next);
+                    }}
+                    onBlur={(e) => {
+                      if (docThumbnailRow) savePrompt("doc-thumbnail", docThumbnailRow.prompt, e.target.value || null);
+                    }}
+                  />
+                  <label className="block text-sm font-medium text-slate-700 mt-2">Prompt</label>
+                  <textarea
+                    className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 min-h-[100px] text-sm"
+                    placeholder="Documentary thumbnail image prompt…"
+                    value={docThumbnailRow?.prompt ?? ""}
+                    onChange={(e) => {
+                      setImages((prev) =>
+                        prev.map((i) => (i.slot === "doc-thumbnail" ? { ...i, prompt: e.target.value } : i))
+                      );
+                    }}
+                    onBlur={(e) => savePrompt("doc-thumbnail", e.target.value || null, docThumbnailRow?.thumbnail_title ?? null)}
+                  />
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={generateDocThumbnailPrompt}
+                      disabled={loadingDocThumbnailPrompt}
+                      className="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-sm"
+                    >
+                      {loadingDocThumbnailPrompt ? "Generating…" : "Generate prompt"}
+                    </button>
+                    <button
+                      onClick={() => docThumbnailRow?.prompt && generateOne("doc-thumbnail", docThumbnailRow.prompt)}
+                      disabled={loadingSlot === "doc-thumbnail" || !docThumbnailRow?.prompt?.trim()}
+                      className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-sm"
+                    >
+                      {loadingSlot === "doc-thumbnail" ? "Generating…" : "Generate image"}
+                    </button>
+                    {docThumbnailRow?.image_path && (
+                      <button
+                        onClick={() => downloadImage("doc-thumbnail")}
+                        className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 text-sm"
+                      >
+                        Download
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  {docThumbnailRow?.image_path ? (
+                    <img
+                      src={`/api/projects/${projectId}/images/doc-thumbnail`}
+                      alt="Documentary Thumbnail"
+                      className="max-w-full rounded border border-slate-200"
+                    />
+                  ) : (
+                    <div className="aspect-video bg-slate-100 rounded border border-slate-200 flex items-center justify-center text-slate-500 text-sm">
+                      No documentary thumbnail yet
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Documentary scene images */}
+        <h4 className="text-lg font-semibold text-slate-900 mb-4">Documentary scene images (1–10)</h4>
         <div className="space-y-6">
-          {DOCUMENTARY_SLOTS.map((slot) => {
+          {DOCUMENTARY_SLOTS.filter((slot) => slot !== "doc-thumbnail").map((slot) => {
             const row = images.find((i) => i.slot === slot);
             const prompt = row?.prompt ?? "";
             const hasImage = !!row?.image_path;

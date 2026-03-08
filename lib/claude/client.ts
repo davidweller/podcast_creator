@@ -6,6 +6,42 @@ export const SCRIPT_MODEL = "claude-sonnet-4-6";
 /** Model for non-script activities (improvements, metadata, descriptions, etc.). */
 export const DEFAULT_MODEL = "claude-sonnet-4-6";
 
+/** Available Claude models for script generation */
+export const CLAUDE_MODELS = {
+  "claude-sonnet-4-5-20250514": {
+    id: "claude-sonnet-4-5-20250514",
+    name: "Claude Sonnet 4.5",
+    description: "Fast and capable",
+    supportsThinking: true,
+  },
+  "claude-sonnet-4-6": {
+    id: "claude-sonnet-4-6",
+    name: "Claude Sonnet 4.6",
+    description: "Latest Sonnet model",
+    supportsThinking: true,
+  },
+  "claude-opus-4-5-20250514": {
+    id: "claude-opus-4-5-20250514",
+    name: "Claude Opus 4.5",
+    description: "Most capable, best for complex tasks",
+    supportsThinking: true,
+  },
+  "claude-opus-4-6": {
+    id: "claude-opus-4-6",
+    name: "Claude Opus 4.6",
+    description: "Latest Opus model",
+    supportsThinking: true,
+  },
+} as const;
+
+export type ClaudeModelId = keyof typeof CLAUDE_MODELS;
+
+export interface ScriptModelConfig {
+  modelId: ClaudeModelId;
+  useThinking: boolean;
+  thinkingBudget?: number;
+}
+
 function getAnthropicClient() {
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey) {
@@ -77,6 +113,12 @@ export async function callClaude(
   }
 }
 
+export interface StreamingResult {
+  stopReason: string | null;
+  inputTokens: number;
+  outputTokens: number;
+}
+
 export async function callClaudeStreaming(
   prompt: string,
   onChunk: (chunk: string) => void,
@@ -86,27 +128,77 @@ export async function callClaudeStreaming(
     system?: string;
     /** Use SCRIPT_MODEL for script generation; omit for DEFAULT_MODEL (Claude Sonnet 4.6). */
     model?: string;
+    /** Enable extended thinking mode */
+    useThinking?: boolean;
+    /** Budget tokens for thinking (default 10000) */
+    thinkingBudget?: number;
   }
-): Promise<void> {
+): Promise<StreamingResult> {
   try {
     const anthropic = getAnthropicClient();
-    const stream = await anthropic.messages.stream({
-      model: options?.model ?? DEFAULT_MODEL,
-      max_tokens: options?.maxTokens || 16384,
-      temperature: options?.temperature || 0.7,
-      system: options?.system || "",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
+    
+    // Build request params
+    const useThinking = options?.useThinking ?? false;
+    const thinkingBudget = options?.thinkingBudget ?? 10000;
+    
+    // Extended thinking requires specific parameters
+    if (useThinking) {
+      const stream = await anthropic.messages.stream({
+        model: options?.model ?? DEFAULT_MODEL,
+        max_tokens: options?.maxTokens || 16384,
+        thinking: {
+          type: "enabled",
+          budget_tokens: thinkingBudget,
         },
-      ],
-    });
+        // Temperature must be 1 for extended thinking
+        temperature: 1,
+        system: options?.system || "",
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      });
 
-    for await (const event of stream) {
-      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-        onChunk(event.delta.text);
+      for await (const event of stream) {
+        if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+          onChunk(event.delta.text);
+        }
       }
+
+      const finalMessage = await stream.finalMessage();
+      return {
+        stopReason: finalMessage.stop_reason,
+        inputTokens: finalMessage.usage.input_tokens,
+        outputTokens: finalMessage.usage.output_tokens,
+      };
+    } else {
+      const stream = await anthropic.messages.stream({
+        model: options?.model ?? DEFAULT_MODEL,
+        max_tokens: options?.maxTokens || 16384,
+        temperature: options?.temperature || 0.7,
+        system: options?.system || "",
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      });
+
+      for await (const event of stream) {
+        if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+          onChunk(event.delta.text);
+        }
+      }
+
+      const finalMessage = await stream.finalMessage();
+      return {
+        stopReason: finalMessage.stop_reason,
+        inputTokens: finalMessage.usage.input_tokens,
+        outputTokens: finalMessage.usage.output_tokens,
+      };
     }
   } catch (error: any) {
     console.error("Claude API streaming error:", error);

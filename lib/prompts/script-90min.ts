@@ -40,13 +40,11 @@ The tone is warm and unhurried. A little sad, sometimes. Never tense, never urge
 The governing test for every sentence: could someone follow this with their eyes closed and their mind going soft? If not, rewrite it.
 
 This means:
-
-- Short sentences when introducing something new. One idea at a time. Let it land.
+- Conversational tone, as if talking to a friend.
 - Plain words over literary ones. "He was tired" rather than "weariness had settled upon him."
 - Use contractions where natural. Write "don't" not "do not," "wasn't" not "was not," "couldn't" not "could not." The narrator is speaking, not writing formally.
 - Avoid passive voice. Write "Her friends called her Phyllis" not "She was known to her friends as Phyllis." Write "The police found the door locked" not "The door was found to be locked." Active voice is more conversational and easier to follow.
 - No subordinate clauses that ask the listener to hold two things in their head at once. If a sentence requires effort, split it or cut it.
-- The narrator thinks aloud. They can acknowledge what they don't know. They can say "I'm not sure" and "we'll never know" and mean it.
 
 ---
 
@@ -67,6 +65,7 @@ Language:
 - No numbered lists, no enumerated points. Legal cases, trial arguments, and theories must be told as story, not as bulleted structure.
 - No markers in the text (e.g. [pause], [music], [SFX]). The script is clean prose only.
 - Never say "subscribe," "like," "bell icon," "content," or "algorithm." Use "return," "join us," "you are welcome," "you will find us here."
+- All numbers must be spelled out as words. Write "three" not "3", "twenty-five" not "25", "eighteen ninety-seven" not "1897". This includes chapter headings: write "Chapter One." not "Chapter 1."
 
 The crime as thread:
 In every segment, the crime or central event must be present as a living thread. The listener should never go more than a few minutes without understanding how what they are hearing connects to the story they came to hear. Context enriches. It does not replace.
@@ -85,7 +84,7 @@ You are writing ONE continuous script with exactly 5 emotional phases and the ch
 
 - The script has 4 to 7 chapter breaks, placed ONLY where the narrative plan specifies them.
 - Chapter breaks mark emotional shifts, not topic changes.
-- Name chapters only by number: "Chapter 1.", "Chapter 2.", etc. Never by topic.
+- Name chapters only by number, spelled out: "Chapter One.", "Chapter Two.", etc. Never by topic.
 - Do NOT add chapter breaks beyond those in the narrative plan.
 - Do NOT reorganise the narrative plan. Follow the phase assignments and chapter placements it specifies.
 
@@ -117,29 +116,29 @@ What this phase achieves:
 
 How to open:
 
-The opening must be short and direct: 1-2 sentences that establish the location, the year, and what the crime is. Then the welcome arrives immediately. Do not elaborate, do not set the scene at length, do not build atmosphere before the welcome. Get the listener oriented and welcomed quickly.
+The opening must follow this exact template:
+
+"Tonight we are in [location], in [date]. [Single intro sentence, in the present tense describing the central event or mystery as it unfolds].
+
+Good evening, and welcome. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, please do.
+
+Close your eyes whenever you wish. Let your breathing slow. Let's begin."
+
+The intro sentence must be in the present tense, as if the event is happening now. It should be a single sentence that orients the listener to the central mystery or event.
 
 Example opening:
 
-"Tonight we are in London, in the year 1907. A woman has been found dead in a boarding house in Camden Town, and nobody can say for certain who killed her.
+"Tonight we are in New York City, in nineteen ten. A young woman walks out of her family's home on a cold Monday morning, turns south along Fifth Avenue, and is never seen again.
 
-Good evening, and welcome..."
+Good evening, and welcome. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, please do.
 
-After the welcome and "Let's begin," the narrator can then develop the atmosphere and scene in Chapter 1.
+Close your eyes whenever you wish. Let your breathing slow. Let's begin."
 
-Date format: Always use American style dates. Write "September 11, 1907" not "11th of September" or "the eleventh of September."
+After "Let's begin," write "Chapter One." and then develop the atmosphere and scene.
 
-Use this welcome paragraph exactly:
-
-"Good evening, and welcome. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, we shall always have a tale waiting for you."
-
-Then: "Close your eyes whenever you wish. Let your breathing slow. Let's begin."
-
-Then write: Chapter 1.
+Date format: All numbers must be spelled out, including dates and years. Write "September eleventh, nineteen oh seven" not "September 11, 1907". Write "the twenty-fifth of December" not "the 25th of December" or "December 25th". Never use numerals or numeric ordinals with suffixes.
 
 Never open with: background on the period, explanation of why the case is significant, a list of what the episode will cover, general statements about crime or history, or extended scene-setting before the welcome.
-
-Open with: 1-2 sentences establishing location, year, and the crime. Then the welcome. Then Chapter 1. Atmosphere and detail come after.
 
 ---
 
@@ -219,7 +218,7 @@ Do not number the arguments. Fold the evidence into the story as it would be fel
 
 ---
 
-PHASE 4: SIT WITH IT (60-80 minutes, 2,400-3,000 words)
+PHASE 4 (60-80 minutes, 2,400-3,000 words)
 
 This is where the story acknowledges its own incompleteness. The theories, the aftermath, the investigation, the unanswered questions: these arrive here, after the listener has lived inside the events. They arrive not as analysis but as the narrator honestly reckoning with what remains.
 
@@ -369,9 +368,7 @@ Closing (Phase 5):
 - Does the episode end in stillness, not in summary?
 
 Throughout:
-- No em-dashes anywhere in the script
 - No numbered or bulleted lists anywhere in the narration
-- No graphic description, sensational language, or modern framing
 - The narrator uses "I" and speaks directly to the listener throughout
 - The central event is present as a thread in every phase
 - Every sentence passes the test: could someone follow this with their eyes closed and their mind going soft?
@@ -383,6 +380,14 @@ A FINAL NOTE
 The template is a container, not a constraint. A story that needs more time in one phase and less in another should take it. A case that has no theories should not manufacture them. A narrative that arrives at its closing image earlier than expected should not be padded to reach a word count.
 
 What the template asks, at every level, is this: is the listener being guided gently through a story told with care, by a narrator who is present with them in the room? If the answer is yes, the template is working. If it is not, the template is the least of the problems.
+
+---
+
+LENGTH REQUIREMENT
+
+The target is 10,800 to 11,700 words. Write the complete script through all five phases.
+
+If the research material genuinely does not support a full-length episode, and continuing would create padding or repetition that harms the listener experience, then a shorter script is acceptable. But do not stop early simply because the story feels "complete enough." Most cases have more depth than a first pass suggests. Explore the people, the context, the aftermath, the unanswered questions. Only end shorter if continuing would make the episode worse, not merely longer.
 
 ---
 

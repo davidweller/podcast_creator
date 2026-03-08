@@ -3,9 +3,18 @@ import {
   callClaudeStreaming,
   SCRIPT_MODEL,
   DEFAULT_MODEL,
+  type ScriptModelConfig,
 } from "@/lib/claude/client";
 import { buildNarrativeArchitecturePrompt } from "@/lib/prompts/narrative-architecture";
 import { buildFullScriptPrompt } from "@/lib/prompts/script-90min";
+
+export interface GenerateScript90MinOptions {
+  modelConfig?: ScriptModelConfig;
+}
+
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
 
 /**
  * Generate a 90-minute script using a two-stage pipeline:
@@ -19,12 +28,26 @@ import { buildFullScriptPrompt } from "@/lib/prompts/script-90min";
  *   the narrative plan. Uses streaming because the output is large enough
  *   to exceed the Anthropic SDK's 10-minute non-streaming timeout.
  */
-export async function generateScript90Min(researchText: string): Promise<{
+export async function generateScript90Min(
+  researchText: string,
+  options?: GenerateScript90MinOptions
+): Promise<{
   script: string;
   narrativePlan: string;
   attempts: number;
 }> {
   let attempts = 0;
+  
+  const modelId = options?.modelConfig?.modelId ?? SCRIPT_MODEL;
+  const useThinking = options?.modelConfig?.useThinking ?? false;
+  const thinkingBudget = options?.modelConfig?.thinkingBudget ?? 10000;
+
+  console.log("[Script Gen] Starting generation with config:", {
+    modelId,
+    useThinking,
+    thinkingBudget,
+    researchWordCount: countWords(researchText),
+  });
 
   // Stage 1: build the narrative architecture
   const architecturePrompt = buildNarrativeArchitecturePrompt(researchText);
@@ -35,16 +58,24 @@ export async function generateScript90Min(researchText: string): Promise<{
   });
   attempts += 1;
 
+  console.log("[Script Gen] Stage 1 complete. Narrative plan word count:", countWords(narrativePlan));
+
   // Stage 2: generate the full script in one streamed pass
   const scriptPrompt = buildFullScriptPrompt(researchText, narrativePlan.trim());
+  const requestedMaxTokens = useThinking ? 32768 + thinkingBudget : 32768;
+  
+  console.log("[Script Gen] Stage 2 starting. Requested max_tokens:", requestedMaxTokens);
+  
   const chunks: string[] = [];
-  await callClaudeStreaming(
+  const streamResult = await callClaudeStreaming(
     scriptPrompt,
     (chunk) => chunks.push(chunk),
     {
-      maxTokens: 24576,
-      temperature: 0.7,
-      model: SCRIPT_MODEL,
+      maxTokens: requestedMaxTokens,
+      temperature: useThinking ? 1 : 0.7,
+      model: modelId,
+      useThinking,
+      thinkingBudget,
     },
   );
   attempts += 1;
@@ -54,6 +85,24 @@ export async function generateScript90Min(researchText: string): Promise<{
   // Strip markdown code fences if the model wrapped the output
   if (script.startsWith("```")) {
     script = script.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/i, "").trim();
+  }
+
+  const scriptWordCount = countWords(script);
+  
+  console.log("[Script Gen] Stage 2 complete. Diagnostics:", {
+    stopReason: streamResult.stopReason,
+    inputTokens: streamResult.inputTokens,
+    outputTokens: streamResult.outputTokens,
+    requestedMaxTokens,
+    scriptWordCount,
+    targetWordCount: "10,800-11,700",
+    shortfall: scriptWordCount < 10800 ? `${10800 - scriptWordCount} words short of minimum` : "None",
+  });
+
+  if (streamResult.stopReason === "max_tokens") {
+    console.warn("[Script Gen] WARNING: Output was truncated due to max_tokens limit!");
+  } else if (scriptWordCount < 10800) {
+    console.warn(`[Script Gen] WARNING: Model stopped early (${streamResult.stopReason}) with only ${scriptWordCount} words.`);
   }
 
   return { script, narrativePlan: narrativePlan.trim(), attempts };

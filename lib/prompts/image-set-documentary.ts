@@ -4,6 +4,11 @@
 
 export const DOCUMENTARY_IMAGE_TYPES = [
   {
+    slot: "doc-thumbnail",
+    name: "YouTube Thumbnail",
+    template: `Victorian documentary photograph composition, [MAIN_SUBJECT], [DRAMATIC_ELEMENT], high contrast, single clear focal point, negative space on [LEFT/RIGHT] for title text overlay, mysterious or intriguing atmosphere, monochrome with slight sepia toning, [DECADE]. No illustration, no painting, photographic only.`,
+  },
+  {
     slot: "doc-portrait",
     name: "Documentary Portrait",
     template: `Formal Victorian studio portrait photograph, wet plate collodion process, [SUBJECT_GENDER], [SUBJECT_AGE], [SUBJECT_CLOTHING], plain grey backdrop, soft diffused window light, slight overexposure on skin, visible silver grain, monochrome, [DECADE]. No illustration, no painting, photographic only.`,
@@ -57,13 +62,26 @@ export const DOCUMENTARY_IMAGE_TYPES = [
 
 export type DocumentarySlotId = typeof DOCUMENTARY_IMAGE_TYPES[number]["slot"];
 
-export const PROMPT_DOCUMENTARY_IMAGE_SET = `You are generating image prompts for a Cozy Crime YouTube channel. The channel presents historical crime as calm, literary storytelling. You will generate 10 documentary-style image prompts that look like authentic Victorian photographs and archival materials.
+export const PROMPT_DOCUMENTARY_IMAGE_SET = `You are generating image prompts for a Cozy Crime YouTube channel. The channel presents historical crime as calm, literary storytelling. You will generate 11 documentary-style image prompts that look like authentic Victorian photographs and archival materials, including 1 YouTube thumbnail.
 
 CRITICAL STYLE REQUIREMENT: These images must NOT be illustrated. They must look like authentic Victorian-era photographs, documents, and archival materials. Every prompt must end with "No illustration, no painting, photographic only" (or similar phrasing for documents).
 
 You will be given research about a historical crime case. Generate prompts that fill in the bracketed placeholders based on the case details.
 
-THE 10 DOCUMENTARY IMAGE TYPES:
+THE 11 DOCUMENTARY IMAGE TYPES:
+
+0. YOUTUBE THUMBNAIL (slot: doc-thumbnail)
+Template: "Victorian documentary photograph composition, [main subject: e.g. shadowy figure in doorway / woman's face partially lit / evidence item in dramatic spotlight], [dramatic element: e.g. stark contrast / mysterious shadows / fog obscuring details], high contrast, single clear focal point, negative space on [left/right] for title text overlay, mysterious or intriguing atmosphere, monochrome with slight sepia toning, [decade]. No illustration, no painting, photographic only."
+
+YOUTUBE THUMBNAIL BEST PRACTICES - The thumbnail must:
+- Have ONE clear focal point (a face, object, or scene) that draws the eye
+- Use high contrast lighting for drama and visibility at small sizes
+- Leave negative space on one side (specify left or right) for title text overlay
+- Evoke curiosity or intrigue without being graphic
+- Work at small sizes (will be viewed as small as 120x90 pixels)
+- Feature the most compelling visual element from the case
+
+Also provide a SHORT TITLE (2-5 words) for the thumbnail overlay - dramatic, curiosity-inducing, works at small font sizes.
 
 1. DOCUMENTARY PORTRAIT (slot: doc-portrait)
 Template: "Formal Victorian studio portrait photograph, wet plate collodion process, [man/woman], [age: e.g. middle-aged / elderly / young], [brief description: e.g. dark wool frock coat / high collar dress], plain grey backdrop, soft diffused window light, slight overexposure on skin, visible silver grain, monochrome, [decade: e.g. 1880s]. No illustration, no painting, photographic only."
@@ -125,6 +143,7 @@ IMPORTANT GUIDELINES:
 OUTPUT FORMAT: Respond with a single JSON object, no other text:
 {
   "decade": "1880s",
+  "thumbnail": { "slot": "doc-thumbnail", "prompt": "Full thumbnail image prompt...", "title": "Short Title" },
   "images": [
     { "slot": "doc-portrait", "prompt": "Full image prompt..." },
     { "slot": "doc-mugshot", "prompt": "..." },

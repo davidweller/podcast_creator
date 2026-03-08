@@ -9,6 +9,8 @@ export default function ScriptShortsPage() {
   const [shorts, setShorts] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     loadShorts();
@@ -67,6 +69,32 @@ export default function ScriptShortsPage() {
     URL.revokeObjectURL(url);
   }
 
+  function handleShortsChange(newValue: string) {
+    setShorts(newValue);
+    setHasUnsavedChanges(true);
+  }
+
+  async function saveShorts() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/data`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shorts: shorts }),
+      });
+      if (res.ok) {
+        setHasUnsavedChanges(false);
+      } else {
+        setError("Failed to save shorts script");
+      }
+    } catch (err) {
+      console.error("Failed to save shorts:", err);
+      setError("Failed to save shorts script");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const wordCount = shorts.split(/\s+/).filter(Boolean).length;
 
   return (
@@ -109,15 +137,27 @@ export default function ScriptShortsPage() {
             <h3 className="text-xl font-bold text-slate-900">
               Generated Shorts Script
             </h3>
-            <span className="text-sm text-slate-600">
-              {wordCount} words {wordCount >= 50 && wordCount <= 100 ? "✓" : "(target: 50-100)"}
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-600">
+                {wordCount} words {wordCount >= 50 && wordCount <= 100 ? "✓" : "(target: 50-100)"}
+              </span>
+              {hasUnsavedChanges && (
+                <span className="text-sm text-amber-600">Unsaved changes</span>
+              )}
+              <button
+                onClick={saveShorts}
+                disabled={saving || !hasUnsavedChanges}
+                className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+            </div>
           </div>
-          <div className="max-h-[400px] overflow-y-auto border border-slate-200 rounded p-4 bg-slate-50">
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900">
-              {shorts}
-            </pre>
-          </div>
+          <textarea
+            value={shorts}
+            onChange={(e) => handleShortsChange(e.target.value)}
+            className="w-full h-[400px] border border-slate-200 rounded p-4 bg-slate-50 font-sans text-sm text-slate-900 resize-y focus:outline-none focus:ring-2 focus:ring-slate-400"
+          />
         </div>
       )}
     </div>

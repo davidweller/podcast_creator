@@ -37,7 +37,7 @@ export type ImageSlot =
   | "31" | "32" | "33" | "34" | "35" | "36" | "thumbnail"
   | "doc-portrait" | "doc-mugshot" | "doc-newspaper" | "doc-street" 
   | "doc-interior" | "doc-map" | "doc-courtroom" | "doc-weather" 
-  | "doc-object" | "doc-grave";
+  | "doc-object" | "doc-grave" | "doc-thumbnail";
 
 export interface ProjectImage {
   project_id: number;
@@ -54,13 +54,13 @@ export const IMAGE_SLOTS: ImageSlot[] = [
   "31", "32", "33", "34", "35", "36", "thumbnail",
   "doc-portrait", "doc-mugshot", "doc-newspaper", "doc-street",
   "doc-interior", "doc-map", "doc-courtroom", "doc-weather",
-  "doc-object", "doc-grave"
+  "doc-object", "doc-grave", "doc-thumbnail"
 ];
 
 export const DOCUMENTARY_SLOTS: ImageSlot[] = [
   "doc-portrait", "doc-mugshot", "doc-newspaper", "doc-street",
   "doc-interior", "doc-map", "doc-courtroom", "doc-weather",
-  "doc-object", "doc-grave"
+  "doc-object", "doc-grave", "doc-thumbnail"
 ];
 
 export const ILLUSTRATED_SLOTS: ImageSlot[] = [

@@ -8,6 +8,15 @@ import { getScriptStats90 } from "@/lib/script-stats";
 
 const ESTIMATE_90MIN = "3–8 min";
 
+const CLAUDE_MODELS = [
+  { id: "claude-sonnet-4-5-20250514", name: "Claude Sonnet 4.5" },
+  { id: "claude-sonnet-4-6", name: "Claude Sonnet 4.6" },
+  { id: "claude-opus-4-5-20250514", name: "Claude Opus 4.5" },
+  { id: "claude-opus-4-6", name: "Claude Opus 4.6" },
+] as const;
+
+type ModelId = typeof CLAUDE_MODELS[number]["id"];
+
 const ANALYSIS_PHASES = [
   { id: "opening", label: "Opening & Welcome Block" },
   { id: "structure", label: "Structure & Chapters" },
@@ -34,8 +43,14 @@ export default function Script90MinPage() {
   const [expandedSuggestions, setExpandedSuggestions] = useState<Set<number>>(new Set());
   const [applyingSingle, setApplyingSingle] = useState<number | null>(null);
   const [applyElapsed, setApplyElapsed] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const startTimeRef = useRef<number | null>(null);
   const applyTimeRef = useRef<number | null>(null);
+  
+  // Model selection state
+  const [selectedModel, setSelectedModel] = useState<ModelId>("claude-sonnet-4-6");
+  const [useThinking, setUseThinking] = useState(false);
 
   useEffect(() => {
     loadScript();
@@ -78,7 +93,11 @@ export default function Script90MinPage() {
       const res = await fetch(`/api/generate/script/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "90min" }),
+        body: JSON.stringify({ 
+          type: "90min",
+          modelId: selectedModel,
+          useThinking,
+        }),
       });
 
       const data = await res.json();
@@ -321,6 +340,32 @@ export default function Script90MinPage() {
     URL.revokeObjectURL(url);
   }
 
+  function handleScriptChange(newValue: string) {
+    setScript(newValue);
+    setHasUnsavedChanges(true);
+  }
+
+  async function saveScript() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/data`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script_90min: script }),
+      });
+      if (res.ok) {
+        setHasUnsavedChanges(false);
+      } else {
+        setError("Failed to save script");
+      }
+    } catch (err) {
+      console.error("Failed to save script:", err);
+      setError("Failed to save script");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -334,6 +379,45 @@ export default function Script90MinPage() {
             {error}
           </div>
         )}
+
+        {/* Model Selection */}
+        <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="model-select" className="text-sm font-medium text-slate-700">
+                Model:
+              </label>
+              <select
+                id="model-select"
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value as ModelId)}
+                disabled={loading}
+                className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
+              >
+                {CLAUDE_MODELS.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useThinking}
+                onChange={(e) => setUseThinking(e.target.checked)}
+                disabled={loading}
+                className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 disabled:cursor-not-allowed"
+              />
+              <span className="text-sm text-slate-700">Extended Thinking</span>
+            </label>
+            {useThinking && (
+              <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                Slower but more thoughtful
+              </span>
+            )}
+          </div>
+        </div>
 
         <div className="flex flex-col gap-2 mb-4">
           <div className="flex gap-2">
@@ -546,18 +630,32 @@ export default function Script90MinPage() {
 
       {script && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-bold text-slate-900 mb-1">90-Minute Script</h3>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-xl font-bold text-slate-900">90-Minute Script</h3>
+            <div className="flex items-center gap-2">
+              {hasUnsavedChanges && (
+                <span className="text-sm text-amber-600">Unsaved changes</span>
+              )}
+              <button
+                onClick={saveScript}
+                disabled={saving || !hasUnsavedChanges}
+                className="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
           <p className="text-sm text-slate-600 mb-4">
             {(() => {
               const { wordCount, chapterCount } = getScriptStats90(script);
               return `${wordCount.toLocaleString()} words • ${chapterCount} chapters`;
             })()}
           </p>
-          <div className="max-h-[600px] overflow-y-auto border border-slate-200 rounded p-4 bg-slate-50">
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900">
-              {script}
-            </pre>
-          </div>
+          <textarea
+            value={script}
+            onChange={(e) => handleScriptChange(e.target.value)}
+            className="w-full h-[600px] border border-slate-200 rounded p-4 bg-slate-50 font-sans text-sm text-slate-900 resize-y focus:outline-none focus:ring-2 focus:ring-slate-400"
+          />
         </div>
       )}
     </div>
