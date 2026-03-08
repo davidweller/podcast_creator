@@ -2,11 +2,22 @@
 
 import { useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import type { ImprovementAnalysis } from "@/types/improvements";
+import type { ImprovementAnalysis, ImprovementSuggestion, SuggestionStatus } from "@/types/improvements";
 import { formatElapsed } from "@/lib/format-time";
 import { getScriptStats90 } from "@/lib/script-stats";
 
 const ESTIMATE_90MIN = "3–8 min";
+
+const ANALYSIS_PHASES = [
+  { id: "opening", label: "Opening & Welcome Block" },
+  { id: "structure", label: "Structure & Chapters" },
+  { id: "voice", label: "Voice & Tone" },
+  { id: "style", label: "Style Rules" },
+  { id: "content", label: "Content & People" },
+  { id: "phase4", label: "Phase 4 (Sit With It)" },
+  { id: "closing", label: "Closing & Farewell" },
+  { id: "copyedit", label: "Copyediting & Flow" },
+];
 
 export default function Script90MinPage() {
   const params = useParams();
@@ -18,7 +29,13 @@ export default function Script90MinPage() {
   const [improvements, setImprovements] = useState<ImprovementAnalysis | null>(null);
   const [loadingImprovements, setLoadingImprovements] = useState(false);
   const [applyingImprovements, setApplyingImprovements] = useState(false);
+  const [suggestionStatuses, setSuggestionStatuses] = useState<Map<number, SuggestionStatus>>(new Map());
+  const [analysisPhaseIndex, setAnalysisPhaseIndex] = useState<number>(-1);
+  const [expandedSuggestions, setExpandedSuggestions] = useState<Set<number>>(new Set());
+  const [applyingSingle, setApplyingSingle] = useState<number | null>(null);
+  const [applyElapsed, setApplyElapsed] = useState(0);
   const startTimeRef = useRef<number | null>(null);
+  const applyTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     loadScript();
@@ -82,6 +99,18 @@ export default function Script90MinPage() {
   async function lookForImprovements() {
     setLoadingImprovements(true);
     setError(null);
+    setAnalysisPhaseIndex(0);
+
+    // Animate through analysis phases while waiting for the API
+    const animatePhases = async () => {
+      for (let i = 0; i < ANALYSIS_PHASES.length; i++) {
+        setAnalysisPhaseIndex(i);
+        // Stagger timing - roughly 2-3 seconds per phase to match typical API response time
+        await new Promise(resolve => setTimeout(resolve, 2500));
+      }
+    };
+
+    const animationPromise = animatePhases();
 
     try {
       const res = await fetch(`/api/improve/script/${projectId}`, {
@@ -91,6 +120,9 @@ export default function Script90MinPage() {
       });
 
       const data = await res.json();
+
+      // Wait for animation to complete if API was faster
+      await animationPromise;
 
       if (res.ok) {
         setImprovements(data);
@@ -102,6 +134,7 @@ export default function Script90MinPage() {
       setError("Failed to analyze script. Please check your API key.");
     } finally {
       setLoadingImprovements(false);
+      setAnalysisPhaseIndex(-1);
     }
   }
 
@@ -113,31 +146,162 @@ export default function Script90MinPage() {
 
     setApplyingImprovements(true);
     setError(null);
+    
+    const suggestions = improvements.suggestions;
+    
+    // Initialize all suggestions as pending
+    const initialStatuses = new Map<number, SuggestionStatus>();
+    for (let i = 0; i < suggestions.length; i++) {
+      initialStatuses.set(i, "pending");
+    }
+    setSuggestionStatuses(new Map(initialStatuses));
+
+    // Process each suggestion sequentially
+    for (let i = 0; i < suggestions.length; i++) {
+      // Mark current suggestion as applying and start timer
+      setApplyElapsed(0);
+      applyTimeRef.current = Date.now();
+      
+      const timerInterval = setInterval(() => {
+        if (applyTimeRef.current !== null) {
+          setApplyElapsed(Math.floor((Date.now() - applyTimeRef.current) / 1000));
+        }
+      }, 1000);
+      
+      setSuggestionStatuses(prev => {
+        const updated = new Map(prev);
+        updated.set(i, "applying");
+        return updated;
+      });
+
+      try {
+        const res = await fetch(`/api/apply-improvement/${projectId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "90min",
+            suggestion: suggestions[i],
+          }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.script) {
+          // Update script with the improved version
+          setScript(data.script);
+          // Mark this suggestion as applied
+          setSuggestionStatuses(prev => {
+            const updated = new Map(prev);
+            updated.set(i, "applied");
+            return updated;
+          });
+        } else {
+          // Mark this suggestion as error but continue with others
+          setSuggestionStatuses(prev => {
+            const updated = new Map(prev);
+            updated.set(i, "error");
+            return updated;
+          });
+          console.error(`Failed to apply improvement ${i + 1}:`, data.error);
+        }
+      } catch (error) {
+        console.error(`Error applying improvement ${i + 1}:`, error);
+        setSuggestionStatuses(prev => {
+          const updated = new Map(prev);
+          updated.set(i, "error");
+          return updated;
+        });
+      } finally {
+        clearInterval(timerInterval);
+        applyTimeRef.current = null;
+      }
+    }
+
+    // All done - keep the panel visible for a moment to show completion
+    setApplyElapsed(0);
+    setApplyingImprovements(false);
+    
+    setTimeout(() => {
+      setImprovements(null);
+      setSuggestionStatuses(new Map());
+    }, 3000);
+  }
+
+  async function applySingleSuggestion(index: number) {
+    if (!improvements || applyingSingle !== null || applyingImprovements) return;
+    
+    const suggestion = improvements.suggestions[index];
+    if (!suggestion) return;
+
+    setApplyingSingle(index);
+    setApplyElapsed(0);
+    applyTimeRef.current = Date.now();
+    
+    // Start elapsed timer
+    const timerInterval = setInterval(() => {
+      if (applyTimeRef.current !== null) {
+        setApplyElapsed(Math.floor((Date.now() - applyTimeRef.current) / 1000));
+      }
+    }, 1000);
+    
+    setSuggestionStatuses(prev => {
+      const updated = new Map(prev);
+      updated.set(index, "applying");
+      return updated;
+    });
 
     try {
-      const res = await fetch(`/api/apply-improvements/${projectId}`, {
+      const res = await fetch(`/api/apply-improvement/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "90min",
-          suggestions: improvements.suggestions,
+          suggestion: suggestion,
         }),
       });
 
       const data = await res.json();
 
-      if (res.ok) {
+      if (res.ok && data.script) {
         setScript(data.script);
-        setImprovements(null);
+        setSuggestionStatuses(prev => {
+          const updated = new Map(prev);
+          updated.set(index, "applied");
+          return updated;
+        });
       } else {
-        setError(data.error || "Failed to apply improvements");
+        setSuggestionStatuses(prev => {
+          const updated = new Map(prev);
+          updated.set(index, "error");
+          return updated;
+        });
+        setError(data.error || "Failed to apply improvement");
       }
     } catch (error) {
-      console.error("Failed to apply improvements:", error);
-      setError("Failed to apply improvements. Please try again.");
+      console.error(`Error applying improvement ${index + 1}:`, error);
+      setSuggestionStatuses(prev => {
+        const updated = new Map(prev);
+        updated.set(index, "error");
+        return updated;
+      });
     } finally {
-      setApplyingImprovements(false);
+      clearInterval(timerInterval);
+      applyTimeRef.current = null;
+      setApplyingSingle(null);
+      setApplyElapsed(0);
     }
+  }
+
+  function toggleExpanded(index: number) {
+    setExpandedSuggestions(prev => {
+      const updated = new Set(prev);
+      if (updated.has(index)) {
+        updated.delete(index);
+      } else {
+        updated.add(index);
+      }
+      return updated;
+    });
   }
 
   function downloadScript() {
@@ -214,40 +378,167 @@ export default function Script90MinPage() {
               )}
             </div>
           )}
+
+        {/* Analysis progress indicator */}
+        {loadingImprovements && analysisPhaseIndex >= 0 && (
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+            <p className="font-semibold text-blue-900 mb-3">Analyzing script...</p>
+            <div className="space-y-2">
+              {ANALYSIS_PHASES.map((phase, i) => {
+                const isComplete = i < analysisPhaseIndex;
+                const isCurrent = i === analysisPhaseIndex;
+                return (
+                  <div 
+                    key={phase.id}
+                    className={`flex items-center gap-2 text-sm transition-all duration-300 ${
+                      isComplete ? "text-green-700" : isCurrent ? "text-blue-700 font-medium" : "text-slate-400"
+                    }`}
+                  >
+                    <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                      {isComplete && (
+                        <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                      {isCurrent && (
+                        <svg className="w-4 h-4 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                      )}
+                      {!isComplete && !isCurrent && (
+                        <div className="w-2 h-2 bg-slate-300 rounded-full" />
+                      )}
+                    </div>
+                    <span>{phase.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
         </div>
 
         {improvements && improvements.suggestions.length > 0 && (
           <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
-            <p className="font-semibold text-blue-900 mb-2">{improvements.summary}</p>
-            <div className="max-h-64 overflow-y-auto space-y-2">
-              {improvements.suggestions.map((suggestion, i) => (
-                <div key={i} className="p-2 bg-white rounded border border-blue-100">
-                  <div className="flex items-start gap-2">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                      suggestion.type === "quality_check" ? "bg-yellow-200 text-yellow-800" :
-                      suggestion.type === "copyedit" ? "bg-blue-200 text-blue-800" :
-                      "bg-purple-200 text-purple-800"
-                    }`}>
-                      {suggestion.type.toUpperCase()}
-                    </span>
-                    <div className="flex-1 text-sm text-slate-700">
-                      <p className="font-medium">{suggestion.description}</p>
-                      {suggestion.location && (
-                        <p className="text-xs text-slate-500 mt-1">Location: {suggestion.location}</p>
-                      )}
-                      {suggestion.suggestion && (
-                        <p className="text-xs text-slate-600 mt-1">{suggestion.suggestion}</p>
-                      )}
-                      {suggestion.original && suggestion.improved && (
-                        <div className="mt-2 text-xs">
-                          <p className="text-red-600 line-through">{suggestion.original}</p>
-                          <p className="text-green-600">{suggestion.improved}</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-semibold text-blue-900">{improvements.summary}</p>
+              <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                {improvements.suggestions.filter((_, i) => suggestionStatuses.get(i) === "applied").length} / {improvements.suggestions.length} applied
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {improvements.suggestions.map((suggestion, i) => {
+                const status = suggestionStatuses.get(i) || "pending";
+                const isExpanded = expandedSuggestions.has(i);
+                const hasDetails = suggestion.suggestion || (suggestion.original && suggestion.improved);
+                
+                return (
+                  <div 
+                    key={i} 
+                    className={`px-3 py-2 rounded border transition-all duration-300 ${
+                      status === "applied" 
+                        ? "bg-green-50 border-green-300" 
+                        : status === "applying" 
+                        ? "bg-blue-100 border-blue-300" 
+                        : status === "error"
+                        ? "bg-red-50 border-red-300"
+                        : "bg-white border-blue-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="flex-shrink-0 flex items-center gap-1">
+                        <div className="w-5 h-5 flex items-center justify-center">
+                          {status === "applying" && (
+                            <svg className="w-4 h-4 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                          )}
+                          {status === "applied" && (
+                            <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                          {status === "error" && (
+                            <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          {status === "pending" && (
+                            <div className="w-2 h-2 bg-slate-300 rounded-full" />
+                          )}
                         </div>
+                        {status === "applying" && applyElapsed > 0 && (
+                          <span className="text-xs text-blue-600 tabular-nums">{applyElapsed}s</span>
+                        )}
+                      </div>
+                      <span className={`text-xs font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${
+                        suggestion.type === "quality_check" ? "bg-yellow-200 text-yellow-800" :
+                        suggestion.type === "copyedit" ? "bg-blue-200 text-blue-800" :
+                        "bg-purple-200 text-purple-800"
+                      }`}>
+                        {suggestion.type === "quality_check" ? "QC" : suggestion.type === "copyedit" ? "EDIT" : "STYLE"}
+                      </span>
+                      <button
+                        onClick={() => hasDetails && toggleExpanded(i)}
+                        className={`flex-1 text-left text-sm ${
+                          status === "applied" ? "text-green-800" : 
+                          status === "applying" ? "text-blue-800 font-medium" : 
+                          "text-slate-700"
+                        } ${hasDetails ? "cursor-pointer hover:text-slate-900" : "cursor-default"} ${isExpanded ? "" : "truncate"}`}
+                      >
+                        {suggestion.description}
+                        {suggestion.location && (
+                          <span className="text-slate-400 ml-1">({suggestion.location})</span>
+                        )}
+                      </button>
+                      {hasDetails && (
+                        <button
+                          onClick={() => toggleExpanded(i)}
+                          className="flex-shrink-0 p-1 text-slate-400 hover:text-slate-600"
+                          title={isExpanded ? "Collapse" : "Expand"}
+                        >
+                          <svg 
+                            className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor" 
+                            strokeWidth="2"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      )}
+                      {status === "pending" && !applyingImprovements && (
+                        <button
+                          onClick={() => applySingleSuggestion(i)}
+                          disabled={applyingSingle !== null}
+                          className="flex-shrink-0 px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed transition-colors"
+                          title="Apply this improvement"
+                        >
+                          Apply
+                        </button>
                       )}
                     </div>
+                    
+                    {/* Expanded details */}
+                    {isExpanded && hasDetails && (
+                      <div className="mt-2 pl-7 text-sm border-t border-slate-200 pt-2">
+                        {suggestion.suggestion && (
+                          <p className="text-slate-600 mb-2">{suggestion.suggestion}</p>
+                        )}
+                        {suggestion.original && suggestion.improved && (
+                          <div className="space-y-1">
+                            <p className="text-red-600 line-through text-xs">{suggestion.original}</p>
+                            <p className="text-green-600 text-xs">{suggestion.improved}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

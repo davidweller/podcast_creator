@@ -1,5 +1,5 @@
 import { callClaude } from "@/lib/claude/client";
-import { buildImprovementPrompt, buildApplyImprovementsPrompt } from "@/lib/prompts/improvement";
+import { buildImprovementPrompt, buildApplyImprovementsPrompt, buildApplySingleImprovementPrompt } from "@/lib/prompts/improvement";
 import type { ImprovementAnalysis, ImprovementSuggestion } from "@/types/improvements";
 
 export async function analyzeScript(
@@ -188,5 +188,30 @@ export async function applyImprovements(
   } catch (error) {
     console.error("Error applying improvements:", error);
     throw new Error("Failed to apply improvements. Please try again.");
+  }
+}
+
+export async function applySingleImprovement(
+  script: string,
+  suggestion: ImprovementSuggestion
+): Promise<string> {
+  const prompt = buildApplySingleImprovementPrompt(script, suggestion);
+
+  try {
+    const improvedScript = await callClaude(prompt, {
+      maxTokens: 16384,
+      temperature: 0.2,
+    });
+
+    let cleaned = improvedScript.trim();
+    
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/i, "");
+    }
+
+    return cleaned.trim();
+  } catch (error) {
+    console.error("Error applying single improvement:", error);
+    throw new Error("Failed to apply improvement. Please try again.");
   }
 }

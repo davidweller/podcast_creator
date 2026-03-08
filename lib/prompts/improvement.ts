@@ -55,13 +55,13 @@ OPENING (Phase 1 - Draw In):
 - The opening is short and direct: 1-2 sentences that establish the location, the year, and what the crime is. No extended scene-setting before the welcome.
 - The exact welcome block must appear (verbatim): "Good evening, and welcome. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, we shall always have a tale waiting for you."
 - Then exactly: "Close your eyes whenever you wish. Let your breathing slow. Let's begin."
-- Then "Chapter 1."
+- Then "Chapter One."
 - The opening avoids all background, preamble, general framing, or extended atmosphere before the welcome. Atmosphere and detail come after the welcome in Chapter 1.
 - Dates use American style: "September 11, 1907" not "11th of September" or "the eleventh of September."
 
 STRUCTURE:
-- Total word count is between 10,800 and 11,700 (90 minutes at 120-130 wpm).
-- Between 4 and 7 chapter headings: "Chapter 1.", "Chapter 2.", etc. (number and full stop only, no topic titles).
+- Total word count should be between 10,800 and 11,700 (90 minutes at 120-130 wpm).
+- Between 4 and 7 chapter headings: "Chapter One.", "Chapter Two.", etc. (number and full stop only, no topic titles).
 - Chapter breaks occur at emotional completions, not topic changes.
 - Chapters are punctuation, not filing cabinets. They mark a breath, a shift, a gentle transition from one emotional register to another.
 
@@ -121,4 +121,46 @@ IMPROVEMENT SUGGESTIONS:
 ${suggestions}
 
 Apply these improvements to the script. Return only the improved script text, with no additional commentary, notes, or formatting. The output should be ready-to-record narration text.`;
+}
+
+export function buildApplySingleImprovementPrompt(
+  script: string,
+  suggestion: {
+    type: string;
+    description: string;
+    location?: string;
+    suggestion?: string;
+    original?: string;
+    improved?: string;
+  }
+): string {
+  let improvementText = `[${suggestion.type.toUpperCase()}] ${suggestion.description}`;
+  if (suggestion.location) {
+    improvementText += `\nLocation: ${suggestion.location}`;
+  }
+  if (suggestion.suggestion) {
+    improvementText += `\nSuggestion: ${suggestion.suggestion}`;
+  }
+  if (suggestion.original && suggestion.improved) {
+    improvementText += `\nOriginal: ${suggestion.original}`;
+    improvementText += `\nImproved: ${suggestion.improved}`;
+  }
+
+  return `You are an editor for the Cozy Crime YouTube channel. Your task is to apply ONE specific improvement to a script.
+
+CRITICAL INSTRUCTIONS:
+- Apply ONLY the single improvement specified below
+- Do NOT make any other changes to the script
+- Do NOT add commentary or notes
+- Return the COMPLETE script with the improvement applied
+
+THE IMPROVEMENT TO APPLY:
+
+${improvementText}
+
+SCRIPT:
+
+${script}
+
+Apply this single improvement and return the complete improved script. Output only the script text, nothing else.`;
 }
