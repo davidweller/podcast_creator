@@ -109,6 +109,27 @@ export default function SpeechPage() {
     }
   }
 
+  // Restore generated speech from disk when returning to this tab (file is persisted by the API).
+  useEffect(() => {
+    if (!projectId || scriptSource === "custom") return;
+    const path = `/audio/${projectId}/speech-${scriptSource}.mp3`;
+    fetch(path, { method: "HEAD" })
+      .then((res) => {
+        if (res.ok) {
+          setAudioUrl(path);
+          const lastMod = res.headers.get("last-modified");
+          setGeneratedAt(lastMod ? new Date(lastMod).toLocaleString() : "Previously generated");
+        } else {
+          setAudioUrl(null);
+          setGeneratedAt(null);
+        }
+      })
+      .catch(() => {
+        setAudioUrl(null);
+        setGeneratedAt(null);
+      });
+  }, [projectId, scriptSource]);
+
   const currentText = scriptSource === "90min" 
     ? scriptText 
     : scriptSource === "shorts" 

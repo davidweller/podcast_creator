@@ -1,78 +1,103 @@
 /**
- * Stage 1 prompt: transforms research fact clusters into a narrative architecture
- * that the script generation prompt will follow. This ensures the script is
- * driven by an emotional arc (the Descending Spiral) rather than by topic coverage.
+ * narrative-architecture.ts
+ *
+ * Stage 1 prompt: transforms research fact clusters into a narrative
+ * architecture that the script generation prompt will follow.
+ *
+ * Style rules and canonical text are imported from cozy-crime-constants.ts.
  */
+
+import {
+  STYLE_RULES,
+  PHASE_RULES,
+  CHAPTER_BREAK_RULES,
+  CRIME_AS_THREAD_RULE,
+  WORD_COUNT_GUIDE,
+} from "./cozy-crime-constants";
 
 export function buildNarrativeArchitecturePrompt(researchText: string): string {
   return `You are a narrative architect for the Cozy Crime YouTube channel. Your task is NOT to write a script. Your task is to read a set of research fact clusters and produce a structured narrative plan that a scriptwriter will follow.
 
-The plan must follow the Descending Spiral structure: the episode begins at its widest, most atmospheric point and slowly, gently narrows toward the human and the intimate. The organising principle is always the listener's emotional journey, not the logical order of information.
+The plan must follow the Descending Spiral structure: the episode begins with the person at its centre, and slowly, gently widens into the world around them before narrowing back toward the human and the intimate. The organising principle is always the listener's emotional connection to a real human being, not the logical order of information, and not the atmosphere of the period.
+
+---
+
+THE MOST IMPORTANT INSTRUCTION IN THIS PROMPT
+
+Before you do anything else, answer this question:
+
+Who is the person at the heart of this story?
+
+Write two or three sentences. Not their role. Not their address. Not the date they disappeared or died. Who were they? What do you know about them that a listener should carry from the first sentence to the last?
+
+This answer is the spine of the entire narrative plan. Everything else, the world, the events, the theories, exists only in relationship to this person. Write this before you write anything else, and let it shape every decision that follows.
+
+---
 
 THE FIVE PHASES
 
-The 90-minute episode moves through five emotional phases. Your plan must assign specific facts and moments from the research to each phase, explaining WHY they belong there emotionally, not just topically.
+${PHASE_RULES}
 
-Phase 1 — Draw In (0-10 min, ~1,200-1,500 words of script)
-The listener arrives inside the world and the mystery simultaneously. You need a specific physical image to open with and the central mystery present from the first moment.
-
-Phase 2 — Settle (10-30 min, ~2,400-3,000 words of script)
-The listener meets the people. The world deepens around them. Context arrives through people, not as standalone information.
-
-Phase 3 — Unfold (30-60 min, ~3,600-4,500 words of script)
-The listener lives inside the events as they happened. Narrated as memory, not as report. This is the longest phase.
-
-Phase 4 — Sit With It (60-80 min, ~2,400-3,000 words of script)
-The aftermath, the theories, the incompleteness. The focus gradually shifts from the puzzle to the people. The pace slows.
-
-Phase 5 — Rest (80-90 min, ~900-1,200 words of script)
-Honour. Hold. Release. A physical closing image, a farewell, stillness.
+---
 
 YOUR OUTPUT
 
-Produce a narrative plan with exactly these sections:
+Produce a narrative plan with exactly these sections, in this order:
 
-OPENING IMAGE
-Describe the specific physical image that will open the script: a particular place, a particular moment, a particular quality of light or weather. Not a general description of a period. A scene the listener can see. Also state the central mystery or question that will be present from the first sentence.
+THE PERSON
+Two or three sentences answering: who was this person, and what should the listener carry about them from beginning to end? This is not biographical summary. It is the human truth at the centre of the story.
+
+OPENING MOMENT
+A specific moment in which this person is present and alive. The mystery arrives within or immediately after this moment, but the person comes first. This can be as simple as their name, something they did, something they wanted. It must not be weather, streets, or period atmosphere.
 
 CLOSING IMAGE
-Describe the specific physical image that will close the script: a still, quiet place from the world of the story. Something the listener can hold in their mind as they sleep.
+A specific physical image from the world of the story: still, quiet, and connected to the person rather than the period. Something the listener can hold in their mind as they sleep.
 
 CHARACTERS
-List each key person who will appear in the script. For each, provide:
-- Their name and role in the story
-- One specific human detail (a habit, a choice, a relationship) that makes them a person rather than a role
-- The phase in which they should be introduced and why
+List each key person who will appear in the script. For each:
+- Name and role in the story.
+- One specific human detail (a habit, a choice, a relationship) that makes them a person rather than a role.
+- The phase in which they should be introduced and why.
 
 PHASE 1 — DRAW IN
-Which facts from the research establish the atmosphere and plant the mystery? List them and explain the emotional purpose of each.
+Which facts establish who this person was and plant the mystery? The world and period may appear here only in service of the person. List the facts and their emotional purpose.
 
 PHASE 2 — SETTLE
-Which facts introduce the people and their world? How does context arrive through characters rather than as background information? List the facts and their emotional purpose.
+Which facts reveal the life this person was living: their relationships, their private world, their constraints and desires? How does context arrive through the person rather than as background? List the facts and their emotional purpose.
 
 PHASE 3 — UNFOLD
-Which facts constitute the events themselves? Arrange them in the order they were discovered or experienced (not logical reconstruction). Note any gaps or uncertainties in the record and how they should be handled.
+Which facts constitute the events themselves? Arrange them in the order they were discovered or experienced, not logical reconstruction. Note any gaps or uncertainties and how they should be handled.
 
 PHASE 4 — SIT WITH IT
-Which facts relate to the aftermath, investigation, theories, and unanswered questions? How will the focus shift from puzzle to people?
+Which facts relate to the aftermath, investigation, theories, and unanswered questions? How will the focus shift from puzzle back to person before this phase ends?
 
 PHASE 5 — REST
-What remains? What has time done to this story? What should the listener carry into sleep?
+What remains of this person? What has time done to their story? What should the listener carry into sleep?
 
 CHAPTER BREAKS
-Propose exactly where 4 to 7 chapter breaks should fall. For each break, state:
-- After which moment or passage it occurs
-- What emotional shift it marks (NOT what topic change it marks)
-- Fewer breaks is usually better. Each must feel genuinely earned.
+Propose where 4 to 7 chapter breaks should fall. For each:
+- After which moment or passage it occurs.
+- What emotional shift it marks. Not what topic change it marks.
+Fewer breaks is usually better. Each must feel genuinely earned.
 
 THE CRIME AS THREAD
-In one paragraph, describe how the central crime or mystery will remain a felt presence throughout all five phases. The listener should never go more than a few minutes without understanding how what they are hearing connects to the story they came to hear.
+${CRIME_AS_THREAD_RULE}
 
-IMPORTANT CONSTRAINTS
-- Assign each fact to ONE phase. Do not scatter the same facts across multiple phases.
-- Organise by emotional purpose, not by topic. If two facts are topically related but serve different emotional purposes, they belong in different phases.
+---
+
+CONSTRAINTS
+
+- The plan must begin with the person, not the place or the period.
+- Assign each fact to ONE phase only.
+- Organise by emotional purpose, not by topic.
 - The plan should be 600 to 1,000 words. It is an instruction sheet, not a draft.
 - Do not write prose. Write clear, direct planning notes.
+
+---
+
+${WORD_COUNT_GUIDE}
+
+---
 
 RESEARCH FACT CLUSTERS:
 
