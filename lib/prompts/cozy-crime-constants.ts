@@ -15,39 +15,71 @@
 /**
  * The story hook that opens every episode.
  *
- * The single sentence before the welcome must name or directly invoke
- * the person at the centre of the story. It places them in a specific
- * moment and lets the mystery arrive through them, not around them.
+ * The story hook is exactly two sentences before the welcome.
+ *
+ * Sentence one names or directly invokes the person at the centre of
+ * the story, places them in a specific moment, and lets the mystery
+ * arrive through them, not around them.
+ *
+ * Sentence two tells the central crime or event plainly and without
+ * ambiguity, in vivid but non-sensational language. After this
+ * sentence the listener should understand clearly what happened and
+ * why they are here, without gore or graphic detail.
  *
  * Fill: [LOCATION], [YEAR spelled out], [person in a specific moment that
- * carries the mystery].
+ * carries the mystery], [sentence that states the crime or central event
+ * clearly and calmly so there is no ambiguity about it].
  *
  * Example:
  *   "Tonight we are in New York City, in nineteen ten. Dorothy Arnold
- *    steps out of her family's home on a cold December morning, turns
- *    south toward Fifth Avenue, and walks out of the world."
+ *    will vanish before the day is over, and her family will begin a
+ *    search that never truly ends."
  *
  * Never: weather first, streets first, period atmosphere first.
  * Always: the person first. The world arrives through them.
  */
 export const STORY_HOOK_TEMPLATE =
-  "Tonight we are in [LOCATION], in [YEAR spelled out as words]. [Single sentence naming the person and placing them in a specific moment connected to the mystery, present tense.]";
+  "Tonight we are in [LOCATION], in [YEAR spelled out as words]. [Single sentence naming the person and placing them in a specific moment directly connected to the central crime or event, present tense, using vivid but calm language and stating clearly what happens so there is no ambiguity about the crime or why the listener is here.]";
 
 /**
- * The canonical welcome block. Must appear verbatim after the story hook,
- * every time, in every script.
+ * The intro paragraph appears after the two-sentence story hook and before
+ * the welcome block. It outlines the case so the listener can decide whether
+ * to listen.
+ *
+ * Content: themes and setting; key story beats (investigation, trial,
+ * aftermath, notable figures); the case name; and a closing sentence that
+ * names the case and frames it as told gently, with care for the historical
+ * record and respect for those whose lives were altered.
+ *
+ * Tone: same Cozy Crime rules. Vivid but non-sensational, no gore, no hype.
+ * A short paragraph (e.g. 3 to 6 sentences), not a list.
+ */
+export const INTRO_PARAGRAPH_RULE = `INTRO PARAGRAPH (after the story hook, before the welcome block)
+
+A short paragraph that outlines the case so the listener has enough information to decide whether to listen. Include:
+- Themes and setting (e.g. the darker currents beneath respectable society, the friendship that concealed betrayal).
+- Key story elements: investigation, trial, aftermath, notable figures, as appropriate (e.g. the newly invented telegraph, the trial at the Old Bailey, the execution, a figure like Dickens and his response).
+- The case name (e.g. "the Bermondsey Horror").
+- A closing sentence that names the case and frames the story: "This is the story of [case name], told gently, with care for the historical record and respect for those whose lives were forever altered by the events of [time/place]."
+
+Tone: vivid but non-sensational. No gore, no hype. Cozy Crime voice throughout. Write 3 to 6 sentences as flowing prose, not a list.`;
+
+/**
+ * The canonical welcome block. Must appear verbatim after the story hook
+ * and intro paragraph, every time, in every script.
  */
 export const OPENING_WELCOME_BLOCK =
   "Good evening, and welcome. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, please do.\n\nClose your eyes whenever you wish. Let your breathing slow. Let's begin.";
 
 /**
  * Full canonical opening sequence for validation purposes.
- * [STORY HOOK] + OPENING_WELCOME_BLOCK + "Chapter One."
+ * [STORY HOOK (two sentences)] + [INTRO PARAGRAPH] + OPENING_WELCOME_BLOCK + "Chapter One."
  */
 export const OPENING_SEQUENCE_DESCRIPTION = `The opening follows this exact sequence:
-1. Story hook: one sentence placing the person in a specific moment (present tense).
-2. Welcome block (verbatim): "${OPENING_WELCOME_BLOCK}"
-3. "Chapter One." Then begin with the person, not the environment.`;
+1. Story hook: two sentences, present tense. The first names the person at the centre of the story and places them in a specific moment. The second states the central crime or event plainly and without ambiguity, in vivid but non-sensational language, so the listener understands what story they have come to hear.
+2. Intro paragraph: a short paragraph outlining the case (themes, key elements, case name, gentle framing) so the listener has enough information to decide whether to listen.
+3. Welcome block (verbatim): "${OPENING_WELCOME_BLOCK}"
+4. "Chapter One." Then begin with the person, not the environment.`;
 
 // ---------------------------------------------------------------------------
 // STYLE RULES
@@ -158,10 +190,21 @@ Context enriches. It does not replace.`;
 // WORD COUNT
 // ---------------------------------------------------------------------------
 
+/** Minimum script length: 60 minutes at 120 wpm. */
+export const MIN_SCRIPT_WORDS_60_MIN = 7200;
+
+/** Target script length: 90-minute episode (lower bound). */
+export const TARGET_SCRIPT_WORDS_MIN = 10800;
+
+/** Target script length: 90-minute episode (upper bound). */
+export const TARGET_SCRIPT_WORDS_MAX = 11700;
+
 export const WORD_COUNT_GUIDE = `WORD COUNT
 
 Spoken word at a calm, unhurried pace runs at approximately 120 to 130 words per minute.
-Target for a 90-minute episode: 10,800 to 11,700 words.
+
+Minimum length: 7,200 words (60 minutes). The script must not be shorter than this.
+Target length: 10,800 to 11,700 words (90 minutes). Aim for this. Do not stop before completing all five phases and reaching at least 10,800 words unless continuing would genuinely harm the listener experience through padding or repetition.
 
 Phase 1 (Draw In):     1,200-1,500 words
 Phase 2 (Settle):      2,400-3,000 words
@@ -177,14 +220,16 @@ Phase 5 (Rest):          900-1,200 words`;
 export const QUALITY_CHECK_RULES = `QUALITY CHECKS: flag any deviation and suggest a fix
 
 OPENING:
-- The story hook names or directly invokes the person at the centre of the story. It does not open with weather, streets, period atmosphere, or a scene from which the person is absent.
+- The story hook consists of exactly two sentences. The first names or directly invokes the person at the centre of the story and places them in a specific moment connected to the mystery. The second states the central crime or event plainly and without ambiguity, in vivid but non-sensational language, so the listener understands clearly what happened and why they are here.
+- After the story hook, an intro paragraph must appear before the welcome block. It outlines the case (themes, key elements, case name, gentle framing) so the listener has enough information to decide whether to listen. Tone must stay within Cozy Crime rules.
+- The story hook does not open with weather, streets, period atmosphere, or a scene from which the person is absent.
+- Nothing before the welcome except the story hook (two sentences) and the intro paragraph. No other preamble or framing.
 - The welcome block appears verbatim: "${OPENING_WELCOME_BLOCK}"
 - Chapter One begins with the person. The world arrives only in service of understanding who they were.
-- No background, preamble, or general framing before the welcome.
 - All numbers in the opening are spelled out as words, including the year.
 
 STRUCTURE:
-- Total word count is between 10,800 and 11,700.
+- Total word count is at least 7,200 (60 min). Ideally 10,800 to 11,700 (90 min). Flag if under 7,200; suggest expansion if under 10,800.
 - Between 4 and 7 chapter headings, numbered and spelled out: "Chapter One.", "Chapter Two.", etc.
 - Chapter breaks follow emotional completions, not topic changes.
 

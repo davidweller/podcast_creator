@@ -8,12 +8,16 @@
  */
 
 import {
+  INTRO_PARAGRAPH_RULE,
   OPENING_WELCOME_BLOCK,
   STYLE_RULES,
   PHASE_RULES,
   CHAPTER_BREAK_RULES,
   CRIME_AS_THREAD_RULE,
   WORD_COUNT_GUIDE,
+  MIN_SCRIPT_WORDS_60_MIN,
+  TARGET_SCRIPT_WORDS_MIN,
+  TARGET_SCRIPT_WORDS_MAX,
 } from "./cozy-crime-constants";
 
 export function buildFullScriptPrompt(
@@ -62,16 +66,22 @@ THE OPENING
 
 The opening follows this exact sequence:
 
-1. Story hook: one sentence, present tense, naming the person and placing them in a specific moment connected to the mystery. The person comes first. The world arrives through them.
+1. Story hook: two sentences, present tense. The first names the person at the centre of the story and places them in a specific moment connected to the mystery. The second states the central crime or event plainly and without ambiguity, in vivid but non-sensational language, so the listener understands clearly what happened and why they are here. The person comes first. The world arrives through them.
 
-2. Welcome block, verbatim:
+2. Intro paragraph: a short paragraph outlining the case so the listener has enough information to decide whether to listen.
+
+${INTRO_PARAGRAPH_RULE}
+
+3. Welcome block, verbatim:
 "${OPENING_WELCOME_BLOCK}"
 
-3. "Chapter One." — then begin with the person. Who were they? What do we know about them? The world arrives only after the person does, and only in service of understanding them.
+4. "Chapter One." — then begin with the person. Who were they? What do we know about them? The world arrives only after the person does, and only in service of understanding them.
 
 Example opening:
 
-"Tonight we are in New York City, in nineteen ten. Dorothy Arnold steps out of her family's home on a cold December morning, turns south toward Fifth Avenue, and walks out of the world.
+"Tonight we are in New York City, in nineteen ten. Dorothy Arnold will vanish before the day is over, and her family will begin a search that never truly ends.
+
+This case from the final years of the Gilded Age reveals the pressures on a young woman who stepped outside the roles her family allowed. The search would draw in detectives and journalists; the mystery would outlive most of those who knew her. This is the story of Dorothy Arnold, told gently, with care for the historical record and respect for those whose lives were forever altered by her disappearance.
 
 ${OPENING_WELCOME_BLOCK}
 
@@ -105,9 +115,15 @@ STRUCTURAL CONSTRAINTS
 
 ---
 
-${WORD_COUNT_GUIDE}
+LENGTH REQUIREMENT
 
-Only write shorter than the target if continuing would genuinely harm the listener experience through padding or repetition.
+- The script must be at least ${MIN_SCRIPT_WORDS_60_MIN.toLocaleString()} words (60 minutes). Shorter is not acceptable.
+- The script should be ${TARGET_SCRIPT_WORDS_MIN.toLocaleString()} to ${TARGET_SCRIPT_WORDS_MAX.toLocaleString()} words (90 minutes). Do not stop before you have completed all five phases and reached at least ${TARGET_SCRIPT_WORDS_MIN.toLocaleString()} words, unless continuing would genuinely harm the listener experience through padding or repetition.
+- Use the per-phase word counts below to pace yourself: Phase 1 (1,200–1,500), Phase 2 (2,400–3,000), Phase 3 (3,600–4,500), Phase 4 (2,400–3,000), Phase 5 (900–1,200).
+
+---
+
+${WORD_COUNT_GUIDE}
 
 ---
 

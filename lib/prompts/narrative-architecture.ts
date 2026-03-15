@@ -13,6 +13,7 @@ import {
   CHAPTER_BREAK_RULES,
   CRIME_AS_THREAD_RULE,
   WORD_COUNT_GUIDE,
+  INTRO_PARAGRAPH_RULE,
 } from "./cozy-crime-constants";
 
 export function buildNarrativeArchitecturePrompt(researchText: string): string {
@@ -49,6 +50,14 @@ Two or three sentences answering: who was this person, and what should the liste
 
 OPENING MOMENT
 A specific moment in which this person is present and alive. The mystery arrives within or immediately after this moment, but the person comes first. This can be as simple as their name, something they did, something they wanted. It must not be weather, streets, or period atmosphere.
+
+CASE OUTLINE FOR OPENING (intro paragraph)
+The script will include a short paragraph after the two-sentence story hook and before the welcome block. It outlines the case so the listener can decide whether to listen. Provide planning notes for that paragraph:
+- Case name (e.g. "the Bermondsey Horror").
+- Two to four key themes or story beats to include (e.g. Victorian respectability and betrayal; the telegraph and fugitive hunt; the trial at the Old Bailey; the execution and Dickens's campaign).
+- A suggested framing line (e.g. "This is the story of X, told gently, with care for the historical record and respect for those whose lives were forever altered by...").
+
+${INTRO_PARAGRAPH_RULE}
 
 CLOSING IMAGE
 A specific physical image from the world of the story: still, quiet, and connected to the person rather than the period. Something the listener can hold in their mind as they sleep.
@@ -90,6 +99,7 @@ CONSTRAINTS
 - The plan must begin with the person, not the place or the period.
 - Assign each fact to ONE phase only.
 - Organise by emotional purpose, not by topic.
+- The scriptwriter will produce a full 90-minute script (10,800 to 11,700 words). Your plan must support that length. For each phase section (PHASE 1 through PHASE 5), list enough material and beats so the scriptwriter can fill the stated word ranges without padding (e.g. Phase 3: 3,600–4,500 words).
 - The plan should be 600 to 1,000 words. It is an instruction sheet, not a draft.
 - Do not write prose. Write clear, direct planning notes.
 

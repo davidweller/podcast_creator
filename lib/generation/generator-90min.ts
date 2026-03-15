@@ -5,6 +5,11 @@ import {
   DEFAULT_MODEL,
   type ScriptModelConfig,
 } from "@/lib/claude/client";
+import {
+  MIN_SCRIPT_WORDS_60_MIN,
+  TARGET_SCRIPT_WORDS_MIN,
+  TARGET_SCRIPT_WORDS_MAX,
+} from "@/lib/prompts/cozy-crime-constants";
 import { buildNarrativeArchitecturePrompt } from "@/lib/prompts/narrative-architecture";
 import { buildFullScriptPrompt } from "@/lib/prompts/script-90min";
 
@@ -95,14 +100,23 @@ export async function generateScript90Min(
     outputTokens: streamResult.outputTokens,
     requestedMaxTokens,
     scriptWordCount,
-    targetWordCount: "10,800-11,700",
-    shortfall: scriptWordCount < 10800 ? `${10800 - scriptWordCount} words short of minimum` : "None",
+    targetWordCount: `${TARGET_SCRIPT_WORDS_MIN.toLocaleString()}-${TARGET_SCRIPT_WORDS_MAX.toLocaleString()}`,
+    shortfall:
+      scriptWordCount < TARGET_SCRIPT_WORDS_MIN
+        ? `${TARGET_SCRIPT_WORDS_MIN - scriptWordCount} words short of 90-min target`
+        : "None",
   });
 
   if (streamResult.stopReason === "max_tokens") {
     console.warn("[Script Gen] WARNING: Output was truncated due to max_tokens limit!");
-  } else if (scriptWordCount < 10800) {
-    console.warn(`[Script Gen] WARNING: Model stopped early (${streamResult.stopReason}) with only ${scriptWordCount} words.`);
+  } else if (scriptWordCount < MIN_SCRIPT_WORDS_60_MIN) {
+    console.warn(
+      `[Script Gen] WARNING: Script below 60-minute minimum (${scriptWordCount} words, need at least ${MIN_SCRIPT_WORDS_60_MIN}).`
+    );
+  } else if (scriptWordCount < TARGET_SCRIPT_WORDS_MIN) {
+    console.warn(
+      `[Script Gen] WARNING: Model stopped early (${streamResult.stopReason}) with only ${scriptWordCount} words (90-min target: ${TARGET_SCRIPT_WORDS_MIN}).`
+    );
   }
 
   return { script, narrativePlan: narrativePlan.trim(), attempts };
