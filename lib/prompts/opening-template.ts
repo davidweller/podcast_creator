@@ -8,6 +8,7 @@
 
 export {
   STORY_HOOK_TEMPLATE,
+  INTRO_PARAGRAPH_RULE,
   OPENING_WELCOME_BLOCK,
   OPENING_SEQUENCE_DESCRIPTION,
 } from "./cozy-crime-constants";

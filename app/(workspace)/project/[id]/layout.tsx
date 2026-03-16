@@ -7,11 +7,11 @@ import type { Project } from "@/types/database";
 
 const tabs = [
   { id: "research", label: "Research", href: (id: string) => `/project/${id}/research` },
-  { id: "scripts", label: "Script Generator", href: (id: string) => `/project/${id}/scripts` },
-  { id: "description", label: "YouTube", href: (id: string) => `/project/${id}/description` },
-  { id: "speech", label: "Speech", href: (id: string) => `/project/${id}/speech` },
-  { id: "images", label: "Images", href: (id: string) => `/project/${id}/images` },
-  { id: "real-images", label: "Real Images", href: (id: string) => `/project/${id}/real-images` },
+  { id: "scripts", label: "Script", href: (id: string) => `/project/${id}/scripts` },
+  { id: "speech", label: "Voice", href: (id: string) => `/project/${id}/speech` },
+  { id: "images", label: "AI Images", href: (id: string) => `/project/${id}/images` },
+  { id: "real-images", label: "Image Search", href: (id: string) => `/project/${id}/real-images` },
+  { id: "description", label: "Social Media", href: (id: string) => `/project/${id}/description` },
 ];
 
 export default function ProjectLayout({
@@ -80,7 +80,8 @@ export default function ProjectLayout({
     }
   };
 
-  const currentTab = tabs.find((tab) => pathname?.includes(tab.id))?.id || "research";
+  const pathSegment = pathname?.split("/").filter(Boolean)[2]; // project id is [1], tab segment is [2]
+  const currentTab = tabs.find((tab) => pathSegment === tab.id)?.id || "research";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">

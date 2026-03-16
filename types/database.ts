@@ -11,6 +11,7 @@ export interface ProjectData {
   research_text: string | null;
   script_90min: string | null;
   description: string | null;
+  spotify_description: string | null;
   shorts: string | null;
   titles_json: string | null;
   metadata_json: string | null;

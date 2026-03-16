@@ -146,6 +146,10 @@ export function updateProjectData(projectId: number, data: Partial<ProjectData>)
     updates.push("description = ?");
     values.push(data.description);
   }
+  if (data.spotify_description !== undefined) {
+    updates.push("spotify_description = ?");
+    values.push(data.spotify_description);
+  }
   if (data.shorts !== undefined) {
     updates.push("shorts = ?");
     values.push(data.shorts);

@@ -35,6 +35,7 @@ export function getDatabase(): Database.Database {
       research_text TEXT,
       script_90min TEXT,
       description TEXT,
+      spotify_description TEXT,
       shorts TEXT,
       titles_json TEXT,
       metadata_json TEXT,
@@ -86,6 +87,13 @@ export function getDatabase(): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_project_images_project_id ON project_images(project_id);
     CREATE INDEX IF NOT EXISTS idx_real_images_project_id ON real_images(project_id);
   `);
+
+  // Migration: add spotify_description to existing project_data tables
+  const tableInfo = db.prepare("PRAGMA table_info(project_data)").all() as { name: string }[];
+  const hasSpotifyDescription = tableInfo.some((col) => col.name === "spotify_description");
+  if (!hasSpotifyDescription) {
+    db.exec("ALTER TABLE project_data ADD COLUMN spotify_description TEXT");
+  }
 
   return db;
 }
