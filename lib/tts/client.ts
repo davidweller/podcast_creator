@@ -1,7 +1,10 @@
 import { TextToSpeechClient, protos } from "@google-cloud/text-to-speech";
+import { mergeLinear16AudioChunks } from "@/lib/tts/wav";
 
 type ISynthesizeSpeechRequest = protos.google.cloud.texttospeech.v1.ISynthesizeSpeechRequest;
 type AudioEncoding = protos.google.cloud.texttospeech.v1.AudioEncoding;
+type StreamingSynthesizeResponse =
+  protos.google.cloud.texttospeech.v1.StreamingSynthesizeResponse;
 
 const AudioEncodingEnum = protos.google.cloud.texttospeech.v1.AudioEncoding;
 
@@ -15,6 +18,21 @@ function getClient(): TextToSpeechClient {
   }
   client = new TextToSpeechClient();
   return client;
+}
+
+function bufferFromAudioContent(
+  content: Uint8Array | string | Buffer | null | undefined
+): Buffer | null {
+  if (content == null) {
+    return null;
+  }
+  if (Buffer.isBuffer(content)) {
+    return content;
+  }
+  if (typeof content === "string") {
+    return Buffer.from(content, "base64");
+  }
+  return Buffer.from(content);
 }
 
 /**
@@ -279,14 +297,137 @@ async function synthesizeChunk(
   return Buffer.from(response.audioContent);
 }
 
+async function synthesizeSpeechChunkedLossyConcat(
+  options: SynthesizeOptions,
+  onProgress?: SynthesizeProgressCallback
+): Promise<Buffer> {
+  const { text, voiceName, languageCode, speakingRate = 1.0, audioEncoding = "MP3" } =
+    options;
+  const encoding = getAudioEncoding(audioEncoding);
+  const chunks = splitTextIntoChunks(text);
+  console.log(`TTS lossy concat: ${chunks.length} chunks (${audioEncoding})`);
+
+  const audioBuffers: Buffer[] = [];
+  for (let i = 0; i < chunks.length; i++) {
+    onProgress?.(i + 1, chunks.length);
+    console.log(
+      `Synthesizing chunk ${i + 1}/${chunks.length} (${Buffer.byteLength(chunks[i], "utf8")} bytes)`
+    );
+    audioBuffers.push(
+      await synthesizeChunk(chunks[i], voiceName, languageCode, speakingRate, encoding)
+    );
+  }
+  return Buffer.concat(audioBuffers);
+}
+
+async function synthesizeSpeechChunkedLinearMerge(
+  options: SynthesizeOptions,
+  onProgress?: SynthesizeProgressCallback
+): Promise<Buffer> {
+  const { text, voiceName, languageCode, speakingRate = 1.0 } = options;
+  const chunks = splitTextIntoChunks(text);
+  console.log(`TTS chunked LINEAR16 merge: ${chunks.length} chunks`);
+
+  const audioBuffers: Buffer[] = [];
+  for (let i = 0; i < chunks.length; i++) {
+    onProgress?.(i + 1, chunks.length);
+    const audioBuffer = await synthesizeChunk(
+      chunks[i],
+      voiceName,
+      languageCode,
+      speakingRate,
+      AudioEncodingEnum.LINEAR16
+    );
+    audioBuffers.push(audioBuffer);
+  }
+  return mergeLinear16AudioChunks(audioBuffers);
+}
+
+/**
+ * Bidirectional streaming (Chirp 3 HD). First write must be streamingConfig only, then text chunks.
+ */
+async function synthesizeSpeechStreaming(
+  options: SynthesizeOptions,
+  onProgress?: SynthesizeProgressCallback
+): Promise<Buffer> {
+  const ttsClient = getClient();
+  const { text, voiceName, languageCode, speakingRate = 1.0 } = options;
+  const fullVoiceName = buildVoiceName(languageCode, voiceName);
+  const textChunks = splitTextIntoChunks(text);
+
+  return new Promise((resolve, reject) => {
+    const stream = ttsClient.streamingSynthesize();
+    const audioChunks: Buffer[] = [];
+    let settled = false;
+
+    const finish = (err: Error | null, result?: Buffer) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      if (err) {
+        reject(err);
+      } else if (result) {
+        resolve(result);
+      } else {
+        reject(new Error("TTS streaming ended without audio"));
+      }
+    };
+
+    stream.on("data", (response: StreamingSynthesizeResponse) => {
+      const buf = bufferFromAudioContent(
+        response.audioContent as Buffer | Uint8Array | string | undefined
+      );
+      if (buf && buf.length > 0) {
+        audioChunks.push(buf);
+      }
+    });
+
+    stream.on("error", (err: Error) => finish(err));
+
+    stream.on("end", () => {
+      try {
+        if (audioChunks.length === 0) {
+          finish(new Error("TTS streaming returned no audio"));
+          return;
+        }
+        finish(null, mergeLinear16AudioChunks(audioChunks));
+      } catch (e) {
+        finish(e instanceof Error ? e : new Error(String(e)));
+      }
+    });
+
+    stream.write({
+      streamingConfig: {
+        voice: {
+          languageCode,
+          name: fullVoiceName,
+        },
+        streamingAudioConfig: {
+          audioEncoding: AudioEncodingEnum.LINEAR16,
+          speakingRate,
+        },
+      },
+    });
+
+    onProgress?.(0, textChunks.length);
+    for (let i = 0; i < textChunks.length; i++) {
+      stream.write({ input: { text: textChunks[i] } });
+      onProgress?.(i + 1, textChunks.length);
+    }
+
+    stream.end();
+  });
+}
+
 export interface SynthesizeProgressCallback {
   (current: number, total: number): void;
 }
 
 /**
  * Synthesize speech from text using Google Cloud Text-to-Speech Chirp 3 HD voices.
- * Automatically handles long text by splitting into chunks.
- * Returns the audio as a Buffer.
+ * LINEAR16 (default) produces one WAV via streaming, with chunked PCM merge as fallback.
+ * MP3/OGG_OPUS long output still uses per-chunk encode + concat.
  */
 export async function synthesizeSpeech(
   options: SynthesizeOptions,
@@ -297,39 +438,35 @@ export async function synthesizeSpeech(
     voiceName,
     languageCode,
     speakingRate = 1.0,
-    audioEncoding = "MP3",
+    audioEncoding = "LINEAR16",
   } = options;
 
-  const encoding = getAudioEncoding(audioEncoding);
-  
-  // Check if text fits in a single request
-  if (Buffer.byteLength(text, "utf8") <= MAX_BYTES) {
-    onProgress?.(1, 1);
-    return synthesizeChunk(text, voiceName, languageCode, speakingRate, encoding);
+  if (audioEncoding === "MP3" || audioEncoding === "OGG_OPUS") {
+    const encoding = getAudioEncoding(audioEncoding);
+    if (Buffer.byteLength(text, "utf8") <= MAX_BYTES) {
+      onProgress?.(1, 1);
+      return synthesizeChunk(text, voiceName, languageCode, speakingRate, encoding);
+    }
+    return synthesizeSpeechChunkedLossyConcat(options, onProgress);
   }
 
-  // Split text into chunks
-  const chunks = splitTextIntoChunks(text);
-  console.log(`Splitting text into ${chunks.length} chunks for TTS`);
-
-  // Synthesize each chunk
-  const audioBuffers: Buffer[] = [];
-  for (let i = 0; i < chunks.length; i++) {
-    onProgress?.(i + 1, chunks.length);
-    console.log(`Synthesizing chunk ${i + 1}/${chunks.length} (${Buffer.byteLength(chunks[i], "utf8")} bytes)`);
-    const audioBuffer = await synthesizeChunk(
-      chunks[i],
+  if (Buffer.byteLength(text, "utf8") <= MAX_BYTES) {
+    onProgress?.(1, 1);
+    return synthesizeChunk(
+      text,
       voiceName,
       languageCode,
       speakingRate,
-      encoding
+      AudioEncodingEnum.LINEAR16
     );
-    audioBuffers.push(audioBuffer);
   }
 
-  // Concatenate MP3 buffers
-  // MP3 files can be concatenated directly as they are frame-based
-  return Buffer.concat(audioBuffers);
+  try {
+    return await synthesizeSpeechStreaming(options, onProgress);
+  } catch (err) {
+    console.warn("TTS streaming failed; falling back to chunked LINEAR16 merge:", err);
+    return synthesizeSpeechChunkedLinearMerge(options, onProgress);
+  }
 }
 
 /**

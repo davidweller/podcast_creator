@@ -74,7 +74,7 @@ export async function POST(
       voiceName: voice,
       languageCode: language,
       speakingRate: speed,
-      audioEncoding: "MP3",
+      audioEncoding: "LINEAR16",
     });
 
     const audioDir = path.join(process.cwd(), "public", "audio", String(projectId));
@@ -82,7 +82,7 @@ export async function POST(
       mkdirSync(audioDir, { recursive: true });
     }
 
-    const extension = getAudioExtension("MP3");
+    const extension = getAudioExtension("LINEAR16");
     const filename = `speech-${scriptSource}.${extension}`;
     const filePath = path.join(audioDir, filename);
 

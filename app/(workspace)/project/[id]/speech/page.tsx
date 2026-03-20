@@ -112,16 +112,26 @@ export default function SpeechPage() {
   // Restore generated speech from disk when returning to this tab (file is persisted by the API).
   useEffect(() => {
     if (!projectId || scriptSource === "custom") return;
-    const path = `/audio/${projectId}/speech-${scriptSource}.mp3`;
-    fetch(path, { method: "HEAD" })
+    const wavPath = `/audio/${projectId}/speech-${scriptSource}.wav`;
+    const mp3Path = `/audio/${projectId}/speech-${scriptSource}.mp3`;
+
+    const applyOk = (path: string, res: Response) => {
+      if (res.ok) {
+        setAudioUrl(path);
+        const lastMod = res.headers.get("last-modified");
+        setGeneratedAt(lastMod ? new Date(lastMod).toLocaleString() : "Previously generated");
+      } else {
+        setAudioUrl(null);
+        setGeneratedAt(null);
+      }
+    };
+
+    fetch(wavPath, { method: "HEAD" })
       .then((res) => {
         if (res.ok) {
-          setAudioUrl(path);
-          const lastMod = res.headers.get("last-modified");
-          setGeneratedAt(lastMod ? new Date(lastMod).toLocaleString() : "Previously generated");
+          applyOk(wavPath, res);
         } else {
-          setAudioUrl(null);
-          setGeneratedAt(null);
+          return fetch(mp3Path, { method: "HEAD" }).then((mp3Res) => applyOk(mp3Path, mp3Res));
         }
       })
       .catch(() => {
@@ -179,7 +189,9 @@ export default function SpeechPage() {
     if (!audioUrl) return;
     const a = document.createElement("a");
     a.href = audioUrl;
-    a.download = `speech-${projectId}-${scriptSource}.mp3`;
+    const base = audioUrl.split("?")[0];
+    const ext = base.endsWith(".wav") ? "wav" : "mp3";
+    a.download = `speech-${projectId}-${scriptSource}.${ext}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -196,7 +208,7 @@ export default function SpeechPage() {
         </h2>
         <p className="text-sm text-slate-600 mb-6">
           Convert your script to speech using Google Cloud Text-to-Speech with Chirp 3 HD voices.
-          These voices deliver realistic and emotionally resonant audio narration.
+          Output is saved as a single WAV (streaming synthesis) for cleaner long-form audio than stitched MP3.
         </p>
 
         {error && (
@@ -298,7 +310,7 @@ export default function SpeechPage() {
             </div>
             {wordCount > 500 && (
               <p className="mt-2 text-sm text-amber-600">
-                Long scripts are split into chunks for processing. This may take several minutes.
+                Long scripts stream through the API as multiple text segments (one continuous WAV). This may take several minutes.
               </p>
             )}
           </div>
@@ -322,7 +334,7 @@ export default function SpeechPage() {
               onClick={downloadAudio}
               className="px-6 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
             >
-              Download MP3
+              Download WAV
             </button>
           )}
         </div>
