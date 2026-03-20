@@ -11,6 +11,7 @@ export default function ScriptShortsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
 
   useEffect(() => {
     loadShorts();
@@ -22,6 +23,8 @@ export default function ScriptShortsPage() {
       if (res.ok) {
         const data = await res.json();
         setShorts(data.shorts || "");
+        const iso = data?.status?.shorts_generated_at as string | null | undefined;
+        setGeneratedAt(iso ? new Date(iso).toLocaleDateString() : null);
       }
     } catch (error) {
       console.error("Failed to load shorts:", error);
@@ -41,6 +44,7 @@ export default function ScriptShortsPage() {
 
       if (res.ok) {
         setShorts(data.shorts);
+        setGeneratedAt(new Date().toLocaleDateString());
       } else {
         setError(data.error || "Failed to generate shorts script");
       }
@@ -139,7 +143,9 @@ export default function ScriptShortsPage() {
             </h3>
             <div className="flex items-center gap-4">
               <span className="text-sm text-slate-600">
-                {wordCount} words {wordCount >= 50 && wordCount <= 100 ? "✓" : "(target: 50-100)"}
+                {wordCount} words
+                {generatedAt ? ` • Generated: ${generatedAt}` : ""}{" "}
+                {wordCount >= 50 && wordCount <= 100 ? "✓" : "(target: 50-100)"}
               </span>
               {hasUnsavedChanges && (
                 <span className="text-sm text-amber-600">Unsaved changes</span>

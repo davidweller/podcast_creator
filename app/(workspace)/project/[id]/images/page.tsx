@@ -9,6 +9,7 @@ export default function ImagesPage() {
   const params = useParams();
   const projectId = params.id as string;
   const [images, setImages] = useState<ProjectImage[]>([]);
+  const [thumbnailBust, setThumbnailBust] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loadingPrompts, setLoadingPrompts] = useState(false);
   const [loadingSlot, setLoadingSlot] = useState<string | null>(null);
@@ -155,6 +156,7 @@ export default function ImagesPage() {
       const data = await res.json();
       if (res.ok) {
         await loadImages();
+        if (slot === "thumbnail") setThumbnailBust(Date.now());
       } else {
         const errorMsg = data.error || `Failed to generate image for slot ${slot}`;
         console.error(`Error generating image for slot ${slot}:`, errorMsg, data);
@@ -405,7 +407,7 @@ export default function ImagesPage() {
           <div>
             {thumbnailRow?.image_path ? (
               <img
-                src={`/api/projects/${projectId}/images/thumbnail`}
+                src={`/api/projects/${projectId}/images/thumbnail?v=${thumbnailBust}`}
                 alt="Thumbnail"
                 className="max-w-full rounded border border-slate-200"
               />

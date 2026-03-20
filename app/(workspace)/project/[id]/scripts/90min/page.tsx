@@ -45,6 +45,7 @@ export default function Script90MinPage() {
   const [applyElapsed, setApplyElapsed] = useState(0);
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const applyTimeRef = useRef<number | null>(null);
   
@@ -78,6 +79,8 @@ export default function Script90MinPage() {
       if (res.ok) {
         const data = await res.json();
         setScript(data.script_90min || "");
+        const iso = data?.status?.script_90min_generated_at as string | null | undefined;
+        setGeneratedAt(iso ? new Date(iso).toLocaleDateString() : null);
       }
     } catch (error) {
       console.error("Failed to load script:", error);
@@ -104,6 +107,7 @@ export default function Script90MinPage() {
 
       if (res.ok) {
         setScript(data.script);
+        setGeneratedAt(new Date().toLocaleDateString());
       } else {
         setError(data.error || "Failed to generate script");
       }
@@ -648,7 +652,8 @@ export default function Script90MinPage() {
           <p className="text-sm text-slate-600 mb-4">
             {(() => {
               const { wordCount, chapterCount } = getScriptStats90(script);
-              return `${wordCount.toLocaleString()} words • ${chapterCount} chapters`;
+              const generated = generatedAt ? ` • Generated: ${generatedAt}` : "";
+              return `${wordCount.toLocaleString()} words${generated} • ${chapterCount} chapters`;
             })()}
           </p>
           <textarea
