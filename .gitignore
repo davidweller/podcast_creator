@@ -43,3 +43,6 @@ next-env.d.ts
 
 # service account keys
 /keys
+
+# Generated narration WAVs are large (often >100MB); keep local only
+public/audio/**/*.wav
