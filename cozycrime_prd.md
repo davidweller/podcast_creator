@@ -1,7 +1,7 @@
 ## PRODUCT REQUIREMENTS DOCUMENT
 
 **Cozy Crime Creator Suite**
-Version 4.0
+Version 4.1
 Last Updated: March 2026
 
 ---
@@ -61,6 +61,7 @@ The tool is for personal production use only and prioritises consistency, tone p
 
 ## 3.2 AI Model
 
+* Research generation: Claude (default model)
 * Script generation: Claude Sonnet 4.6
 * Improvements, metadata, descriptions: Claude Sonnet 4.6
 * Image prompt model targets: ChatGPT + Gemini image systems
@@ -135,17 +136,28 @@ All outputs saved to project.
 
 Single source of truth for case data.
 
-## 6.2 Input Method
+## 6.2 Input Methods
 
-User pastes fact clusters manually.
+**Request research (AI-generated)**
 
-Large scrollable text field.
+User enters a historical topic (e.g. "The disappearance of Benjamin Bathurst, 1809"). Claude generates structured fact clusters using the locked Research prompt. Output is organised into four clusters aligned to the script’s emotional phases:
+
+* **Fact Cluster 1: The World** — Place, time, sensory and social world (feeds Draw In and Settle)
+* **Fact Cluster 2: The People** — Identity, life, relationships, inner life for each named person (feeds Settle)
+* **Fact Cluster 3: The Events** — Last ordinary day, moment of disruption, discovery, aftermath (feeds Unfold)
+* **Fact Cluster 4: The Aftermath** — Investigations, theories, legacy, what remains (feeds Sit With It and Rest)
+
+Generated research can replace existing content (with confirmation if the project already has research). Topic length is limited (e.g. 500 characters).
+
+**Paste manually**
+
+Large scrollable text field for pasting or editing research. Same content is used for script and asset generation.
 
 ## 6.3 Stored Data
 
 Saved locally per project:
 
-* Full research paste
+* Full research text (generated or pasted)
 * Last edit timestamp
 
 ## 6.4 Guidance
@@ -403,6 +415,7 @@ User cannot edit.
 
 Includes:
 
+* Research generation prompt (`Research_Prompt.md`) — structured fact clusters (The World, The People, The Events, The Aftermath)
 * Narrative architecture prompt (Stage 1 planning)
 * 90-min master script prompt (Stage 2 generation, Descending Spiral)
 * Shorts prompt
