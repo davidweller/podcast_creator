@@ -11,6 +11,7 @@ import {
   TARGET_SCRIPT_WORDS_MAX,
 } from "@/lib/prompts/cozy-crime-constants";
 import { buildNarrativeArchitecturePrompt } from "@/lib/prompts/narrative-architecture";
+import { buildScriptContinuationPrompt } from "@/lib/prompts/script-continue";
 import { buildFullScriptPrompt } from "@/lib/prompts/script-90min";
 
 export interface GenerateScript90MinOptions {
@@ -19,6 +20,21 @@ export interface GenerateScript90MinOptions {
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+const REQUIRED_ENDING_LINE = "Rest well. A peaceful night to you.";
+
+function stripRequiredEnding(script: string): string {
+  // Ensure we don't end up with the required ending line in the middle after appending.
+  const trimmed = script.trim();
+  if (!trimmed.endsWith(REQUIRED_ENDING_LINE)) return trimmed;
+  return trimmed.slice(0, trimmed.length - REQUIRED_ENDING_LINE.length).trimEnd();
+}
+
+function ensureRequiredEnding(script: string): string {
+  const trimmed = script.trimEnd();
+  if (trimmed.endsWith(REQUIRED_ENDING_LINE)) return trimmed;
+  return `${trimmed}\n\n${REQUIRED_ENDING_LINE}`;
 }
 
 /**
@@ -117,6 +133,66 @@ export async function generateScript90Min(
     console.warn(
       `[Script Gen] WARNING: Model stopped early (${streamResult.stopReason}) with only ${scriptWordCount} words (90-min target: ${TARGET_SCRIPT_WORDS_MIN}).`
     );
+  }
+
+  // If the script is below the 60-minute minimum, run a single continuation pass and append.
+  if (scriptWordCount < MIN_SCRIPT_WORDS_60_MIN) {
+    console.log("[Script Gen] Below 60-minute minimum. Running continuation pass...");
+
+    const baseScript = stripRequiredEnding(script);
+    const baseWordCount = countWords(baseScript);
+
+    const continuationPrompt = buildScriptContinuationPrompt({
+      narrativePlan: narrativePlan.trim(),
+      existingScript: baseScript,
+      currentWordCount: baseWordCount,
+      minWords: MIN_SCRIPT_WORDS_60_MIN,
+      targetWords: TARGET_SCRIPT_WORDS_MIN,
+    });
+
+    const continuationMaxTokens = useThinking ? 16384 + thinkingBudget : 16384;
+    console.log("[Script Gen] Continuation starting. Requested max_tokens:", continuationMaxTokens);
+
+    const continuationChunks: string[] = [];
+    const continuationResult = await callClaudeStreaming(
+      continuationPrompt,
+      (chunk) => continuationChunks.push(chunk),
+      {
+        maxTokens: continuationMaxTokens,
+        temperature: useThinking ? 1 : 0.7,
+        model: modelId,
+        useThinking,
+        thinkingBudget,
+      }
+    );
+    attempts += 1;
+
+    let continuationText = continuationChunks.join("").trim();
+    if (continuationText.startsWith("```")) {
+      continuationText = continuationText
+        .replace(/^```[a-z]*\n?/i, "")
+        .replace(/\n?```$/i, "")
+        .trim();
+    }
+
+    console.log("[Script Gen] Continuation complete. Diagnostics:", {
+      stopReason: continuationResult.stopReason,
+      inputTokens: continuationResult.inputTokens,
+      outputTokens: continuationResult.outputTokens,
+    });
+
+    script = ensureRequiredEnding(`${baseScript}\n\n${stripRequiredEnding(continuationText)}`.trim());
+
+    const finalWordCount = countWords(script);
+    console.log("[Script Gen] Final script word count after continuation:", finalWordCount);
+    if (finalWordCount < MIN_SCRIPT_WORDS_60_MIN) {
+      console.warn(
+        `[Script Gen] WARNING: Still below 60-minute minimum after continuation (${finalWordCount} words, need at least ${MIN_SCRIPT_WORDS_60_MIN}).`
+      );
+    }
+  } else {
+    // Ensure the final line is present exactly once.
+    script = ensureRequiredEnding(stripRequiredEnding(script));
   }
 
   return { script, narrativePlan: narrativePlan.trim(), attempts };
