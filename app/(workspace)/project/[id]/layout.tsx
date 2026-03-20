@@ -10,7 +10,6 @@ const tabs = [
   { id: "scripts", label: "Script", href: (id: string) => `/project/${id}/scripts` },
   { id: "speech", label: "Voice", href: (id: string) => `/project/${id}/speech` },
   { id: "images", label: "AI Images", href: (id: string) => `/project/${id}/images` },
-  { id: "real-images", label: "Image Search", href: (id: string) => `/project/${id}/real-images` },
   { id: "description", label: "Social Media", href: (id: string) => `/project/${id}/description` },
 ];
 
