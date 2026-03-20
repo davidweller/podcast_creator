@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getProjectData, updateProjectData } from "@/lib/db/projects";
+import { getProject, getProjectData, getProjectStatus, updateProjectData, updateProjectStatus } from "@/lib/db/projects";
 
 export async function GET(
   request: NextRequest,
@@ -9,6 +9,8 @@ export async function GET(
     const { id } = await params;
     const projectId = parseInt(id);
     const data = getProjectData(projectId);
+    const status = getProjectStatus(projectId);
+    const project = getProject(projectId);
 
     if (!data) {
       return NextResponse.json(
@@ -17,7 +19,19 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(data);
+    // Backfill generation timestamps for existing content (best effort).
+    if (project?.updated_at && status) {
+      if (status.script_90min_generated && !status.script_90min_generated_at && data.script_90min) {
+        updateProjectStatus(projectId, { script_90min_generated_at: project.updated_at });
+        (status as any).script_90min_generated_at = project.updated_at;
+      }
+      if (status.shorts_generated && !status.shorts_generated_at && data.shorts) {
+        updateProjectStatus(projectId, { shorts_generated_at: project.updated_at });
+        (status as any).shorts_generated_at = project.updated_at;
+      }
+    }
+
+    return NextResponse.json({ ...data, status });
   } catch (error) {
     console.error("Error fetching project data:", error);
     return NextResponse.json(

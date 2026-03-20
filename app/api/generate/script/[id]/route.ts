@@ -35,7 +35,10 @@ export async function POST(
     // Generate 90-minute script
     const result = await generateScript90Min(projectData.research_text, { modelConfig });
     updateProjectData(projectId, { script_90min: result.script });
-    updateProjectStatus(projectId, { script_90min_generated: true });
+    updateProjectStatus(projectId, {
+      script_90min_generated: true,
+      script_90min_generated_at: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       script: result.script,

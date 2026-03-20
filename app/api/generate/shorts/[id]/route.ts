@@ -40,7 +40,10 @@ export async function POST(
     });
 
     updateProjectData(projectId, { shorts });
-    updateProjectStatus(projectId, { shorts_generated: true });
+    updateProjectStatus(projectId, {
+      shorts_generated: true,
+      shorts_generated_at: new Date().toISOString(),
+    });
 
     return NextResponse.json({ shorts });
   } catch (error: any) {

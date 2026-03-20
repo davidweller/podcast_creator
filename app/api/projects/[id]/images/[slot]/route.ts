@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProject } from "@/lib/db/projects";
-import { readProjectImage } from "@/lib/images/storage";
+import { getProjectImagesDir } from "@/lib/images/storage";
 import { IMAGE_SLOTS, type ImageSlot } from "@/types/database";
+import path from "path";
+import { existsSync, readFileSync, statSync } from "fs";
 
 const VALID_SLOTS = new Set<ImageSlot>(IMAGE_SLOTS);
 
@@ -20,14 +22,33 @@ export async function GET(
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
-    const buffer = readProjectImage(projectId, slotKey);
-    if (!buffer) {
+
+    const dir = getProjectImagesDir(projectId);
+    const filename = slotKey === "thumbnail" ? "thumbnail.png" : `${slotKey}.png`;
+    const filePath = path.join(dir, filename);
+    if (!existsSync(filePath)) {
       return NextResponse.json({ error: "Image not found" }, { status: 404 });
     }
+
+    const stat = statSync(filePath);
+    const etag = `W/"${stat.size}-${stat.mtimeMs}"`;
+    const ifNoneMatch = request.headers.get("if-none-match");
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          ETag: etag,
+          "Cache-Control": "private, max-age=0, must-revalidate",
+        },
+      });
+    }
+
+    const buffer = readFileSync(filePath);
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "image/png",
-        "Cache-Control": "private, max-age=3600",
+        ETag: etag,
+        "Cache-Control": "private, max-age=0, must-revalidate",
       },
     });
   } catch (error) {
