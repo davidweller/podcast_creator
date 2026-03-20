@@ -46,8 +46,10 @@ export function getDatabase(): Database.Database {
     CREATE TABLE IF NOT EXISTS project_status (
       project_id INTEGER PRIMARY KEY,
       script_90min_generated INTEGER DEFAULT 0,
+      script_90min_generated_at TEXT,
       description_generated INTEGER DEFAULT 0,
       shorts_generated INTEGER DEFAULT 0,
+      shorts_generated_at TEXT,
       metadata_generated INTEGER DEFAULT 0,
       image_prompt_generated INTEGER DEFAULT 0,
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
@@ -93,6 +95,17 @@ export function getDatabase(): Database.Database {
   const hasSpotifyDescription = tableInfo.some((col) => col.name === "spotify_description");
   if (!hasSpotifyDescription) {
     db.exec("ALTER TABLE project_data ADD COLUMN spotify_description TEXT");
+  }
+
+  // Migration: add generated_at timestamps to project_status
+  const statusTableInfo = db.prepare("PRAGMA table_info(project_status)").all() as { name: string }[];
+  const hasScript90GeneratedAt = statusTableInfo.some((col) => col.name === "script_90min_generated_at");
+  if (!hasScript90GeneratedAt) {
+    db.exec("ALTER TABLE project_status ADD COLUMN script_90min_generated_at TEXT");
+  }
+  const hasShortsGeneratedAt = statusTableInfo.some((col) => col.name === "shorts_generated_at");
+  if (!hasShortsGeneratedAt) {
+    db.exec("ALTER TABLE project_status ADD COLUMN shorts_generated_at TEXT");
   }
 
   return db;

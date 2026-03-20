@@ -196,11 +196,15 @@ export function getProjectStatus(projectId: number): ProjectStatus | null {
 export function updateProjectStatus(projectId: number, status: Partial<ProjectStatus>): void {
   const db = getDatabase();
   const updates: string[] = [];
-  const values: (number | boolean)[] = [];
+  const values: (number | string | null)[] = [];
 
   if (status.script_90min_generated !== undefined) {
     updates.push("script_90min_generated = ?");
     values.push(status.script_90min_generated ? 1 : 0);
+  }
+  if (status.script_90min_generated_at !== undefined) {
+    updates.push("script_90min_generated_at = ?");
+    values.push(status.script_90min_generated_at ?? null);
   }
   if (status.description_generated !== undefined) {
     updates.push("description_generated = ?");
@@ -209,6 +213,10 @@ export function updateProjectStatus(projectId: number, status: Partial<ProjectSt
   if (status.shorts_generated !== undefined) {
     updates.push("shorts_generated = ?");
     values.push(status.shorts_generated ? 1 : 0);
+  }
+  if (status.shorts_generated_at !== undefined) {
+    updates.push("shorts_generated_at = ?");
+    values.push(status.shorts_generated_at ?? null);
   }
   if (status.metadata_generated !== undefined) {
     updates.push("metadata_generated = ?");

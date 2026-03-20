@@ -21,8 +21,10 @@ export interface ProjectData {
 export interface ProjectStatus {
   project_id: number;
   script_90min_generated: boolean;
+  script_90min_generated_at?: string | null;
   description_generated: boolean;
   shorts_generated: boolean;
+  shorts_generated_at?: string | null;
   metadata_generated: boolean;
   image_prompt_generated: boolean;
 }
