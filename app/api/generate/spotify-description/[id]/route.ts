@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProject, getProjectData, updateProjectData } from "@/lib/db/projects";
 import { completeLlmText } from "@/lib/llm/unified";
-import { parseLlmModelId } from "@/lib/llm/parse-selection";
+import { parseLlmCompletionOptions } from "@/lib/llm/parse-selection";
 import { PROMPT_SPOTIFY_DESCRIPTION } from "@/lib/prompts/spotify-description";
 
 export async function POST(
@@ -32,13 +32,16 @@ export async function POST(
       prompt += `\n\nScript (for key moments and tone):\n${projectData.script_90min.slice(0, 8000)}`;
     }
 
-    const llmModelId = parseLlmModelId(body, "social");
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseLlmCompletionOptions(body, "social");
 
     const response = await completeLlmText("social", prompt, {
       modelId: llmModelId,
       maxTokens: 512,
       temperature: 0.7,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
 
     const spotify_description = response.trim();

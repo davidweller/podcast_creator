@@ -11,7 +11,8 @@ export async function POST(
     const { id } = await params;
     const projectId = parseInt(id);
     const body = await request.json().catch(() => ({}));
-    const { llmModelId } = parseScriptLlmSelection(body);
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseScriptLlmSelection(body);
 
     // Get script text
     const projectData = getProjectData(projectId);
@@ -35,6 +36,8 @@ export async function POST(
     const analysis = await analyzeScript(script, "90min", {
       llmModelId,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
 
     return NextResponse.json(analysis);

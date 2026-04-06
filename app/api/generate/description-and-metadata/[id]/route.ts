@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectData, updateProjectData, updateProjectStatus } from "@/lib/db/projects";
 import { completeLlmText } from "@/lib/llm/unified";
-import { parseLlmModelId } from "@/lib/llm/parse-selection";
+import { parseLlmCompletionOptions } from "@/lib/llm/parse-selection";
 import {
   PROMPT_DESCRIPTION_AND_METADATA,
   DESCRIPTION_METADATA_DELIMITER,
@@ -30,13 +30,16 @@ export async function POST(
       prompt += `\n\nScript (for timestamps):\n${projectData.script_90min}`;
     }
 
-    const llmModelId = parseLlmModelId(body, "social");
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseLlmCompletionOptions(body, "social");
 
     const response = await completeLlmText("social", prompt, {
       modelId: llmModelId,
       maxTokens: 4096,
       temperature: 0.7,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
 
     const delimiter = DESCRIPTION_METADATA_DELIMITER;

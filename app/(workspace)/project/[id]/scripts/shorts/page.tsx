@@ -9,6 +9,7 @@ import {
 
 const SOCIAL_MODELS = listModelsForStage("social");
 const LS_SOCIAL_MODEL = "cozycrime:llm:social";
+const LS_SOCIAL_THINKING = "cozycrime:llm:social:thinking";
 
 export default function ScriptShortsPage() {
   const params = useParams();
@@ -20,11 +21,13 @@ export default function ScriptShortsPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
   const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.social);
+  const [useThinking, setUseThinking] = useState(false);
 
   useEffect(() => {
     try {
       const s = localStorage.getItem(LS_SOCIAL_MODEL);
       if (s && SOCIAL_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+      if (localStorage.getItem(LS_SOCIAL_THINKING) === "1") setUseThinking(true);
     } catch {
       /* ignore */
     }
@@ -33,10 +36,14 @@ export default function ScriptShortsPage() {
   useEffect(() => {
     try {
       localStorage.setItem(LS_SOCIAL_MODEL, llmModelId);
+      localStorage.setItem(LS_SOCIAL_THINKING, useThinking ? "1" : "0");
     } catch {
       /* ignore */
     }
-  }, [llmModelId]);
+  }, [llmModelId, useThinking]);
+
+  const selectedSocialModel = SOCIAL_MODELS.find((m) => m.id === llmModelId);
+  const thinkingSupported = selectedSocialModel?.supportsThinking ?? false;
 
   useEffect(() => {
     loadShorts();
@@ -64,7 +71,10 @@ export default function ScriptShortsPage() {
       const res = await fetch(`/api/generate/shorts/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ llmModelId }),
+        body: JSON.stringify({
+          llmModelId,
+          useThinking: thinkingSupported && useThinking,
+        }),
       });
 
       const data = await res.json();
@@ -143,24 +153,43 @@ export default function ScriptShortsPage() {
           </div>
         )}
 
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <label className="text-sm font-medium text-slate-700">Model:</label>
-          <select
-            value={llmModelId}
-            onChange={(e) => setLlmModelId(e.target.value)}
-            disabled={loading}
-            className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[14rem]"
-          >
-            {[...new Set(SOCIAL_MODELS.map((m) => m.group))].map((group) => (
-              <optgroup key={group} label={group}>
-                {SOCIAL_MODELS.filter((m) => m.group === group).map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.label}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+        <div className="mb-4 flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-sm font-medium text-slate-700">Model:</label>
+            <select
+              value={llmModelId}
+              onChange={(e) => {
+                const v = e.target.value;
+                setLlmModelId(v);
+                const m = SOCIAL_MODELS.find((x) => x.id === v);
+                if (!m?.supportsThinking) setUseThinking(false);
+              }}
+              disabled={loading}
+              className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[14rem]"
+            >
+              {[...new Set(SOCIAL_MODELS.map((m) => m.group))].map((group) => (
+                <optgroup key={group} label={group}>
+                  {SOCIAL_MODELS.filter((m) => m.group === group).map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+          {thinkingSupported && (
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useThinking}
+                onChange={(e) => setUseThinking(e.target.checked)}
+                disabled={loading}
+                className="rounded border-slate-300"
+              />
+              Extended thinking
+            </label>
+          )}
         </div>
 
         <div className="flex gap-4 mb-6">

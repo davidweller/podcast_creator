@@ -13,6 +13,7 @@ import {
 
 const IMAGE_PROMPT_MODELS = listModelsForStage("imagePrompt");
 const LS_IMAGE_PROMPT_MODEL = "cozycrime:llm:imagePrompt";
+const LS_IMAGE_PROMPT_THINKING = "cozycrime:llm:imagePrompt:thinking";
 const LS_GEMINI_IMAGE = "cozycrime:gemini:imageModel";
 
 export default function ImagesPage() {
@@ -28,12 +29,14 @@ export default function ImagesPage() {
   const [promptsElapsedTime, setPromptsElapsedTime] = useState(0);
   const [imagesElapsedTime, setImagesElapsedTime] = useState(0);
   const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.imagePrompt);
+  const [useThinking, setUseThinking] = useState(false);
   const [geminiImageModel, setGeminiImageModel] = useState(DEFAULT_GEMINI_IMAGE_MODEL);
 
   useEffect(() => {
     try {
       const s = localStorage.getItem(LS_IMAGE_PROMPT_MODEL);
       if (s && IMAGE_PROMPT_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+      if (localStorage.getItem(LS_IMAGE_PROMPT_THINKING) === "1") setUseThinking(true);
       const g = localStorage.getItem(LS_GEMINI_IMAGE);
       if (g && GEMINI_IMAGE_MODELS.some((m) => m.id === g)) {
         setGeminiImageModel(g as typeof DEFAULT_GEMINI_IMAGE_MODEL);
@@ -46,11 +49,15 @@ export default function ImagesPage() {
   useEffect(() => {
     try {
       localStorage.setItem(LS_IMAGE_PROMPT_MODEL, llmModelId);
+      localStorage.setItem(LS_IMAGE_PROMPT_THINKING, useThinking ? "1" : "0");
       localStorage.setItem(LS_GEMINI_IMAGE, geminiImageModel);
     } catch {
       /* ignore */
     }
-  }, [llmModelId, geminiImageModel]);
+  }, [llmModelId, useThinking, geminiImageModel]);
+
+  const selectedPromptModel = IMAGE_PROMPT_MODELS.find((m) => m.id === llmModelId);
+  const promptThinkingSupported = selectedPromptModel?.supportsThinking ?? false;
 
   const loadImages = useCallback(async () => {
     try {
@@ -113,7 +120,10 @@ export default function ImagesPage() {
       const res = await fetch(`/api/generate/image-prompts/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ llmModelId }),
+        body: JSON.stringify({
+          llmModelId,
+          useThinking: promptThinkingSupported && useThinking,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -242,31 +252,50 @@ export default function ImagesPage() {
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-2xl font-bold text-slate-900 mb-2">Images</h2>
         <p className="text-sm text-slate-600 mb-6">
-          36 illustrated scene images plus a YouTube thumbnail. Style: period-accurate, Rick and Morty–esque illustrated. Generate prompts with your chosen LLM, then generate images with Gemini.
+          36 illustrated scene images plus a YouTube thumbnail. Style: period-accurate, Rick and Morty–esque illustrated. Generate prompts with your chosen LLM, then generate images with Nano Banana (Gemini image).
         </p>
 
         <div className="mb-4 flex flex-wrap gap-6 items-end">
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Prompt LLM</label>
-            <select
-              value={llmModelId}
-              onChange={(e) => setLlmModelId(e.target.value)}
-              disabled={loadingPrompts}
-              className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[12rem]"
-            >
-              {[...new Set(IMAGE_PROMPT_MODELS.map((m) => m.group))].map((group) => (
-                <optgroup key={group} label={group}>
-                  {IMAGE_PROMPT_MODELS.filter((m) => m.group === group).map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={llmModelId}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setLlmModelId(v);
+                  const m = IMAGE_PROMPT_MODELS.find((x) => x.id === v);
+                  if (!m?.supportsThinking) setUseThinking(false);
+                }}
+                disabled={loadingPrompts}
+                className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[12rem]"
+              >
+                {[...new Set(IMAGE_PROMPT_MODELS.map((m) => m.group))].map((group) => (
+                  <optgroup key={group} label={group}>
+                    {IMAGE_PROMPT_MODELS.filter((m) => m.group === group).map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              {promptThinkingSupported && (
+                <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useThinking}
+                    onChange={(e) => setUseThinking(e.target.checked)}
+                    disabled={loadingPrompts}
+                    className="rounded border-slate-300"
+                  />
+                  Extended thinking
+                </label>
+              )}
+            </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Image model (Gemini)</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Image model (Nano Banana)</label>
             <select
               value={geminiImageModel}
               onChange={(e) => setGeminiImageModel(e.target.value as typeof DEFAULT_GEMINI_IMAGE_MODEL)}

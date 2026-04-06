@@ -109,6 +109,8 @@ export async function generateScript90Min(
     maxTokens: 4096,
     temperature: 0.4,
     projectId,
+    useThinking,
+    thinkingBudget,
   });
   attempts += 1;
 

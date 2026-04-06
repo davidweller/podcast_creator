@@ -12,7 +12,8 @@ export async function POST(
     const { id } = await params;
     const projectId = parseInt(id);
     const body = await request.json();
-    const { llmModelId } = parseScriptLlmSelection(body);
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseScriptLlmSelection(body);
     const { suggestions } = body;
 
     if (!Array.isArray(suggestions) || suggestions.length === 0) {
@@ -54,6 +55,8 @@ export async function POST(
     const improvedScript = await applyImprovements(script, validSuggestions, "90min", {
       llmModelId,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
 
     // Update project data

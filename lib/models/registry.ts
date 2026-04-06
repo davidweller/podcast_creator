@@ -52,60 +52,14 @@ export const LLM_MODELS: LlmModelEntry[] = [
     supportsThinking: true,
     stages: ALL_TEXT_STAGES,
   },
-  // OpenRouter — Claude
-  {
-    id: "openrouter/anthropic/claude-sonnet-4.6",
-    label: "Claude Sonnet 4.6 (OpenRouter)",
-    group: "OpenRouter",
-    provider: "openrouter",
-    apiModel: "anthropic/claude-sonnet-4.6",
-    supportsThinking: true,
-    stages: ALL_TEXT_STAGES,
-  },
-  {
-    id: "openrouter/anthropic/claude-opus-4.6",
-    label: "Claude Opus 4.6 (OpenRouter)",
-    group: "OpenRouter",
-    provider: "openrouter",
-    apiModel: "anthropic/claude-opus-4.6",
-    supportsThinking: true,
-    stages: ALL_TEXT_STAGES,
-  },
-  // OpenRouter — OpenAI GPT-5.2+
-  {
-    id: "openrouter/openai/gpt-5.2",
-    label: "GPT-5.2 (OpenRouter)",
-    group: "OpenRouter",
-    provider: "openrouter",
-    apiModel: "openai/gpt-5.2",
-    supportsThinking: false,
-    stages: ALL_TEXT_STAGES,
-  },
-  {
-    id: "openrouter/openai/gpt-5.2-chat",
-    label: "GPT-5.2 Chat (OpenRouter)",
-    group: "OpenRouter",
-    provider: "openrouter",
-    apiModel: "openai/gpt-5.2-chat",
-    supportsThinking: false,
-    stages: ALL_TEXT_STAGES,
-  },
-  // Qwen — confirm apiModel against OpenRouter if generation fails
+  // OpenRouter only exposes qwen/qwen3.6-plus:free (base qwen/qwen3.6-plus has no providers).
+  // No :thinking variant in the public model list — Extended thinking is disabled for this row.
   {
     id: "openrouter/qwen/qwen3.6-plus",
-    label: "Qwen 3.6 Plus (OpenRouter)",
+    label: "Qwen 3.6 Plus (OpenRouter, free)",
     group: "OpenRouter",
     provider: "openrouter",
-    apiModel: "qwen/qwen3-235b-a22b-2507",
-    supportsThinking: false,
-    stages: ALL_TEXT_STAGES,
-  },
-  {
-    id: "openrouter/qwen/qwen3-next-80b-a3b-instruct",
-    label: "Qwen3 Next 80B A3B Instruct (OpenRouter)",
-    group: "OpenRouter",
-    provider: "openrouter",
-    apiModel: "qwen/qwen3-next-80b-a3b-instruct",
+    apiModel: "qwen/qwen3.6-plus:free",
     supportsThinking: false,
     stages: ALL_TEXT_STAGES,
   },
@@ -132,6 +86,10 @@ export function resolveOpenRouterApiModel(
 ): string {
   if (entry.provider !== "openrouter") return entry.apiModel;
   if (!useThinking || !entry.supportsThinking) return entry.apiModel;
+  // Thinking is a variant suffix, not stacked after :free (would be invalid).
+  if (entry.apiModel.endsWith(":free")) {
+    return entry.apiModel.replace(/:free$/, ":thinking");
+  }
   return `${entry.apiModel}:thinking`;
 }
 
@@ -143,11 +101,11 @@ export const DEFAULT_LLM_BY_STAGE: Record<LlmStage, string> = {
   social: "anthropic/claude-sonnet-4-6",
 };
 
-/** Gemini image generation models (allowlist) */
+/** Gemini image generation models (allowlist). Nano Banana = gemini-2.5-flash-image per Google docs. */
 export const GEMINI_IMAGE_MODELS = [
   {
     id: "gemini-2.5-flash-image",
-    label: "Gemini 2.5 Flash Image (default)",
+    label: "Nano Banana (Gemini 2.5 Flash Image)",
   },
 ] as const;
 

@@ -10,6 +10,7 @@ import {
 
 const RESEARCH_MODELS = listModelsForStage("research");
 const LS_RESEARCH_MODEL = "cozycrime:llm:research";
+const LS_RESEARCH_THINKING = "cozycrime:llm:research:thinking";
 
 export default function ResearchPage() {
   const params = useParams();
@@ -22,11 +23,13 @@ export default function ResearchPage() {
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.research);
+  const [useThinking, setUseThinking] = useState(false);
 
   useEffect(() => {
     try {
       const s = localStorage.getItem(LS_RESEARCH_MODEL);
       if (s && RESEARCH_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+      if (localStorage.getItem(LS_RESEARCH_THINKING) === "1") setUseThinking(true);
     } catch {
       /* ignore */
     }
@@ -35,10 +38,14 @@ export default function ResearchPage() {
   useEffect(() => {
     try {
       localStorage.setItem(LS_RESEARCH_MODEL, llmModelId);
+      localStorage.setItem(LS_RESEARCH_THINKING, useThinking ? "1" : "0");
     } catch {
       /* ignore */
     }
-  }, [llmModelId]);
+  }, [llmModelId, useThinking]);
+
+  const selectedResearchModel = RESEARCH_MODELS.find((m) => m.id === llmModelId);
+  const thinkingSupported = selectedResearchModel?.supportsThinking ?? false;
 
   useEffect(() => {
     loadResearch();
@@ -96,7 +103,11 @@ export default function ResearchPage() {
       const res = await fetch(`/api/generate/research/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: trimmed, llmModelId }),
+        body: JSON.stringify({
+          topic: trimmed,
+          llmModelId,
+          useThinking: thinkingSupported && useThinking,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -139,7 +150,12 @@ export default function ResearchPage() {
             <span className="block mb-1 font-medium">Model</span>
             <select
               value={llmModelId}
-              onChange={(e) => setLlmModelId(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setLlmModelId(v);
+                const m = RESEARCH_MODELS.find((x) => x.id === v);
+                if (!m?.supportsThinking) setUseThinking(false);
+              }}
               disabled={researching}
               className="text-sm border border-slate-300 rounded px-2 py-2 bg-white min-w-[12rem]"
             >
@@ -154,6 +170,18 @@ export default function ResearchPage() {
               ))}
             </select>
           </label>
+          {thinkingSupported && (
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useThinking}
+                onChange={(e) => setUseThinking(e.target.checked)}
+                disabled={researching}
+                className="rounded border-slate-300"
+              />
+              Extended thinking
+            </label>
+          )}
           <label className="flex-1 min-w-[200px]">
             <span className="sr-only">Research topic</span>
             <input

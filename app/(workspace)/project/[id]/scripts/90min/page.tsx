@@ -14,6 +14,8 @@ const ESTIMATE_90MIN = "3–8 min";
 
 const SCRIPT_MODELS = listModelsForStage("script");
 const LS_SCRIPT_MODEL = "cozycrime:llm:script";
+const LS_SCRIPT_THINKING = "cozycrime:llm:script:thinking";
+const DEFAULT_THINKING_BUDGET = 10000;
 
 const ANALYSIS_PHASES = [
   { id: "opening", label: "Opening & Welcome Block" },
@@ -58,6 +60,7 @@ export default function Script90MinPage() {
       if (s && SCRIPT_MODELS.some((m) => m.id === s)) {
         setSelectedLlmModelId(s);
       }
+      if (localStorage.getItem(LS_SCRIPT_THINKING) === "1") setUseThinking(true);
     } catch {
       /* ignore */
     }
@@ -66,10 +69,11 @@ export default function Script90MinPage() {
   useEffect(() => {
     try {
       localStorage.setItem(LS_SCRIPT_MODEL, selectedLlmModelId);
+      localStorage.setItem(LS_SCRIPT_THINKING, useThinking ? "1" : "0");
     } catch {
       /* ignore */
     }
-  }, [selectedLlmModelId]);
+  }, [selectedLlmModelId, useThinking]);
 
   const selectedEntry = SCRIPT_MODELS.find((m) => m.id === selectedLlmModelId);
   const thinkingSupported = selectedEntry?.supportsThinking ?? false;
@@ -121,6 +125,7 @@ export default function Script90MinPage() {
           type: "90min",
           llmModelId: selectedLlmModelId,
           useThinking: thinkingSupported && useThinking,
+          thinkingBudget: DEFAULT_THINKING_BUDGET,
         }),
       });
 
@@ -163,6 +168,8 @@ export default function Script90MinPage() {
         body: JSON.stringify({
           type: "90min",
           llmModelId: selectedLlmModelId,
+          useThinking: thinkingSupported && useThinking,
+          thinkingBudget: DEFAULT_THINKING_BUDGET,
         }),
       });
 
@@ -228,6 +235,8 @@ export default function Script90MinPage() {
           body: JSON.stringify({
             type: "90min",
             llmModelId: selectedLlmModelId,
+            useThinking: thinkingSupported && useThinking,
+            thinkingBudget: DEFAULT_THINKING_BUDGET,
             suggestion: suggestions[i],
           }),
         });
@@ -305,6 +314,8 @@ export default function Script90MinPage() {
         body: JSON.stringify({
           type: "90min",
           llmModelId: selectedLlmModelId,
+          useThinking: thinkingSupported && useThinking,
+          thinkingBudget: DEFAULT_THINKING_BUDGET,
           suggestion: suggestion,
         }),
       });

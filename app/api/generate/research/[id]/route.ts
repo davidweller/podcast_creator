@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import path from "path";
 import { updateProjectData } from "@/lib/db/projects";
 import { completeLlmText } from "@/lib/llm/unified";
-import { parseLlmModelId } from "@/lib/llm/parse-selection";
+import { parseLlmCompletionOptions } from "@/lib/llm/parse-selection";
 
 const RESEARCH_PROMPT_PATH = path.join(
   process.cwd(),
@@ -42,7 +42,8 @@ export async function POST(
     const userMessage =
       "Produce the structured fact clusters for the topic above. Follow the four cluster templates exactly.";
 
-    const llmModelId = parseLlmModelId(body, "research");
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseLlmCompletionOptions(body, "research");
 
     const research = await completeLlmText("research", userMessage, {
       system: systemPrompt,
@@ -50,6 +51,8 @@ export async function POST(
       maxTokens: 16384,
       temperature: 0.4,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
 
     updateProjectData(projectId, { research_text: research });

@@ -25,9 +25,29 @@ export async function completeLlmText(
     temperature: number;
     maxTokens: number;
     projectId?: number | null;
+    /** When true and the model supports it, uses extended thinking (streaming). */
+    useThinking?: boolean;
+    thinkingBudget?: number;
   }
 ): Promise<string> {
   const entry = getLlmModelOrThrow(options.modelId);
+  const useThinking = Boolean(
+    options.useThinking && entry.supportsThinking
+  );
+
+  if (useThinking) {
+    const chunks: string[] = [];
+    await streamLlmText(stage, prompt, (c) => chunks.push(c), {
+      modelId: options.modelId,
+      useThinking: true,
+      thinkingBudget: options.thinkingBudget ?? 10000,
+      maxTokens: options.maxTokens,
+      temperature: options.temperature,
+      system: options.system,
+      projectId: options.projectId ?? undefined,
+    });
+    return chunks.join("").trim();
+  }
 
   if (entry.provider === "anthropic") {
     const apiKey = resolveProviderApiKey("anthropic") ?? undefined;

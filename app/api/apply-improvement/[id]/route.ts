@@ -12,7 +12,8 @@ export async function POST(
     const { id } = await params;
     const projectId = parseInt(id);
     const body = await request.json();
-    const { llmModelId } = parseScriptLlmSelection(body);
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseScriptLlmSelection(body);
     const { suggestion, type } = body;
 
     if (!suggestion || !suggestion.description) {
@@ -55,6 +56,8 @@ export async function POST(
     const improvedScript = await applySingleImprovement(script, validSuggestion, {
       llmModelId,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
     
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

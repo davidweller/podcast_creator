@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProjectData, getProject } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
 import { completeLlmText } from "@/lib/llm/unified";
-import { parseLlmModelId } from "@/lib/llm/parse-selection";
+import { parseLlmCompletionOptions } from "@/lib/llm/parse-selection";
 import { PROMPT_SHORTS } from "@/lib/prompts/shorts";
 
 export async function POST(
@@ -36,13 +36,16 @@ export async function POST(
 
     const prompt = `${PROMPT_SHORTS}\n\nTitle: ${project.title}\n\nCompelling details:\n${compellingDetails}`;
 
-    const llmModelId = parseLlmModelId(body, "social");
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseLlmCompletionOptions(body, "social");
 
     const shorts = await completeLlmText("social", prompt, {
       modelId: llmModelId,
       maxTokens: 512,
       temperature: 0.7,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
 
     updateProjectData(projectId, { shorts });

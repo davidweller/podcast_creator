@@ -3,7 +3,7 @@ import { getProject } from "@/lib/db/projects";
 import { getProjectData } from "@/lib/db/projects";
 import { getProjectImages, setProjectImagesPrompts } from "@/lib/db/project-images";
 import { completeLlmText } from "@/lib/llm/unified";
-import { parseLlmModelId } from "@/lib/llm/parse-selection";
+import { parseLlmCompletionOptions } from "@/lib/llm/parse-selection";
 import { PROMPT_IMAGE_SET } from "@/lib/prompts/image-set";
 
 interface ImageSetResponse {
@@ -50,13 +50,16 @@ Era and location: ${project.era_location}
 Research:
 ${projectData.research_text}`;
 
-    const llmModelId = parseLlmModelId(body, "imagePrompt");
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseLlmCompletionOptions(body, "imagePrompt");
 
     const raw = await completeLlmText("imagePrompt", prompt, {
       modelId: llmModelId,
       maxTokens: 16384, // Increased to ensure all 36 prompts fit
       temperature: 0.6,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
 
     const parsed = parseImageSetResponse(raw);

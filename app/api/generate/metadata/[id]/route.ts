@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProjectData } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
 import { completeLlmText } from "@/lib/llm/unified";
-import { parseLlmModelId } from "@/lib/llm/parse-selection";
+import { parseLlmCompletionOptions } from "@/lib/llm/parse-selection";
 import { PROMPT_METADATA } from "@/lib/prompts/metadata";
 
 export async function POST(
@@ -24,13 +24,16 @@ export async function POST(
 
     const prompt = `${PROMPT_METADATA}\n\nResearch:\n${projectData.research_text}`;
 
-    const llmModelId = parseLlmModelId(body, "social");
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseLlmCompletionOptions(body, "social");
 
     const metadata = await completeLlmText("social", prompt, {
       modelId: llmModelId,
       maxTokens: 2048,
       temperature: 0.7,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
 
     // Store as JSON string

@@ -6,6 +6,8 @@ import type { ImprovementAnalysis, ImprovementSuggestion } from "@/types/improve
 export interface ImprovementLlmOptions {
   llmModelId?: string;
   projectId?: number;
+  useThinking?: boolean;
+  thinkingBudget?: number;
 }
 
 export async function analyzeScript(
@@ -25,6 +27,8 @@ export async function analyzeScript(
       maxTokens: 4096,
       temperature: 0.3,
       projectId: llm?.projectId,
+      useThinking: llm?.useThinking,
+      thinkingBudget: llm?.thinkingBudget,
     });
 
     let parsed: ImprovementAnalysis | null = null;
@@ -188,6 +192,8 @@ export async function applyImprovements(
       maxTokens: 16384,
       temperature: 0.3,
       projectId: llm?.projectId,
+      useThinking: llm?.useThinking,
+      thinkingBudget: llm?.thinkingBudget,
     });
 
     // Clean up the response (remove any markdown formatting if present)
@@ -219,6 +225,8 @@ export async function applySingleImprovement(
       maxTokens: 16384,
       temperature: 0.2,
       projectId: llm?.projectId,
+      useThinking: llm?.useThinking,
+      thinkingBudget: llm?.thinkingBudget,
     });
 
     let cleaned = improvedScript.trim();

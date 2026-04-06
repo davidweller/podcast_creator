@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProjectData } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
 import { completeLlmText } from "@/lib/llm/unified";
-import { parseLlmModelId } from "@/lib/llm/parse-selection";
+import { parseLlmCompletionOptions } from "@/lib/llm/parse-selection";
 import { PROMPT_IMAGE_PROMPT } from "@/lib/prompts/image-prompt";
 
 export async function POST(
@@ -24,13 +24,16 @@ export async function POST(
 
     const prompt = `${PROMPT_IMAGE_PROMPT}\n\nResearch:\n${projectData.research_text}`;
 
-    const llmModelId = parseLlmModelId(body, "imagePrompt");
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseLlmCompletionOptions(body, "imagePrompt");
 
     const imagePrompt = await completeLlmText("imagePrompt", prompt, {
       modelId: llmModelId,
       maxTokens: 1024,
       temperature: 0.7,
       projectId,
+      useThinking,
+      thinkingBudget,
     });
 
     updateProjectData(projectId, { image_prompt: imagePrompt });

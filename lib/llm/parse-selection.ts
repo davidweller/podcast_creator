@@ -22,6 +22,31 @@ export function parseLlmModelId(
   return raw;
 }
 
+/** Model id + extended thinking flag (only applied if the model supports thinking). */
+export function parseLlmCompletionOptions(
+  body: unknown,
+  stage: LlmStage,
+  fallbackModel: string = DEFAULT_LLM_BY_STAGE[stage]
+): {
+  llmModelId: string;
+  useThinking: boolean;
+  thinkingBudget: number;
+} {
+  const llmModelId = parseLlmModelId(body, stage, fallbackModel);
+  const entry = getLlmModelOrThrow(llmModelId);
+  const b = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  const wantThinking = Boolean(b.useThinking);
+  const thinkingBudget =
+    typeof b.thinkingBudget === "number" && b.thinkingBudget > 0
+      ? Math.floor(b.thinkingBudget)
+      : 10000;
+  return {
+    llmModelId,
+    useThinking: wantThinking && entry.supportsThinking,
+    thinkingBudget,
+  };
+}
+
 /**
  * Script generation: supports new `llmModelId` or legacy Anthropic `modelId`.
  */

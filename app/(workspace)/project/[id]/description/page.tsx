@@ -10,6 +10,7 @@ import {
 
 const SOCIAL_MODELS = listModelsForStage("social");
 const LS_SOCIAL_MODEL = "cozycrime:llm:social";
+const LS_SOCIAL_THINKING = "cozycrime:llm:social:thinking";
 
 export default function DescriptionPage() {
   const params = useParams();
@@ -23,11 +24,13 @@ export default function DescriptionPage() {
   const [loadingSpotify, setLoadingSpotify] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.social);
+  const [useThinking, setUseThinking] = useState(false);
 
   useEffect(() => {
     try {
       const s = localStorage.getItem(LS_SOCIAL_MODEL);
       if (s && SOCIAL_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+      if (localStorage.getItem(LS_SOCIAL_THINKING) === "1") setUseThinking(true);
     } catch {
       /* ignore */
     }
@@ -36,10 +39,14 @@ export default function DescriptionPage() {
   useEffect(() => {
     try {
       localStorage.setItem(LS_SOCIAL_MODEL, llmModelId);
+      localStorage.setItem(LS_SOCIAL_THINKING, useThinking ? "1" : "0");
     } catch {
       /* ignore */
     }
-  }, [llmModelId]);
+  }, [llmModelId, useThinking]);
+
+  const selectedSocialModel = SOCIAL_MODELS.find((m) => m.id === llmModelId);
+  const thinkingSupported = selectedSocialModel?.supportsThinking ?? false;
 
   useEffect(() => {
     loadData();
@@ -85,7 +92,10 @@ export default function DescriptionPage() {
       const res = await fetch(`/api/generate/description-and-metadata/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ llmModelId }),
+        body: JSON.stringify({
+          llmModelId,
+          useThinking: thinkingSupported && useThinking,
+        }),
       });
 
       const data = await res.json();
@@ -112,7 +122,10 @@ export default function DescriptionPage() {
       const res = await fetch(`/api/generate/spotify-description/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ llmModelId }),
+        body: JSON.stringify({
+          llmModelId,
+          useThinking: thinkingSupported && useThinking,
+        }),
       });
 
       const data = await res.json();
@@ -212,23 +225,41 @@ export default function DescriptionPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-4 border border-slate-200">
-        <label className="text-sm font-medium text-slate-700 mr-2">LLM for social copy:</label>
-        <select
-          value={llmModelId}
-          onChange={(e) => setLlmModelId(e.target.value)}
-          className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[14rem]"
-        >
-          {[...new Set(SOCIAL_MODELS.map((m) => m.group))].map((group) => (
-            <optgroup key={group} label={group}>
-              {SOCIAL_MODELS.filter((m) => m.group === group).map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.label}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
+      <div className="bg-white rounded-lg shadow-md p-4 border border-slate-200 flex flex-wrap items-center gap-4">
+        <div>
+          <label className="text-sm font-medium text-slate-700 mr-2">LLM for social copy:</label>
+          <select
+            value={llmModelId}
+            onChange={(e) => {
+              const v = e.target.value;
+              setLlmModelId(v);
+              const m = SOCIAL_MODELS.find((x) => x.id === v);
+              if (!m?.supportsThinking) setUseThinking(false);
+            }}
+            className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[14rem]"
+          >
+            {[...new Set(SOCIAL_MODELS.map((m) => m.group))].map((group) => (
+              <optgroup key={group} label={group}>
+                {SOCIAL_MODELS.filter((m) => m.group === group).map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+        {thinkingSupported && (
+          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useThinking}
+              onChange={(e) => setUseThinking(e.target.checked)}
+              className="rounded border-slate-300"
+            />
+            Extended thinking
+          </label>
+        )}
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
