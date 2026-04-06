@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectData } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
-import { callClaude } from "@/lib/claude/client";
+import { completeLlmText } from "@/lib/llm/unified";
+import { parseLlmModelId } from "@/lib/llm/parse-selection";
 import { PROMPT_IMAGE_PROMPT } from "@/lib/prompts/image-prompt";
 
 export async function POST(
@@ -11,6 +12,7 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
+    const body = await request.json().catch(() => ({}));
     const projectData = getProjectData(projectId);
 
     if (!projectData || !projectData.research_text) {
@@ -22,9 +24,13 @@ export async function POST(
 
     const prompt = `${PROMPT_IMAGE_PROMPT}\n\nResearch:\n${projectData.research_text}`;
 
-    const imagePrompt = await callClaude(prompt, {
+    const llmModelId = parseLlmModelId(body, "imagePrompt");
+
+    const imagePrompt = await completeLlmText("imagePrompt", prompt, {
+      modelId: llmModelId,
       maxTokens: 1024,
       temperature: 0.7,
+      projectId,
     });
 
     updateProjectData(projectId, { image_prompt: imagePrompt });

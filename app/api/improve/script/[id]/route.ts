@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectData } from "@/lib/db/projects";
 import { analyzeScript } from "@/lib/generation/improvement";
+import { parseScriptLlmSelection } from "@/lib/llm/parse-selection";
 
 export async function POST(
   request: NextRequest,
@@ -9,6 +10,8 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
+    const body = await request.json().catch(() => ({}));
+    const { llmModelId } = parseScriptLlmSelection(body);
 
     // Get script text
     const projectData = getProjectData(projectId);
@@ -29,7 +32,10 @@ export async function POST(
     }
 
     // Analyze script for improvements
-    const analysis = await analyzeScript(script, "90min");
+    const analysis = await analyzeScript(script, "90min", {
+      llmModelId,
+      projectId,
+    });
 
     return NextResponse.json(analysis);
   } catch (error: any) {

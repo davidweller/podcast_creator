@@ -1,10 +1,9 @@
+import { completeLlmText, streamLlmText } from "@/lib/llm/unified";
 import {
-  callClaude,
-  callClaudeStreaming,
-  SCRIPT_MODEL,
-  DEFAULT_MODEL,
-  type ScriptModelConfig,
-} from "@/lib/claude/client";
+  DEFAULT_LLM_BY_STAGE,
+  getLlmModelOrThrow,
+} from "@/lib/models/registry";
+import type { ScriptModelConfig } from "@/lib/claude/client";
 import {
   MIN_SCRIPT_WORDS_60_MIN,
   TARGET_SCRIPT_WORDS_MIN,
@@ -15,7 +14,13 @@ import { buildScriptContinuationPrompt } from "@/lib/prompts/script-continue";
 import { buildFullScriptPrompt } from "@/lib/prompts/script-90min";
 
 export interface GenerateScript90MinOptions {
+  /** Unified registry model id (preferred) */
+  llmModelId?: string;
+  useThinking?: boolean;
+  thinkingBudget?: number;
+  /** Legacy Anthropic-only config */
   modelConfig?: ScriptModelConfig;
+  projectId?: number;
 }
 
 function countWords(text: string): number {
@@ -25,7 +30,6 @@ function countWords(text: string): number {
 const REQUIRED_ENDING_LINE = "Rest well. A peaceful night to you.";
 
 function stripRequiredEnding(script: string): string {
-  // Ensure we don't end up with the required ending line in the middle after appending.
   const trimmed = script.trim();
   if (!trimmed.endsWith(REQUIRED_ENDING_LINE)) return trimmed;
   return trimmed.slice(0, trimmed.length - REQUIRED_ENDING_LINE.length).trimEnd();
@@ -35,6 +39,35 @@ function ensureRequiredEnding(script: string): string {
   const trimmed = script.trimEnd();
   if (trimmed.endsWith(REQUIRED_ENDING_LINE)) return trimmed;
   return `${trimmed}\n\n${REQUIRED_ENDING_LINE}`;
+}
+
+function resolveUnifiedOptions(
+  options?: GenerateScript90MinOptions
+): {
+  llmModelId: string;
+  useThinking: boolean;
+  thinkingBudget: number;
+  projectId?: number;
+} {
+  if (options?.modelConfig) {
+    const legacyId = `anthropic/${options.modelConfig.modelId}`;
+    getLlmModelOrThrow(legacyId);
+    return {
+      llmModelId: legacyId,
+      useThinking: options.modelConfig.useThinking,
+      thinkingBudget: options.modelConfig.thinkingBudget ?? 10000,
+      projectId: options?.projectId,
+    };
+  }
+  const llmModelId =
+    options?.llmModelId ?? DEFAULT_LLM_BY_STAGE.script;
+  getLlmModelOrThrow(llmModelId);
+  return {
+    llmModelId,
+    useThinking: options?.useThinking ?? false,
+    thinkingBudget: options?.thinkingBudget ?? 10000,
+    projectId: options?.projectId,
+  };
 }
 
 /**
@@ -58,58 +91,57 @@ export async function generateScript90Min(
   attempts: number;
 }> {
   let attempts = 0;
-  
-  const modelId = options?.modelConfig?.modelId ?? SCRIPT_MODEL;
-  const useThinking = options?.modelConfig?.useThinking ?? false;
-  const thinkingBudget = options?.modelConfig?.thinkingBudget ?? 10000;
+
+  const { llmModelId, useThinking, thinkingBudget, projectId } =
+    resolveUnifiedOptions(options);
 
   console.log("[Script Gen] Starting generation with config:", {
-    modelId,
+    llmModelId,
     useThinking,
     thinkingBudget,
     researchWordCount: countWords(researchText),
   });
 
-  // Stage 1: build the narrative architecture
+  // Stage 1: build the narrative architecture (same model as Stage 2)
   const architecturePrompt = buildNarrativeArchitecturePrompt(researchText);
-  const narrativePlan = await callClaude(architecturePrompt, {
+  const narrativePlan = await completeLlmText("script", architecturePrompt, {
+    modelId: llmModelId,
     maxTokens: 4096,
     temperature: 0.4,
-    model: DEFAULT_MODEL,
+    projectId,
   });
   attempts += 1;
 
-  console.log("[Script Gen] Stage 1 complete. Narrative plan word count:", countWords(narrativePlan));
+  console.log(
+    "[Script Gen] Stage 1 complete. Narrative plan word count:",
+    countWords(narrativePlan)
+  );
 
   // Stage 2: generate the full script in one streamed pass
   const scriptPrompt = buildFullScriptPrompt(researchText, narrativePlan.trim());
   const requestedMaxTokens = useThinking ? 32768 + thinkingBudget : 32768;
-  
+
   console.log("[Script Gen] Stage 2 starting. Requested max_tokens:", requestedMaxTokens);
-  
+
   const chunks: string[] = [];
-  const streamResult = await callClaudeStreaming(
-    scriptPrompt,
-    (chunk) => chunks.push(chunk),
-    {
-      maxTokens: requestedMaxTokens,
-      temperature: useThinking ? 1 : 0.7,
-      model: modelId,
-      useThinking,
-      thinkingBudget,
-    },
-  );
+  const streamResult = await streamLlmText("script", scriptPrompt, (chunk) => chunks.push(chunk), {
+    modelId: llmModelId,
+    useThinking,
+    thinkingBudget,
+    maxTokens: requestedMaxTokens,
+    temperature: useThinking ? 1 : 0.7,
+    projectId,
+  });
   attempts += 1;
 
   let script = chunks.join("").trim();
 
-  // Strip markdown code fences if the model wrapped the output
   if (script.startsWith("```")) {
     script = script.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/i, "").trim();
   }
 
   const scriptWordCount = countWords(script);
-  
+
   console.log("[Script Gen] Stage 2 complete. Diagnostics:", {
     stopReason: streamResult.stopReason,
     inputTokens: streamResult.inputTokens,
@@ -135,7 +167,6 @@ export async function generateScript90Min(
     );
   }
 
-  // If the script is below the 60-minute minimum, run a single continuation pass and append.
   if (scriptWordCount < MIN_SCRIPT_WORDS_60_MIN) {
     console.log("[Script Gen] Below 60-minute minimum. Running continuation pass...");
 
@@ -154,15 +185,17 @@ export async function generateScript90Min(
     console.log("[Script Gen] Continuation starting. Requested max_tokens:", continuationMaxTokens);
 
     const continuationChunks: string[] = [];
-    const continuationResult = await callClaudeStreaming(
+    const continuationResult = await streamLlmText(
+      "script",
       continuationPrompt,
       (chunk) => continuationChunks.push(chunk),
       {
-        maxTokens: continuationMaxTokens,
-        temperature: useThinking ? 1 : 0.7,
-        model: modelId,
+        modelId: llmModelId,
         useThinking,
         thinkingBudget,
+        maxTokens: continuationMaxTokens,
+        temperature: useThinking ? 1 : 0.7,
+        projectId,
       }
     );
     attempts += 1;
@@ -181,7 +214,9 @@ export async function generateScript90Min(
       outputTokens: continuationResult.outputTokens,
     });
 
-    script = ensureRequiredEnding(`${baseScript}\n\n${stripRequiredEnding(continuationText)}`.trim());
+    script = ensureRequiredEnding(
+      `${baseScript}\n\n${stripRequiredEnding(continuationText)}`.trim()
+    );
 
     const finalWordCount = countWords(script);
     console.log("[Script Gen] Final script word count after continuation:", finalWordCount);
@@ -191,7 +226,6 @@ export async function generateScript90Min(
       );
     }
   } else {
-    // Ensure the final line is present exactly once.
     script = ensureRequiredEnding(stripRequiredEnding(script));
   }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectData, updateProjectData } from "@/lib/db/projects";
 import { applyImprovements } from "@/lib/generation/improvement";
+import { parseScriptLlmSelection } from "@/lib/llm/parse-selection";
 import type { ImprovementSuggestion } from "@/types/improvements";
 
 export async function POST(
@@ -11,6 +12,7 @@ export async function POST(
     const { id } = await params;
     const projectId = parseInt(id);
     const body = await request.json();
+    const { llmModelId } = parseScriptLlmSelection(body);
     const { suggestions } = body;
 
     if (!Array.isArray(suggestions) || suggestions.length === 0) {
@@ -49,7 +51,10 @@ export async function POST(
     }));
 
     // Apply improvements
-    const improvedScript = await applyImprovements(script, validSuggestions, "90min");
+    const improvedScript = await applyImprovements(script, validSuggestions, "90min", {
+      llmModelId,
+      projectId,
+    });
 
     // Update project data
     updateProjectData(projectId, { script_90min: improvedScript });

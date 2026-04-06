@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectImages, updateProjectImage } from "@/lib/db/project-images";
 import { generateImage } from "@/lib/gemini/client";
+import { DEFAULT_GEMINI_IMAGE_MODEL, getGeminiImageModelOrThrow } from "@/lib/models/registry";
 import { ensure16x9 } from "@/lib/images/ensure-16-9";
 import { saveProjectImage } from "@/lib/images/storage";
 import { IMAGE_SLOTS } from "@/types/database";
@@ -18,6 +19,11 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
+    const body = await request.json().catch(() => ({}));
+    const geminiImageModel =
+      typeof body.geminiImageModel === "string"
+        ? getGeminiImageModelOrThrow(body.geminiImageModel)
+        : DEFAULT_GEMINI_IMAGE_MODEL;
     const images = getProjectImages(projectId);
     console.log(`Processing ${images.length} image slots for project ${projectId}`);
 
@@ -45,7 +51,7 @@ export async function POST(
         continue;
       }
       try {
-        const buffer = await generateImage(prompt);
+        const buffer = await generateImage(prompt, { model: geminiImageModel });
         const buffer16x9 = await ensure16x9(buffer);
         const relativePath = saveProjectImage(projectId, slot, buffer16x9);
         updateProjectImage(projectId, slot, { image_path: relativePath });

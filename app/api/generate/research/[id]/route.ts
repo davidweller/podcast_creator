@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFileSync } from "fs";
 import path from "path";
 import { updateProjectData } from "@/lib/db/projects";
-import { callClaude, DEFAULT_MODEL } from "@/lib/claude/client";
+import { completeLlmText } from "@/lib/llm/unified";
+import { parseLlmModelId } from "@/lib/llm/parse-selection";
 
 const RESEARCH_PROMPT_PATH = path.join(
   process.cwd(),
@@ -41,11 +42,14 @@ export async function POST(
     const userMessage =
       "Produce the structured fact clusters for the topic above. Follow the four cluster templates exactly.";
 
-    const research = await callClaude(userMessage, {
+    const llmModelId = parseLlmModelId(body, "research");
+
+    const research = await completeLlmText("research", userMessage, {
+      system: systemPrompt,
+      modelId: llmModelId,
       maxTokens: 16384,
       temperature: 0.4,
-      system: systemPrompt,
-      model: DEFAULT_MODEL,
+      projectId,
     });
 
     updateProjectData(projectId, { research_text: research });
@@ -64,8 +68,10 @@ export async function POST(
 
     if (
       error?.message?.includes("ANTHROPIC_API_KEY") ||
+      error?.message?.includes("OPENROUTER_API_KEY") ||
       error?.message?.includes("api key") ||
-      error?.message?.includes("Invalid API key")
+      error?.message?.includes("Invalid API key") ||
+      error?.message?.includes("not configured")
     ) {
       errorMessage =
         error.message ||

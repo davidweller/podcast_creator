@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectImage, updateProjectImage } from "@/lib/db/project-images";
 import { generateImage } from "@/lib/gemini/client";
+import { DEFAULT_GEMINI_IMAGE_MODEL, getGeminiImageModelOrThrow } from "@/lib/models/registry";
 import { ensure16x9 } from "@/lib/images/ensure-16-9";
 import { saveProjectImage } from "@/lib/images/storage";
 import { IMAGE_SLOTS, type ImageSlot } from "@/types/database";
@@ -17,6 +18,10 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const slot = body.slot != null ? String(body.slot) : null;
     const promptOverride = typeof body.prompt === "string" ? body.prompt : undefined;
+    const geminiImageModel =
+      typeof body.geminiImageModel === "string"
+        ? getGeminiImageModelOrThrow(body.geminiImageModel)
+        : DEFAULT_GEMINI_IMAGE_MODEL;
 
     if (!slot || !VALID_SLOTS.has(slot as ImageSlot)) {
       return NextResponse.json(
@@ -38,7 +43,7 @@ export async function POST(
 
     console.log(`Generating image for slot ${slotKey}...`);
     try {
-      const buffer = await generateImage(prompt);
+      const buffer = await generateImage(prompt, { model: geminiImageModel });
       console.log(`Generated image buffer for slot ${slotKey}, size: ${buffer.length} bytes`);
       const buffer16x9 = await ensure16x9(buffer);
       console.log(`Processed 16:9 image for slot ${slotKey}, size: ${buffer16x9.length} bytes`);

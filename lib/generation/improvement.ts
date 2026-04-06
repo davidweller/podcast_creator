@@ -1,10 +1,17 @@
-import { callClaude } from "@/lib/claude/client";
+import { completeLlmText } from "@/lib/llm/unified";
+import { DEFAULT_LLM_BY_STAGE } from "@/lib/models/registry";
 import { buildImprovementPrompt, buildApplyImprovementsPrompt, buildApplySingleImprovementPrompt } from "@/lib/prompts/improvement";
 import type { ImprovementAnalysis, ImprovementSuggestion } from "@/types/improvements";
 
+export interface ImprovementLlmOptions {
+  llmModelId?: string;
+  projectId?: number;
+}
+
 export async function analyzeScript(
   script: string,
-  _type?: string
+  _type?: string,
+  llm?: ImprovementLlmOptions
 ): Promise<ImprovementAnalysis> {
   const improvementPrompt = buildImprovementPrompt(script);
 
@@ -12,9 +19,12 @@ export async function analyzeScript(
   let summary = "";
 
   try {
-    const response = await callClaude(improvementPrompt, {
+    const modelId = llm?.llmModelId ?? DEFAULT_LLM_BY_STAGE.script;
+    const response = await completeLlmText("script", improvementPrompt, {
+      modelId,
       maxTokens: 4096,
       temperature: 0.3,
+      projectId: llm?.projectId,
     });
 
     let parsed: ImprovementAnalysis | null = null;
@@ -148,7 +158,8 @@ export async function analyzeScript(
 export async function applyImprovements(
   script: string,
   suggestions: ImprovementSuggestion[],
-  _type?: string
+  _type?: string,
+  llm?: ImprovementLlmOptions
 ): Promise<string> {
   // Format suggestions for the prompt
   const suggestionsText = suggestions
@@ -171,9 +182,12 @@ export async function applyImprovements(
   const prompt = buildApplyImprovementsPrompt(script, suggestionsText);
 
   try {
-    const improvedScript = await callClaude(prompt, {
+    const modelId = llm?.llmModelId ?? DEFAULT_LLM_BY_STAGE.script;
+    const improvedScript = await completeLlmText("script", prompt, {
+      modelId,
       maxTokens: 16384,
       temperature: 0.3,
+      projectId: llm?.projectId,
     });
 
     // Clean up the response (remove any markdown formatting if present)
@@ -193,14 +207,18 @@ export async function applyImprovements(
 
 export async function applySingleImprovement(
   script: string,
-  suggestion: ImprovementSuggestion
+  suggestion: ImprovementSuggestion,
+  llm?: ImprovementLlmOptions
 ): Promise<string> {
   const prompt = buildApplySingleImprovementPrompt(script, suggestion);
 
   try {
-    const improvedScript = await callClaude(prompt, {
+    const modelId = llm?.llmModelId ?? DEFAULT_LLM_BY_STAGE.script;
+    const improvedScript = await completeLlmText("script", prompt, {
+      modelId,
       maxTokens: 16384,
       temperature: 0.2,
+      projectId: llm?.projectId,
     });
 
     let cleaned = improvedScript.trim();

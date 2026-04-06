@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectData } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
-import { callClaude } from "@/lib/claude/client";
+import { completeLlmText } from "@/lib/llm/unified";
+import { parseLlmModelId } from "@/lib/llm/parse-selection";
 import { PROMPT_METADATA } from "@/lib/prompts/metadata";
 
 export async function POST(
@@ -11,6 +12,7 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
+    const body = await request.json().catch(() => ({}));
     const projectData = getProjectData(projectId);
 
     if (!projectData || !projectData.research_text) {
@@ -22,9 +24,13 @@ export async function POST(
 
     const prompt = `${PROMPT_METADATA}\n\nResearch:\n${projectData.research_text}`;
 
-    const metadata = await callClaude(prompt, {
+    const llmModelId = parseLlmModelId(body, "social");
+
+    const metadata = await completeLlmText("social", prompt, {
+      modelId: llmModelId,
       maxTokens: 2048,
       temperature: 0.7,
+      projectId,
     });
 
     // Store as JSON string

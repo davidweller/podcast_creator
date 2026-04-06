@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectData, updateProjectData } from "@/lib/db/projects";
 import { applySingleImprovement } from "@/lib/generation/improvement";
+import { parseScriptLlmSelection } from "@/lib/llm/parse-selection";
 import type { ImprovementSuggestion } from "@/types/improvements";
 
 export async function POST(
@@ -11,6 +12,7 @@ export async function POST(
     const { id } = await params;
     const projectId = parseInt(id);
     const body = await request.json();
+    const { llmModelId } = parseScriptLlmSelection(body);
     const { suggestion, type } = body;
 
     if (!suggestion || !suggestion.description) {
@@ -50,7 +52,10 @@ export async function POST(
     console.log(`[Apply Improvement] Starting: ${validSuggestion.type} - ${validSuggestion.description.substring(0, 50)}...`);
     const startTime = Date.now();
     
-    const improvedScript = await applySingleImprovement(script, validSuggestion);
+    const improvedScript = await applySingleImprovement(script, validSuggestion, {
+      llmModelId,
+      projectId,
+    });
     
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[Apply Improvement] Completed in ${elapsed}s`);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProjectData } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
 import { generateScript90Min } from "@/lib/generation/generator-90min";
-import { CLAUDE_MODELS, type ClaudeModelId, type ScriptModelConfig } from "@/lib/claude/client";
+import { parseScriptLlmSelection } from "@/lib/llm/parse-selection";
 
 export async function POST(
   request: NextRequest,
@@ -11,17 +11,10 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
 
-    // Parse model configuration from request body
-    let modelConfig: ScriptModelConfig | undefined;
-    if (body.modelId && body.modelId in CLAUDE_MODELS) {
-      modelConfig = {
-        modelId: body.modelId as ClaudeModelId,
-        useThinking: body.useThinking ?? false,
-        thinkingBudget: body.thinkingBudget ?? 10000,
-      };
-    }
+    const { llmModelId, useThinking, thinkingBudget } =
+      parseScriptLlmSelection(body);
 
     // Get research text
     const projectData = getProjectData(projectId);
@@ -33,7 +26,12 @@ export async function POST(
     }
 
     // Generate 90-minute script
-    const result = await generateScript90Min(projectData.research_text, { modelConfig });
+    const result = await generateScript90Min(projectData.research_text, {
+      llmModelId,
+      useThinking,
+      thinkingBudget,
+      projectId,
+    });
     updateProjectData(projectId, { script_90min: result.script });
     updateProjectStatus(projectId, {
       script_90min_generated: true,
@@ -55,8 +53,8 @@ export async function POST(
     let errorMessage = "Failed to generate script. Please try again.";
     let statusCode = 500;
     
-    if (error?.message?.includes("ANTHROPIC_API_KEY") || error?.message?.includes("api key") || error?.message?.includes("Invalid API key")) {
-      errorMessage = error.message || "Claude API key not configured or invalid. Please check your ANTHROPIC_API_KEY in the .env file and restart your server.";
+    if (error?.message?.includes("ANTHROPIC_API_KEY") || error?.message?.includes("OPENROUTER_API_KEY") || error?.message?.includes("api key") || error?.message?.includes("Invalid API key") || error?.message?.includes("not configured")) {
+      errorMessage = error.message || "API key not configured or invalid. Check Settings or your .env file.";
     } else if (error?.message?.includes("authentication_error") || error?.message?.includes("invalid x-api-key")) {
       errorMessage = "Invalid API key. Please verify your ANTHROPIC_API_KEY in the .env file is correct and restart your server.";
     } else if (error?.message?.includes("overloaded") || error?.message?.includes("Overloaded") || error?.error?.type === "overloaded_error") {

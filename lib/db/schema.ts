@@ -67,6 +67,26 @@ export function getDatabase(): Database.Database {
 
     CREATE INDEX IF NOT EXISTS idx_projects_updated_at ON projects(updated_at DESC);
     CREATE INDEX IF NOT EXISTS idx_project_images_project_id ON project_images(project_id);
+
+    CREATE TABLE IF NOT EXISTS app_secrets (
+      provider_id TEXT PRIMARY KEY,
+      ciphertext BLOB NOT NULL,
+      nonce BLOB NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS llm_usage_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      stage TEXT,
+      provider TEXT NOT NULL,
+      model TEXT NOT NULL,
+      input_tokens INTEGER NOT NULL DEFAULT 0,
+      output_tokens INTEGER NOT NULL DEFAULT 0,
+      project_id INTEGER
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_llm_usage_created ON llm_usage_log(created_at DESC);
   `);
 
   // Migration: add spotify_description to existing project_data tables

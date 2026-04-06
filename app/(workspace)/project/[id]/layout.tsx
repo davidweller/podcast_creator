@@ -86,7 +86,8 @@ export default function ProjectLayout({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-8 py-4">
-          <div className="mb-4">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
             <Link
               href="/"
               className="text-sm text-slate-600 hover:text-slate-900 mb-2 inline-block"
@@ -132,6 +133,13 @@ export default function ProjectLayout({
                 <p className="text-sm text-slate-600">{project.era_location}</p>
               </div>
             )}
+            </div>
+            <Link
+              href="/settings"
+              className="text-sm font-medium text-slate-700 hover:text-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50"
+            >
+              Settings
+            </Link>
           </div>
           <nav className="flex gap-1 overflow-x-auto">
             {tabs.map((tab) => {

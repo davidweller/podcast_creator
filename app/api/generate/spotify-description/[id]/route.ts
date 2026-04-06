@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProject, getProjectData, updateProjectData } from "@/lib/db/projects";
-import { callClaude } from "@/lib/claude/client";
+import { completeLlmText } from "@/lib/llm/unified";
+import { parseLlmModelId } from "@/lib/llm/parse-selection";
 import { PROMPT_SPOTIFY_DESCRIPTION } from "@/lib/prompts/spotify-description";
 
 export async function POST(
@@ -10,6 +11,7 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
+    const body = await request.json().catch(() => ({}));
     const projectData = getProjectData(projectId);
 
     if (!projectData || !projectData.research_text) {
@@ -30,9 +32,13 @@ export async function POST(
       prompt += `\n\nScript (for key moments and tone):\n${projectData.script_90min.slice(0, 8000)}`;
     }
 
-    const response = await callClaude(prompt, {
+    const llmModelId = parseLlmModelId(body, "social");
+
+    const response = await completeLlmText("social", prompt, {
+      modelId: llmModelId,
       maxTokens: 512,
       temperature: 0.7,
+      projectId,
     });
 
     const spotify_description = response.trim();

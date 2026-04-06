@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProject } from "@/lib/db/projects";
 import { getProjectData } from "@/lib/db/projects";
 import { getProjectImages, setProjectImagesPrompts } from "@/lib/db/project-images";
-import { callClaude } from "@/lib/claude/client";
+import { completeLlmText } from "@/lib/llm/unified";
+import { parseLlmModelId } from "@/lib/llm/parse-selection";
 import { PROMPT_IMAGE_SET } from "@/lib/prompts/image-set";
 
 interface ImageSetResponse {
@@ -27,6 +28,7 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
+    const body = await request.json().catch(() => ({}));
     const project = getProject(projectId);
     const projectData = getProjectData(projectId);
 
@@ -48,9 +50,13 @@ Era and location: ${project.era_location}
 Research:
 ${projectData.research_text}`;
 
-    const raw = await callClaude(prompt, {
+    const llmModelId = parseLlmModelId(body, "imagePrompt");
+
+    const raw = await completeLlmText("imagePrompt", prompt, {
+      modelId: llmModelId,
       maxTokens: 16384, // Increased to ensure all 36 prompts fit
       temperature: 0.6,
+      projectId,
     });
 
     const parsed = parseImageSetResponse(raw);

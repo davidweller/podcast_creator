@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { resolveProviderApiKey } from "@/lib/keys/resolve";
 
 /** Model for script generation (long-form, high quality). */
 export const SCRIPT_MODEL = "claude-sonnet-4-6";
@@ -42,13 +43,16 @@ export interface ScriptModelConfig {
   thinkingBudget?: number;
 }
 
-function getAnthropicClient() {
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+function getAnthropicClient(apiKeyOverride?: string) {
+  const apiKey =
+    apiKeyOverride?.trim() || resolveProviderApiKey("anthropic");
   if (!apiKey) {
-    throw new Error("ANTHROPIC_API_KEY environment variable is not set");
+    throw new Error(
+      "Anthropic API key not configured. Set ANTHROPIC_API_KEY or add your key in Settings."
+    );
   }
   return new Anthropic({
-    apiKey: apiKey,
+    apiKey,
   });
 }
 
@@ -65,10 +69,12 @@ export async function callClaude(
     system?: string;
     /** Use SCRIPT_MODEL for script generation; omit for DEFAULT_MODEL (Claude Sonnet 4.6). */
     model?: string;
+    /** Optional explicit API key (otherwise env / Settings store) */
+    apiKey?: string;
   }
 ): Promise<string> {
   try {
-    const anthropic = getAnthropicClient();
+    const anthropic = getAnthropicClient(options?.apiKey);
     const response = await anthropic.messages.create({
       model: options?.model ?? DEFAULT_MODEL,
       max_tokens: options?.maxTokens || 16384,
@@ -93,7 +99,9 @@ export async function callClaude(
     
     // Handle authentication errors specifically
     if (error?.status === 401 || error?.message?.includes("authentication_error") || error?.message?.includes("invalid x-api-key")) {
-      throw new Error("Invalid API key. Please check your ANTHROPIC_API_KEY in the .env file and ensure it's correct. You may need to restart your server after updating it.");
+      throw new Error(
+        "Invalid Anthropic API key. Check Settings or ANTHROPIC_API_KEY in your environment."
+      );
     }
     
     // Handle model not found errors
@@ -109,6 +117,70 @@ export async function callClaude(
       throw new Error("Claude API is currently overloaded. Please wait a moment and try again. The service is experiencing high demand.");
     }
     
+    throw error;
+  }
+}
+
+/** Non-streaming call that exposes token usage for logging */
+export async function callClaudeWithUsage(
+  prompt: string,
+  options?: {
+    maxTokens?: number;
+    temperature?: number;
+    system?: string;
+    model?: string;
+    apiKey?: string;
+  }
+): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
+  try {
+    const anthropic = getAnthropicClient(options?.apiKey);
+    const response = await anthropic.messages.create({
+      model: options?.model ?? DEFAULT_MODEL,
+      max_tokens: options?.maxTokens || 16384,
+      temperature: options?.temperature || 0.7,
+      system: options?.system || "",
+      messages: [{ role: "user", content: prompt }],
+    });
+    const content = response.content[0];
+    if (content.type !== "text") {
+      throw new Error("Unexpected response format from Claude");
+    }
+    return {
+      text: content.text,
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
+    };
+  } catch (error: any) {
+    console.error("Claude API error:", error);
+    if (
+      error?.status === 401 ||
+      error?.message?.includes("authentication_error") ||
+      error?.message?.includes("invalid x-api-key")
+    ) {
+      throw new Error(
+        "Invalid Anthropic API key. Check Settings or ANTHROPIC_API_KEY in your environment."
+      );
+    }
+    if (
+      error?.status === 404 ||
+      error?.message?.includes("not_found_error") ||
+      error?.message?.includes("model:")
+    ) {
+      throw new Error(
+        "Model not found. The model identifier may have changed. Check Anthropic documentation."
+      );
+    }
+    if (
+      error?.status === 529 ||
+      error?.status === 429 ||
+      error?.error?.type === "overloaded_error" ||
+      error?.message?.includes("overloaded_error") ||
+      error?.message?.includes("Overloaded")
+    ) {
+      throw new Error(
+        "Claude API is currently overloaded. Please wait a moment and try again."
+      );
+    }
     throw error;
   }
 }
@@ -132,10 +204,11 @@ export async function callClaudeStreaming(
     useThinking?: boolean;
     /** Budget tokens for thinking (default 10000) */
     thinkingBudget?: number;
+    apiKey?: string;
   }
 ): Promise<StreamingResult> {
   try {
-    const anthropic = getAnthropicClient();
+    const anthropic = getAnthropicClient(options?.apiKey);
     
     // Build request params
     const useThinking = options?.useThinking ?? false;
@@ -205,7 +278,9 @@ export async function callClaudeStreaming(
     
     // Handle authentication errors specifically
     if (error?.status === 401 || error?.message?.includes("authentication_error") || error?.message?.includes("invalid x-api-key")) {
-      throw new Error("Invalid API key. Please check your ANTHROPIC_API_KEY in the .env file and ensure it's correct. You may need to restart your server after updating it.");
+      throw new Error(
+        "Invalid Anthropic API key. Check Settings or ANTHROPIC_API_KEY in your environment."
+      );
     }
     
     // Handle model not found errors

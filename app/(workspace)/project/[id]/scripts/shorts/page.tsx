@@ -2,6 +2,13 @@
 
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import {
+  DEFAULT_LLM_BY_STAGE,
+  listModelsForStage,
+} from "@/lib/models/registry";
+
+const SOCIAL_MODELS = listModelsForStage("social");
+const LS_SOCIAL_MODEL = "cozycrime:llm:social";
 
 export default function ScriptShortsPage() {
   const params = useParams();
@@ -12,6 +19,24 @@ export default function ScriptShortsPage() {
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
+  const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.social);
+
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(LS_SOCIAL_MODEL);
+      if (s && SOCIAL_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_SOCIAL_MODEL, llmModelId);
+    } catch {
+      /* ignore */
+    }
+  }, [llmModelId]);
 
   useEffect(() => {
     loadShorts();
@@ -38,6 +63,8 @@ export default function ScriptShortsPage() {
     try {
       const res = await fetch(`/api/generate/shorts/${projectId}`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ llmModelId }),
       });
 
       const data = await res.json();
@@ -115,6 +142,26 @@ export default function ScriptShortsPage() {
             {error}
           </div>
         )}
+
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <label className="text-sm font-medium text-slate-700">Model:</label>
+          <select
+            value={llmModelId}
+            onChange={(e) => setLlmModelId(e.target.value)}
+            disabled={loading}
+            className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[14rem]"
+          >
+            {[...new Set(SOCIAL_MODELS.map((m) => m.group))].map((group) => (
+              <optgroup key={group} label={group}>
+                {SOCIAL_MODELS.filter((m) => m.group === group).map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
 
         <div className="flex gap-4 mb-6">
           <button

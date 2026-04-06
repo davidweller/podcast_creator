@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectData, getProject } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
-import { callClaude } from "@/lib/claude/client";
+import { completeLlmText } from "@/lib/llm/unified";
+import { parseLlmModelId } from "@/lib/llm/parse-selection";
 import { PROMPT_SHORTS } from "@/lib/prompts/shorts";
 
 export async function POST(
@@ -11,6 +12,7 @@ export async function POST(
   try {
     const { id } = await params;
     const projectId = parseInt(id);
+    const body = await request.json().catch(() => ({}));
     const project = getProject(projectId);
     const projectData = getProjectData(projectId);
 
@@ -34,9 +36,13 @@ export async function POST(
 
     const prompt = `${PROMPT_SHORTS}\n\nTitle: ${project.title}\n\nCompelling details:\n${compellingDetails}`;
 
-    const shorts = await callClaude(prompt, {
+    const llmModelId = parseLlmModelId(body, "social");
+
+    const shorts = await completeLlmText("social", prompt, {
+      modelId: llmModelId,
       maxTokens: 512,
       temperature: 0.7,
+      projectId,
     });
 
     updateProjectData(projectId, { shorts });

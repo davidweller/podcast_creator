@@ -1,11 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
+import { resolveProviderApiKey } from "@/lib/keys/resolve";
+import {
+  DEFAULT_GEMINI_IMAGE_MODEL,
+  getGeminiImageModelOrThrow,
+  type GeminiImageModelId,
+} from "@/lib/models/registry";
 
-const IMAGE_MODEL = "gemini-2.5-flash-image";
-
-function getClient() {
-  const apiKey = process.env.GOOGLE_GEMINI_API_KEY?.trim();
+function getClient(apiKeyOverride?: string) {
+  const apiKey =
+    apiKeyOverride?.trim() || resolveProviderApiKey("google_gemini");
   if (!apiKey) {
-    throw new Error("GOOGLE_GEMINI_API_KEY environment variable is not set");
+    throw new Error(
+      "Google Gemini API key not configured. Set GOOGLE_GEMINI_API_KEY or add your key in Settings."
+    );
   }
   return new GoogleGenAI({ apiKey });
 }
@@ -14,10 +21,16 @@ function getClient() {
  * Generate an image from a text prompt using the Gemini image generation model.
  * Returns the image as a Buffer (PNG).
  */
-export async function generateImage(prompt: string): Promise<Buffer> {
-  const ai = getClient();
+export async function generateImage(
+  prompt: string,
+  options?: { model?: GeminiImageModelId; apiKey?: string }
+): Promise<Buffer> {
+  const modelId = options?.model
+    ? getGeminiImageModelOrThrow(options.model)
+    : DEFAULT_GEMINI_IMAGE_MODEL;
+  const ai = getClient(options?.apiKey);
   const response = await ai.models.generateContent({
-    model: IMAGE_MODEL,
+    model: modelId,
     contents: prompt,
     config: {
       responseModalities: ["IMAGE"],

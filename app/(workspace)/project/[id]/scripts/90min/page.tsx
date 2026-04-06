@@ -5,17 +5,15 @@ import { useState, useEffect, useRef } from "react";
 import type { ImprovementAnalysis, ImprovementSuggestion, SuggestionStatus } from "@/types/improvements";
 import { formatElapsed } from "@/lib/format-time";
 import { getScriptStats90 } from "@/lib/script-stats";
+import {
+  DEFAULT_LLM_BY_STAGE,
+  listModelsForStage,
+} from "@/lib/models/registry";
 
 const ESTIMATE_90MIN = "3–8 min";
 
-const CLAUDE_MODELS = [
-  { id: "claude-sonnet-4-5-20250514", name: "Claude Sonnet 4.5" },
-  { id: "claude-sonnet-4-6", name: "Claude Sonnet 4.6" },
-  { id: "claude-opus-4-5-20250514", name: "Claude Opus 4.5" },
-  { id: "claude-opus-4-6", name: "Claude Opus 4.6" },
-] as const;
-
-type ModelId = typeof CLAUDE_MODELS[number]["id"];
+const SCRIPT_MODELS = listModelsForStage("script");
+const LS_SCRIPT_MODEL = "cozycrime:llm:script";
 
 const ANALYSIS_PHASES = [
   { id: "opening", label: "Opening & Welcome Block" },
@@ -49,9 +47,32 @@ export default function Script90MinPage() {
   const startTimeRef = useRef<number | null>(null);
   const applyTimeRef = useRef<number | null>(null);
   
-  // Model selection state
-  const [selectedModel, setSelectedModel] = useState<ModelId>("claude-sonnet-4-6");
+  const [selectedLlmModelId, setSelectedLlmModelId] = useState(
+    DEFAULT_LLM_BY_STAGE.script
+  );
   const [useThinking, setUseThinking] = useState(false);
+
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(LS_SCRIPT_MODEL);
+      if (s && SCRIPT_MODELS.some((m) => m.id === s)) {
+        setSelectedLlmModelId(s);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_SCRIPT_MODEL, selectedLlmModelId);
+    } catch {
+      /* ignore */
+    }
+  }, [selectedLlmModelId]);
+
+  const selectedEntry = SCRIPT_MODELS.find((m) => m.id === selectedLlmModelId);
+  const thinkingSupported = selectedEntry?.supportsThinking ?? false;
 
   useEffect(() => {
     loadScript();
@@ -96,10 +117,10 @@ export default function Script90MinPage() {
       const res = await fetch(`/api/generate/script/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           type: "90min",
-          modelId: selectedModel,
-          useThinking,
+          llmModelId: selectedLlmModelId,
+          useThinking: thinkingSupported && useThinking,
         }),
       });
 
@@ -139,7 +160,10 @@ export default function Script90MinPage() {
       const res = await fetch(`/api/improve/script/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "90min" }),
+        body: JSON.stringify({
+          type: "90min",
+          llmModelId: selectedLlmModelId,
+        }),
       });
 
       const data = await res.json();
@@ -203,6 +227,7 @@ export default function Script90MinPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "90min",
+            llmModelId: selectedLlmModelId,
             suggestion: suggestions[i],
           }),
         });
@@ -279,6 +304,7 @@ export default function Script90MinPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "90min",
+          llmModelId: selectedLlmModelId,
           suggestion: suggestion,
         }),
       });
@@ -393,15 +419,24 @@ export default function Script90MinPage() {
               </label>
               <select
                 id="model-select"
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value as ModelId)}
+                value={selectedLlmModelId}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSelectedLlmModelId(v);
+                  const m = SCRIPT_MODELS.find((x) => x.id === v);
+                  if (!m?.supportsThinking) setUseThinking(false);
+                }}
                 disabled={loading}
-                className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white disabled:bg-slate-100 disabled:cursor-not-allowed"
+                className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white disabled:bg-slate-100 disabled:cursor-not-allowed min-w-[14rem]"
               >
-                {CLAUDE_MODELS.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.name}
-                  </option>
+                {[...new Set(SCRIPT_MODELS.map((m) => m.group))].map((group) => (
+                  <optgroup key={group} label={group}>
+                    {SCRIPT_MODELS.filter((m) => m.group === group).map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
@@ -410,12 +445,12 @@ export default function Script90MinPage() {
                 type="checkbox"
                 checked={useThinking}
                 onChange={(e) => setUseThinking(e.target.checked)}
-                disabled={loading}
+                disabled={loading || !thinkingSupported}
                 className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 disabled:cursor-not-allowed"
               />
               <span className="text-sm text-slate-700">Extended Thinking</span>
             </label>
-            {useThinking && (
+            {thinkingSupported && useThinking && (
               <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
                 Slower but more thoughtful
               </span>

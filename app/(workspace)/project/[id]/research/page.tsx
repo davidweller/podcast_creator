@@ -3,6 +3,13 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import {
+  DEFAULT_LLM_BY_STAGE,
+  listModelsForStage,
+} from "@/lib/models/registry";
+
+const RESEARCH_MODELS = listModelsForStage("research");
+const LS_RESEARCH_MODEL = "cozycrime:llm:research";
 
 export default function ResearchPage() {
   const params = useParams();
@@ -14,6 +21,24 @@ export default function ResearchPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.research);
+
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(LS_RESEARCH_MODEL);
+      if (s && RESEARCH_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_RESEARCH_MODEL, llmModelId);
+    } catch {
+      /* ignore */
+    }
+  }, [llmModelId]);
 
   useEffect(() => {
     loadResearch();
@@ -71,7 +96,7 @@ export default function ResearchPage() {
       const res = await fetch(`/api/generate/research/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic: trimmed }),
+        body: JSON.stringify({ topic: trimmed, llmModelId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -110,6 +135,25 @@ export default function ResearchPage() {
           Enter a historical topic and Claude will produce structured fact clusters (The World, The People, The Events, The Aftermath) for script writing.
         </p>
         <div className="flex gap-3 flex-wrap items-end">
+          <label className="text-sm text-slate-700">
+            <span className="block mb-1 font-medium">Model</span>
+            <select
+              value={llmModelId}
+              onChange={(e) => setLlmModelId(e.target.value)}
+              disabled={researching}
+              className="text-sm border border-slate-300 rounded px-2 py-2 bg-white min-w-[12rem]"
+            >
+              {[...new Set(RESEARCH_MODELS.map((m) => m.group))].map((group) => (
+                <optgroup key={group} label={group}>
+                  {RESEARCH_MODELS.filter((m) => m.group === group).map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
           <label className="flex-1 min-w-[200px]">
             <span className="sr-only">Research topic</span>
             <input

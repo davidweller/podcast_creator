@@ -105,7 +105,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-4xl font-bold text-slate-900 mb-2">
               Cozy Crime Creator Suite
@@ -114,12 +114,20 @@ export default function Home() {
               Transform historical research into publish-ready scripts
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
-          >
-            Create New Project
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/settings"
+              className="px-4 py-3 border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+            >
+              Settings
+            </Link>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+            >
+              Create New Project
+            </button>
+          </div>
         </div>
 
         {loading ? (

@@ -3,6 +3,13 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import type { Project } from "@/types/database";
+import {
+  DEFAULT_LLM_BY_STAGE,
+  listModelsForStage,
+} from "@/lib/models/registry";
+
+const SOCIAL_MODELS = listModelsForStage("social");
+const LS_SOCIAL_MODEL = "cozycrime:llm:social";
 
 export default function DescriptionPage() {
   const params = useParams();
@@ -15,6 +22,24 @@ export default function DescriptionPage() {
   const [loading, setLoading] = useState(false);
   const [loadingSpotify, setLoadingSpotify] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.social);
+
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(LS_SOCIAL_MODEL);
+      if (s && SOCIAL_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_SOCIAL_MODEL, llmModelId);
+    } catch {
+      /* ignore */
+    }
+  }, [llmModelId]);
 
   useEffect(() => {
     loadData();
@@ -59,6 +84,8 @@ export default function DescriptionPage() {
     try {
       const res = await fetch(`/api/generate/description-and-metadata/${projectId}`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ llmModelId }),
       });
 
       const data = await res.json();
@@ -84,6 +111,8 @@ export default function DescriptionPage() {
     try {
       const res = await fetch(`/api/generate/spotify-description/${projectId}`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ llmModelId }),
       });
 
       const data = await res.json();
@@ -183,6 +212,25 @@ export default function DescriptionPage() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-md p-4 border border-slate-200">
+        <label className="text-sm font-medium text-slate-700 mr-2">LLM for social copy:</label>
+        <select
+          value={llmModelId}
+          onChange={(e) => setLlmModelId(e.target.value)}
+          className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[14rem]"
+        >
+          {[...new Set(SOCIAL_MODELS.map((m) => m.group))].map((group) => (
+            <optgroup key={group} label={group}>
+              {SOCIAL_MODELS.filter((m) => m.group === group).map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center justify-between mb-3 gap-3">
           <h2 className="text-2xl font-bold text-slate-900">Title</h2>
