@@ -13,12 +13,14 @@ STYLE (all images):
 - Period-accurate: era, location, architecture, clothing and props must match the case's time and place.
 - Attractive for a cozy crime / historical mystery audience: atmospheric, intriguing, no gore or violence; mood can be mysterious, melancholic, or quietly dramatic.
 - Each prompt should be detailed enough for AI image generation (Gemini/ChatGPT): describe composition, lighting, mood, and key visual elements.
-- All images are 16:9 widescreen. Describe compositions that fill the full frame—wide cinematic framing, no empty margins or letterboxing, no square crops with blank sides.
-- No characters staring directly at the viewer. No violence.
+- All images are 16:9 widescreen. Ensure full-bleed artwork with no letterboxing or black bars above/below, and no empty margins or square-crop padding.
+- No characters staring directly at the viewer.
+- No text, text boxes, captions, subtitles, signage, speech bubbles, or UI overlays anywhere in the image (no conversation shown).
+- No violence.
 
 SLOTS 1–36: Scene and atmosphere images. Vary locations (street, interior, landscape), time of day, and key moments or moods. Include people in most slots where it fits (e.g. detective at desk, figure in period street, courtroom with figures, harbour with workers). Use the exact same appearance description for each key figure every time they appear.
 
-SLOT 37 (thumbnail): A single YouTube thumbnail prompt. Eye-catching, with space for a title overlay. Feature a person or item as the main focus (e.g. a key figure from the case, a significant object, or a central character). If the thumbnail shows a person from the case, use that person's canonical appearance phrase from your character list exactly. Also provide a short thumbnail title (a few words) suitable for overlay.
+SLOT 37 (thumbnail): A single YouTube thumbnail prompt. Eye-catching, with space for a title overlay outside the generated image. Feature a person or item as the main focus (e.g. a key figure from the case, a significant object, or a central character). If the thumbnail shows a person from the case, use that person's canonical appearance phrase from your character list exactly. Also provide a short thumbnail title (a few words) suitable for external overlay. The thumbnail image itself must not contain any text.
 
 OUTPUT FORMAT: Respond with a single JSON object, no other text. Use this exact structure:
 {

@@ -112,8 +112,8 @@ export default function SpeechPage() {
   // Restore generated speech from disk when returning to this tab (file is persisted by the API).
   useEffect(() => {
     if (!projectId || scriptSource === "custom") return;
-    const wavPath = `/audio/${projectId}/speech-${scriptSource}.wav`;
     const mp3Path = `/audio/${projectId}/speech-${scriptSource}.mp3`;
+    const wavPath = `/audio/${projectId}/speech-${scriptSource}.wav`;
 
     const applyOk = (path: string, res: Response) => {
       if (res.ok) {
@@ -126,12 +126,12 @@ export default function SpeechPage() {
       }
     };
 
-    fetch(wavPath, { method: "HEAD" })
+    fetch(mp3Path, { method: "HEAD" })
       .then((res) => {
         if (res.ok) {
-          applyOk(wavPath, res);
+          applyOk(mp3Path, res);
         } else {
-          return fetch(mp3Path, { method: "HEAD" }).then((mp3Res) => applyOk(mp3Path, mp3Res));
+          return fetch(wavPath, { method: "HEAD" }).then((wavRes) => applyOk(wavPath, wavRes));
         }
       })
       .catch(() => {
@@ -208,7 +208,7 @@ export default function SpeechPage() {
         </h2>
         <p className="text-sm text-slate-600 mb-6">
           Convert your script to speech using Google Cloud Text-to-Speech with Chirp 3 HD voices.
-          Output is saved as a single WAV (streaming synthesis) for cleaner long-form audio than stitched MP3.
+          Output is saved as an MP3 file generated in chunks for long scripts.
         </p>
 
         {error && (
@@ -310,7 +310,7 @@ export default function SpeechPage() {
             </div>
             {wordCount > 500 && (
               <p className="mt-2 text-sm text-amber-600">
-                Long scripts stream through the API as multiple text segments (one continuous WAV). This may take several minutes.
+                Long scripts are generated in multiple segments and stitched into one MP3. This may take several minutes.
               </p>
             )}
           </div>
@@ -334,7 +334,7 @@ export default function SpeechPage() {
               onClick={downloadAudio}
               className="px-6 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
             >
-              Download WAV
+              Download MP3
             </button>
           )}
         </div>
