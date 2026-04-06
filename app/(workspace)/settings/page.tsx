@@ -20,6 +20,7 @@ export default function SettingsPage() {
   const [providers, setProviders] = useState<ProviderRow[]>([]);
   const [values, setValues] = useState<Partial<Record<ProviderId, string>>>({});
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,6 +39,14 @@ export default function SettingsPage() {
     load();
   }, []);
 
+  async function reloadProviders() {
+    const reload = await fetch("/api/settings");
+    const r = await reload.json();
+    setProviders(r.providers ?? []);
+    setCanStoreKeys(Boolean(r.canStoreKeys));
+  }
+
+  /** Persist pasted fields only (does not clear untouched providers). */
   async function save() {
     setSaving(true);
     setMessage(null);
@@ -54,13 +63,40 @@ export default function SettingsPage() {
       }
       setValues({});
       setMessage("Saved.");
-      const reload = await fetch("/api/settings");
-      const r = await reload.json();
-      setProviders(r.providers ?? []);
+      await reloadProviders();
     } catch {
       setMessage("Save failed.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  /** Copy all keys from the server environment (.env) into encrypted storage. */
+  async function importFromEnvironment() {
+    setImporting(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ importFromEnv: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMessage(data.error || "Import failed.");
+        return;
+      }
+      const ids = (data.importedFromEnv as string[] | undefined) ?? [];
+      setMessage(
+        ids.length > 0
+          ? `Imported ${ids.length} key(s) from environment into encrypted storage.`
+          : "No keys found in environment to import (check your .env file)."
+      );
+      await reloadProviders();
+    } catch {
+      setMessage("Import failed.");
+    } finally {
+      setImporting(false);
     }
   }
 
@@ -102,9 +138,11 @@ export default function SettingsPage() {
         {message && (
           <div
             className={`mb-4 text-sm rounded px-3 py-2 ${
-              message.startsWith("Saved")
+              message.startsWith("Saved") || message.startsWith("Imported")
                 ? "bg-green-50 text-green-800 border border-green-200"
-                : "bg-red-50 text-red-800 border border-red-200"
+                : message.startsWith("No keys")
+                  ? "bg-slate-50 text-slate-700 border border-slate-200"
+                  : "bg-red-50 text-red-800 border border-red-200"
             }`}
           >
             {message}
@@ -157,14 +195,27 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex flex-wrap gap-3 items-center">
           <button
             type="button"
             onClick={save}
-            disabled={saving || !canStoreKeys}
+            disabled={saving || !canStoreKeys || Object.keys(values).length === 0}
             className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 disabled:opacity-50"
+            title={
+              Object.keys(values).length === 0
+                ? "Type or paste at least one key, or use Import from environment"
+                : undefined
+            }
           >
-            {saving ? "Saving…" : "Save keys"}
+            {saving ? "Saving…" : "Save pasted keys"}
+          </button>
+          <button
+            type="button"
+            onClick={importFromEnvironment}
+            disabled={importing || !canStoreKeys}
+            className="px-4 py-2 rounded-lg border border-slate-300 text-slate-800 text-sm font-medium hover:bg-slate-50 disabled:opacity-50"
+          >
+            {importing ? "Importing…" : "Import keys from environment"}
           </button>
           <Link
             href="/"
@@ -173,6 +224,12 @@ export default function SettingsPage() {
             Cancel
           </Link>
         </div>
+        <p className="mt-3 text-xs text-slate-500 max-w-xl">
+          <strong>Import from environment</strong> copies values from your server&apos;s{" "}
+          <code className="text-xs">.env</code> (or host env) into the local encrypted database so they
+          keep working without redeploying env files. <strong>Save pasted keys</strong> only updates
+          providers where you entered text above.
+        </p>
       </div>
     </div>
   );

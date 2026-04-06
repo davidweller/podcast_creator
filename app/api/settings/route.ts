@@ -59,7 +59,20 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as Record<string, unknown>;
     const allowed = new Set(BYOK_PROVIDERS.map((p) => p.id));
 
+    /** Copy every key that exists in process.env into encrypted SQLite (BYOK). */
+    const importedFromEnv: ProviderId[] = [];
+    if (body.importFromEnv === true) {
+      for (const p of BYOK_PROVIDERS) {
+        const v = ENV_LOOKUP[p.id]?.trim();
+        if (v) {
+          setStoredSecret(p.id, v);
+          importedFromEnv.push(p.id);
+        }
+      }
+    }
+
     for (const key of Object.keys(body)) {
+      if (key === "importFromEnv") continue;
       if (!allowed.has(key as ProviderId)) continue;
       const val = body[key];
       if (val === null || val === "") {
@@ -71,7 +84,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      importedFromEnv:
+        importedFromEnv.length > 0 ? importedFromEnv : undefined,
+    });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Failed to save settings";
     return NextResponse.json({ error: msg }, { status: 500 });
