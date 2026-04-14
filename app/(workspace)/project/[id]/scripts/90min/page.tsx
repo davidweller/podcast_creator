@@ -10,7 +10,7 @@ import {
   listModelsForStage,
 } from "@/lib/models/registry";
 
-const ESTIMATE_90MIN = "3–8 min";
+const ESTIMATE_SCRIPT_GEN = "3–8 min";
 
 const SCRIPT_MODELS = listModelsForStage("script");
 const LS_SCRIPT_MODEL = "cozycrime:llm:script";
@@ -18,14 +18,14 @@ const LS_SCRIPT_THINKING = "cozycrime:llm:script:thinking";
 const DEFAULT_THINKING_BUDGET = 10000;
 
 const ANALYSIS_PHASES = [
-  { id: "opening", label: "Opening & Welcome Block" },
-  { id: "structure", label: "Structure & Chapters" },
-  { id: "voice", label: "Voice & Tone" },
-  { id: "style", label: "Style Rules" },
-  { id: "content", label: "Content & People" },
-  { id: "phase4", label: "Phase 4 (Sit With It)" },
-  { id: "closing", label: "Closing & Farewell" },
-  { id: "copyedit", label: "Copyediting & Flow" },
+  { id: "opening", label: "Cold open & intro" },
+  { id: "structure", label: "Structure & segments" },
+  { id: "voice", label: "Voice & tone" },
+  { id: "style", label: "Style & pause tags" },
+  { id: "content", label: "Content & people" },
+  { id: "main", label: "Main segments & thread" },
+  { id: "closing", label: "Closing & sign-off" },
+  { id: "copyedit", label: "Copyediting & flow" },
 ];
 
 export default function Script90MinPage() {
@@ -374,7 +374,7 @@ export default function Script90MinPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "script-90min.txt";
+    a.download = "script-episode-60min.txt";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -410,7 +410,7 @@ export default function Script90MinPage() {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">90-Minute Script</h3>
+        <h3 className="text-xl font-semibold text-slate-900 mb-2">Episode script (about 60 min)</h3>
         <p className="text-sm text-slate-600 mb-4">
           10,800-11,700 words • 5 phases (Descending Spiral)
         </p>
@@ -476,7 +476,7 @@ export default function Script90MinPage() {
               disabled={loading}
               className="flex-1 px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Generating..." : "Generate 90-Min Script"}
+              {loading ? "Generating..." : "Generate episode script"}
             </button>
             {script && (
               <button
@@ -489,7 +489,7 @@ export default function Script90MinPage() {
           </div>
           {loading && (
             <p className="text-sm text-slate-600">
-              Elapsed: {formatElapsed(elapsedSeconds)} • Approx. {ESTIMATE_90MIN} remaining
+              Elapsed: {formatElapsed(elapsedSeconds)} • Approx. {ESTIMATE_SCRIPT_GEN} remaining
             </p>
           )}
           {script && (
@@ -681,7 +681,7 @@ export default function Script90MinPage() {
       {script && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-xl font-bold text-slate-900">90-Minute Script</h3>
+            <h3 className="text-xl font-bold text-slate-900">Episode script</h3>
             <div className="flex items-center gap-2">
               {hasUnsavedChanges && (
                 <span className="text-sm text-amber-600">Unsaved changes</span>
@@ -697,9 +697,10 @@ export default function Script90MinPage() {
           </div>
           <p className="text-sm text-slate-600 mb-4">
             {(() => {
-              const { wordCount, chapterCount } = getScriptStats90(script);
+              const { wordCount } = getScriptStats90(script);
               const generated = generatedAt ? ` • Generated: ${generatedAt}` : "";
-              return `${wordCount.toLocaleString()} words${generated} • ${chapterCount} chapters`;
+              const approxMin = Math.max(1, Math.round(wordCount / 155));
+              return `${wordCount.toLocaleString()} words${generated} • ~${approxMin} min at calm pace`;
             })()}
           </p>
           <textarea

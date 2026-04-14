@@ -213,12 +213,18 @@ export async function callClaudeStreaming(
     // Build request params
     const useThinking = options?.useThinking ?? false;
     const thinkingBudget = options?.thinkingBudget ?? 10000;
-    
+
+    // Anthropic requires max_tokens > thinking.budget_tokens (strict inequality).
+    const clampThinkingMaxTokens = (requested: number, budget: number): number =>
+      requested > budget ? requested : budget + 1024;
+
     // Extended thinking requires specific parameters
     if (useThinking) {
+      const requestedMax = options?.maxTokens ?? 16384;
+      const max_tokens = clampThinkingMaxTokens(requestedMax, thinkingBudget);
       const stream = await anthropic.messages.stream({
         model: options?.model ?? DEFAULT_MODEL,
-        max_tokens: options?.maxTokens || 16384,
+        max_tokens,
         thinking: {
           type: "enabled",
           budget_tokens: thinkingBudget,

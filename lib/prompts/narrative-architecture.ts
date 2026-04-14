@@ -1,25 +1,22 @@
 /**
  * narrative-architecture.ts
  *
- * Stage 1 prompt: transforms research fact clusters into a narrative
- * architecture that the script generation prompt will follow.
+ * Stage 1 prompt: transforms episode research into a segment outline
+ * that the script generation prompt will follow (cold open through sign-off).
  *
- * Style rules and canonical text are imported from cozy-crime-constants.ts.
+ * Style rules and word guidance are imported from cozy-crime-constants.ts.
  */
 
 import {
   STYLE_RULES,
-  PHASE_RULES,
-  CHAPTER_BREAK_RULES,
   CRIME_AS_THREAD_RULE,
   WORD_COUNT_GUIDE,
-  INTRO_PARAGRAPH_RULE,
 } from "./cozy-crime-constants";
 
 export function buildNarrativeArchitecturePrompt(researchText: string): string {
-  return `You are a narrative architect for the Cozy Crime YouTube channel. Your task is NOT to write a script. Your task is to read a set of research fact clusters and produce a structured narrative plan that a scriptwriter will follow.
+  return `You are a narrative planner for the Cozy Crime podcast channel. Your task is NOT to write a script. Your task is to read the episode research packet and produce a structured plan that a scriptwriter will follow.
 
-The plan must follow the Descending Spiral structure: the episode begins with the person at its centre, and slowly, gently widens into the world around them before narrowing back toward the human and the intimate. The organising principle is always the listener's emotional connection to a real human being, not the logical order of information, and not the atmosphere of the period.
+The episode is a roughly 60-minute, audio-first historical crime narrative for text-to-speech. The scriptwriter will use your plan plus the research to write cold open, intro, three main segments, closing, and sign-off.
 
 ---
 
@@ -29,79 +26,82 @@ Before you do anything else, answer this question:
 
 Who is the person at the heart of this story?
 
-Write two or three sentences. Not their role. Not their address. Not the date they disappeared or died. Who were they? What do you know about them that a listener should carry from the first sentence to the last?
+Write two or three sentences. Not their role alone. Not their address. Who were they, and what should a listener carry about them from the first minute to the last?
 
-This answer is the spine of the entire narrative plan. Everything else, the world, the events, the theories, exists only in relationship to this person. Write this before you write anything else, and let it shape every decision that follows.
+This answer is the spine of the plan. Everything else exists in relationship to this person.
 
 ---
 
-THE FIVE PHASES
+${STYLE_RULES}
 
-${PHASE_RULES}
+---
+
+${CRIME_AS_THREAD_RULE}
 
 ---
 
 YOUR OUTPUT
 
-Produce a narrative plan with exactly these sections, in this order:
+Produce a narrative plan with exactly these sections, in this order. Use planning notes only, not finished script prose.
 
 THE PERSON
-Two or three sentences answering: who was this person, and what should the listener carry about them from beginning to end? This is not biographical summary. It is the human truth at the centre of the story.
+Two or three sentences: the human truth at the centre, as above.
 
-OPENING MOMENT
-A specific moment in which this person is present and alive. The mystery arrives within or immediately after this moment, but the person comes first. This can be as simple as their name, something they did, something they wanted. It must not be weather, streets, or period atmosphere.
+COLD OPEN (0:30-1:00)
+- Hook or teaser beats: what grabs attention immediately?
+- Core value proposition: why listen?
+- Curiosity or emotional connection: one line each.
+- Plan the very first line as immediate in-scene narrative with concrete details; no warm-up preamble.
 
-CASE OUTLINE FOR OPENING (intro paragraph)
-The script will include a short paragraph after the two-sentence story hook and before the welcome block. It outlines the case so the listener can decide whether to listen. Provide planning notes for that paragraph:
-- Case name (e.g. "the Bermondsey Horror").
-- Two to four key themes or story beats to include (e.g. Victorian respectability and betrayal; the telegraph and fugitive hunt; the trial at the Old Bailey; the execution and Dickens's campaign).
-- A suggested framing line (e.g. "This is the story of X, told gently, with care for the historical record and respect for those whose lives were forever altered by...").
+INTRO SEGMENT (0:20-0:45)
+- Podcast name and tagline beats (Cozy Crime: historical crime told calmly for rest and curiosity).
+- Episode title as it should be spoken.
+- Host framing in first person: what the listener will learn or feel.
+- Optional: note that the intro may include a calm welcome (no sudden shocks, invitation to rest) in natural language, not as stage directions.
+- Keep this section tight so the script returns to story momentum quickly.
+- Plan for a maximum of three sentences in the final script intro.
 
-${INTRO_PARAGRAPH_RULE}
+MAIN SEGMENT 1
+- Topic or narrative job for this block (foundation: who people were, world through character).
+- Key facts or beats to include (from research).
+- One example or story beat to illustrate.
+- Transition cue into Segment 2.
 
-CLOSING IMAGE
-A specific physical image from the world of the story: still, quiet, and connected to the person rather than the period. Something the listener can hold in their mind as they sleep.
+MAIN SEGMENT 2
+- Topic or narrative job (the heart of the case, investigation or trial as human story).
+- Key facts or beats.
+- Example or story beat.
+- Transition cue into Segment 3.
+
+MAIN SEGMENT 3
+- Topic or narrative job (aftermath, theories, unanswered questions, return to human cost).
+- Key facts or beats.
+- Example or story beat.
+- Transition cue into closing.
+
+CLOSING SEGMENT (2-3 minutes)
+- Two or three recap points (as ideas for spoken sentences, not bullet text for the script).
+- Call-to-action ideas: gentle, no "subscribe" or algorithm language; prefer return, join us, you are welcome.
+- Tone: warm sign-off toward rest.
+
+SIGN-OFF (0:30)
+- Final spoken line concept and tagline energy.
 
 CHARACTERS
-List each key person who will appear in the script. For each:
-- Name and role in the story.
-- One specific human detail (a habit, a choice, a relationship) that makes them a person rather than a role.
-- The phase in which they should be introduced and why.
+List each key person. For each: name and role, one humanising detail, which segment they first matter in.
 
-PHASE 1 — DRAW IN
-Which facts establish who this person was and plant the mystery? The world and period may appear here only in service of the person. List the facts and their emotional purpose.
-
-PHASE 2 — SETTLE
-Which facts reveal the life this person was living: their relationships, their private world, their constraints and desires? How does context arrive through the person rather than as background? List the facts and their emotional purpose.
-
-PHASE 3 — UNFOLD
-Which facts constitute the events themselves? Arrange them in the order they were discovered or experienced, not logical reconstruction. Note any gaps or uncertainties and how they should be handled.
-
-PHASE 4 — SIT WITH IT
-Which facts relate to the aftermath, investigation, theories, and unanswered questions? How will the focus shift from puzzle back to person before this phase ends?
-
-PHASE 5 — REST
-What remains of this person? What has time done to their story? What should the listener carry into sleep?
-
-CHAPTER BREAKS
-Propose where 4 to 7 chapter breaks should fall. For each:
-- After which moment or passage it occurs.
-- What emotional shift it marks. Not what topic change it marks.
-Fewer breaks is usually better. Each must feel genuinely earned.
-
-THE CRIME AS THREAD
-${CRIME_AS_THREAD_RULE}
+SENSITIVITY AND DISCLAIMERS
+- Angles to handle carefully, claims to avoid, or disclaimers if the material touches legal, medical, or financial advice.
 
 ---
 
 CONSTRAINTS
 
-- The plan must begin with the person, not the place or the period.
-- Assign each fact to ONE phase only.
-- Organise by emotional purpose, not by topic.
-- The scriptwriter will produce a full 90-minute script (10,800 to 11,700 words). Your plan must support that length. For each phase section (PHASE 1 through PHASE 5), list enough material and beats so the scriptwriter can fill the stated word ranges without padding (e.g. Phase 3: 3,600–4,500 words).
+- The plan must centre the person, not the place or period, in THE PERSON and in Segment 1 priorities.
+- Assign each major fact to one segment only where possible, so the scriptwriter can pace without repetition.
+- The scriptwriter will produce about 9,000 to 10,000 words. Each segment section must list enough beats and material to support roughly: Segment 1 about 2,000 to 2,800 words, Segment 2 about 2,000 to 2,800 words, Segment 3 about 2,000 to 2,800 words (adjust within the band as the case demands).
 - The plan should be 600 to 1,000 words. It is an instruction sheet, not a draft.
-- Do not write prose. Write clear, direct planning notes.
+- Do not use "Descending Spiral," "phases," or "chapter break" language. Do not propose "Chapter One" style labels.
 
 ---
 
@@ -109,7 +109,7 @@ ${WORD_COUNT_GUIDE}
 
 ---
 
-RESEARCH FACT CLUSTERS:
+EPISODE RESEARCH (source material):
 
 ${researchText}`;
 }

@@ -9,6 +9,11 @@ export interface LlmModelEntry {
   /** Model id for the provider API (no :thinking suffix; applied at runtime) */
   apiModel: string;
   supportsThinking: boolean;
+  /**
+   * When true, never append `:thinking` to the OpenRouter model id (paid `qwen/qwen3.6-plus` only).
+   * Extended thinking uses OpenRouter's `reasoning` JSON field instead of a `:thinking` slug.
+   */
+  openRouterReasoningViaBody?: boolean;
   stages: LlmStage[];
 }
 
@@ -52,15 +57,15 @@ export const LLM_MODELS: LlmModelEntry[] = [
     supportsThinking: true,
     stages: ALL_TEXT_STAGES,
   },
-  // OpenRouter only exposes qwen/qwen3.6-plus:free (base qwen/qwen3.6-plus has no providers).
-  // No :thinking variant in the public model list — Extended thinking is disabled for this row.
+  // Paid id `qwen/qwen3.6-plus` only — `:thinking` / `:free` slugs hit deprecated or wrong tiers on OpenRouter.
   {
     id: "openrouter/qwen/qwen3.6-plus",
-    label: "Qwen 3.6 Plus (OpenRouter, free)",
+    label: "Qwen 3.6 Plus (OpenRouter, thinking)",
     group: "OpenRouter",
     provider: "openrouter",
-    apiModel: "qwen/qwen3.6-plus:free",
-    supportsThinking: false,
+    apiModel: "qwen/qwen3.6-plus",
+    supportsThinking: true,
+    openRouterReasoningViaBody: true,
     stages: ALL_TEXT_STAGES,
   },
 ];
@@ -79,14 +84,20 @@ export function listModelsForStage(stage: LlmStage): LlmModelEntry[] {
   return LLM_MODELS.filter((m) => m.stages.includes(stage));
 }
 
-/** Resolve OpenRouter model id including :thinking when enabled */
+/** Resolve OpenRouter `model` string (optional `:thinking` suffix for legacy rows only). */
 export function resolveOpenRouterApiModel(
   entry: LlmModelEntry,
   useThinking: boolean
 ): string {
   if (entry.provider !== "openrouter") return entry.apiModel;
-  if (!useThinking || !entry.supportsThinking) return entry.apiModel;
-  // Thinking is a variant suffix, not stacked after :free (would be invalid).
+
+  if (entry.openRouterReasoningViaBody) {
+    return entry.apiModel.replace(/:thinking$/, "").replace(/:free$/, "");
+  }
+
+  const wantSuffix = Boolean(useThinking && entry.supportsThinking);
+  if (!wantSuffix) return entry.apiModel;
+  if (entry.apiModel.endsWith(":thinking")) return entry.apiModel;
   if (entry.apiModel.endsWith(":free")) {
     return entry.apiModel.replace(/:free$/, ":thinking");
   }
@@ -95,10 +106,10 @@ export function resolveOpenRouterApiModel(
 
 /** Default model ids per stage (matches previous hardcoded behavior) */
 export const DEFAULT_LLM_BY_STAGE: Record<LlmStage, string> = {
-  research: "anthropic/claude-sonnet-4-6",
-  script: "anthropic/claude-sonnet-4-6",
-  imagePrompt: "anthropic/claude-sonnet-4-6",
-  social: "anthropic/claude-sonnet-4-6",
+  research: "openrouter/qwen/qwen3.6-plus",
+  script: "openrouter/qwen/qwen3.6-plus",
+  imagePrompt: "openrouter/qwen/qwen3.6-plus",
+  social: "openrouter/qwen/qwen3.6-plus",
 };
 
 /** Gemini image generation models (allowlist). Nano Banana = gemini-2.5-flash-image per Google docs. */

@@ -4,7 +4,7 @@ import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
 
 const scriptTabs = [
-  { id: "90min", label: "90-Minute Script", href: (id: string) => `/project/${id}/scripts/90min` },
+  { id: "90min", label: "Episode Script (60 min)", href: (id: string) => `/project/${id}/scripts/90min` },
   { id: "shorts", label: "YouTube Short", href: (id: string) => `/project/${id}/scripts/shorts` },
 ];
 

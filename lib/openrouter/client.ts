@@ -2,6 +2,46 @@ import { resolveProviderApiKey } from "@/lib/keys/resolve";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
+function formatOpenRouterError(status: number, errText: string, fallbackStatusText: string): string {
+  const fallback = `OpenRouter error ${status}: ${errText.slice(0, 500) || fallbackStatusText}`;
+  if (!errText) return fallback;
+
+  try {
+    const parsed = JSON.parse(errText) as {
+      error?: {
+        message?: string;
+        code?: number | string;
+        metadata?: { raw?: string; is_byok?: boolean };
+      };
+    };
+
+    const providerMessage = parsed.error?.metadata?.raw || parsed.error?.message || "";
+    const normalized = providerMessage.toLowerCase();
+    const isRateLimit =
+      status === 429 ||
+      parsed.error?.code === 429 ||
+      normalized.includes("rate-limit") ||
+      normalized.includes("rate limited");
+
+    if (isRateLimit) {
+      const isFreeTier =
+        normalized.includes(":free") || parsed.error?.metadata?.is_byok === false;
+      if (isFreeTier) {
+        return "OpenRouter free model is temporarily rate-limited. Please retry shortly, or add your own provider key in Settings -> Integrations to get your own rate limits.";
+      }
+      return "OpenRouter is currently rate-limiting this model. Please retry shortly, or switch to another model/provider.";
+    }
+
+    if (providerMessage) {
+      return `OpenRouter error ${status}: ${providerMessage.slice(0, 500)}`;
+    }
+  } catch {
+    // Non-JSON errors use the fallback message.
+  }
+
+  return fallback;
+}
+
 function getOpenRouterKey(apiKeyOverride?: string): string {
   const key = apiKeyOverride?.trim() || resolveProviderApiKey("openrouter");
   if (!key) {
@@ -17,12 +57,20 @@ export interface OpenRouterMessage {
   content: string;
 }
 
+/** OpenRouter unified reasoning control (e.g. Alibaba `thinking_budget` mapping). */
+export type OpenRouterReasoningBody = {
+  max_tokens?: number;
+  enabled?: boolean;
+  exclude?: boolean;
+};
+
 export async function openRouterChatCompletion(params: {
   model: string;
   messages: OpenRouterMessage[];
   maxTokens: number;
   temperature: number;
   apiKey?: string;
+  reasoning?: OpenRouterReasoningBody;
 }): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
   const apiKey = getOpenRouterKey(params.apiKey);
   const res = await fetch(OPENROUTER_URL, {
@@ -38,14 +86,13 @@ export async function openRouterChatCompletion(params: {
       messages: params.messages,
       max_tokens: params.maxTokens,
       temperature: params.temperature,
+      ...(params.reasoning ? { reasoning: params.reasoning } : {}),
     }),
   });
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(
-      `OpenRouter error ${res.status}: ${errText.slice(0, 500) || res.statusText}`
-    );
+    throw new Error(formatOpenRouterError(res.status, errText, res.statusText));
   }
 
   const data = (await res.json()) as {
@@ -75,6 +122,7 @@ export async function openRouterChatCompletionStream(params: {
   maxTokens: number;
   temperature: number;
   apiKey?: string;
+  reasoning?: OpenRouterReasoningBody;
   onChunk: (text: string) => void;
 }): Promise<OpenRouterStreamResult> {
   const apiKey = getOpenRouterKey(params.apiKey);
@@ -93,14 +141,13 @@ export async function openRouterChatCompletionStream(params: {
       max_tokens: params.maxTokens,
       temperature: params.temperature,
       stream: true,
+      ...(params.reasoning ? { reasoning: params.reasoning } : {}),
     }),
   });
 
   if (!res.ok || !res.body) {
     const errText = await res.text().catch(() => "");
-    throw new Error(
-      `OpenRouter stream error ${res.status}: ${errText.slice(0, 500) || res.statusText}`
-    );
+    throw new Error(formatOpenRouterError(res.status, errText, res.statusText));
   }
 
   const reader = res.body.getReader();

@@ -1,15 +1,13 @@
 /**
  * script-90min.ts
  *
- * Stage 2 prompt: generates the full 90-minute script in a single pass,
- * guided by the narrative architecture plan produced in Stage 1.
+ * Stage 2 prompt: generates the full ~60-minute TTS script in a single pass,
+ * guided by the narrative plan from Stage 1.
  *
- * Style rules and canonical text are imported from cozy-crime-constants.ts.
+ * Canonical Cozy style and pacing rules are imported from cozy-crime-constants.ts.
  */
 
 import {
-  INTRO_PARAGRAPH_RULE,
-  OPENING_WELCOME_BLOCK,
   STYLE_RULES,
   PHASE_RULES,
   CHAPTER_BREAK_RULES,
@@ -20,78 +18,126 @@ import {
   TARGET_SCRIPT_WORDS_MAX,
 } from "./cozy-crime-constants";
 
+const COZY_CRIME_PODCAST_NAME =
+  "Cozy Crime — Historical Crime to Fall Asleep To";
+
+export interface BuildFullScriptPromptOptions {
+  /** Project or episode title; if omitted, derive from research. */
+  episodeTitle?: string | null;
+}
+
 export function buildFullScriptPrompt(
   researchText: string,
-  narrativePlan: string
+  narrativePlan: string,
+  options?: BuildFullScriptPromptOptions
 ): string {
-  return `You are a scriptwriter for a YouTube channel called Cozy Crime. The channel presents historical crime as calm storytelling intended for sleep, background listening, and gentle curiosity.
+  const episodeTitleInstruction =
+    options?.episodeTitle?.trim() ||
+    "Derive a clear, calm episode title from the research and use it in the intro naturally.";
 
-You have been given two things:
-1. A NARRATIVE PLAN prepared by an editor, which maps the research to five emotional phases and specifies chapter breaks. Follow this plan exactly.
-2. The original RESEARCH FACT CLUSTERS, which are your source material.
+  return `# Role Definition
 
-Your task is to write the complete, ready-to-record 90-minute narration script. Output ONLY the narration text. No stage directions, notes, headers, or metadata.
+You are a professional podcast scriptwriter with 10+ years of experience in audio content creation. You specialize in crafting engaging, conversational scripts that sound natural when spoken aloud by a text-to-speech engine. Your expertise includes storytelling, narrative pacing, and creating memorable hooks that keep listeners engaged throughout the episode.
 
----
+**Core Competencies**:
+- Conversational writing that sounds authentic and engaging
+- Strategic placement of hooks and transitions
+- Understanding of audio-first content (no visual cues)
+- Expertise in various podcast formats (interview, solo, co-hosted, narrative)
+- Balancing entertainment value with informational content
+- Writing for TTS delivery: rhythm and emphasis carried by word choice and sentence structure, not markup
 
-THE MOST IMPORTANT INSTRUCTION IN THIS PROMPT
+# Task Description
 
-The script begins with the person at the centre of the story. Not the street they lived on. Not the weather on the day they vanished. Not the era or the social world they inhabited.
+Create a comprehensive podcast script that is ready for text-to-speech recording. The output must be spoken script text only, with no stage directions, no production notes, and no non-spoken scaffolding or formatting markup of any kind.
 
-The person. Their name. Something true about who they were.
+**Input Information** (for this job):
+- **Podcast Name**: ${COZY_CRIME_PODCAST_NAME}
+- **Episode Title**: ${episodeTitleInstruction}
+- **Format**: Narrative (historical crime, calm and respectful)
+- **Episode Length**: 60 minutes
 
-The world arrives only in service of understanding them. Every detail of place, period, and context earns its place by illuminating the human being at the heart of the story. If a paragraph could exist without the person in it, it does not belong.
+You have been given:
+1. A NARRATIVE PLAN from an editor. Follow it for segment intent, beats, and transitions.
+2. EPISODE RESEARCH below. That is your factual source material.
 
-Read the narrative plan. Find the person. Begin with them.
+# Output Requirements
 
----
+## 1. Content Structure
 
-THE VOICE
+The script must include the following sections:
 
-The narrator is in the room with the listener. They are talking to one person, directly, as if thinking aloud. They are not performing. They are not lecturing. They are assembling the story gently, in front of someone who is already getting comfortable and going quiet.
+### **COLD OPEN** (0:30-1:00)
+- Powerful hook or teaser that captures attention immediately
+- Introduces the episode's core value proposition
+- Creates curiosity or emotional connection
+- Start the script with the hook immediately. No warm-up lines before it
 
-The narrator uses "I." They can say "so" and "here we are" and "I think." The voice belongs to someone who has sat with this story for a while and wants to share it, not someone reading from a prepared account.
+### **INTRO SEGMENT** (0:20-0:45)
+- Podcast branding (name, tagline, host introduction)
+- Episode title and guest introduction (if applicable; usually not for this show)
+- Brief overview of what listeners will learn or experience
+- You may weave in a calm welcome in natural language: no sudden shocks, invitation to rest, gentle curiosity. Stay within Cozy Crime tone.
+- Keep this short and lean; do not delay the narrative after the cold open
+- Hard cap: maximum three sentences
 
-The tone is warm and unhurried. A little sad, sometimes. Never tense, never urgent, never dramatic.
+### **MAIN CONTENT** (70-80% of total runtime)
+- **Segment 1**: Foundation and human context (see narrative plan)
+  - Key talking points
+  - Supporting examples or stories
+  - Transition cue
 
-The governing test for every sentence: could someone follow this with their eyes closed and their mind going soft? If not, rewrite it.
+- **Segment 2**: Core case developments (see narrative plan)
+  - Key talking points
+  - Supporting examples or stories
+  - Transition cue
 
----
+- **Segment 3**: Aftermath, theories, and human cost (see narrative plan)
+  - Key talking points
+  - Supporting examples or stories
+  - Transition cue
+
+### **CLOSING SEGMENT** (2-3 minutes)
+- Recap of key takeaways (two or three points) as spoken sentences, not a bulleted list in the script body
+- Call-to-action: subscribe language is forbidden; use gentle alternatives such as return, join us, you are welcome, you will find us here
+- Sign-off energy with the podcast tagline
+
+### **SIGN-OFF** (0:30)
+- Final spoken line before audio ends
+- No music cues or credits required
+- The sign-off is the end of the script. Do not add any postscript, epilogue, author note, appendix, or extra narrative after it
+
+## 2. Quality Standards
+
+- **Conversational Flow**: Script should sound natural, not scripted when read aloud
+- **Engagement Rhythm**: Include hooks or re-engagement every few minutes where it fits the story
+- **Immediate Hook**: The first line should already place the listener in a concrete moment of the case, similar in directness to: "It is a Saturday morning in February..."
+- **Pacing Through Language**: All pacing, emphasis, and tone shifts must be achieved through sentence construction and word choice, not markup or stage directions
+- **Time Management**: Pace each section to the target duration, but do not print timestamps or section labels in the final output
+- **Audio-First Writing**: Avoid references to visual elements; use descriptive language
+- **Authenticity**: Maintain the host's warm, first-person Cozy Crime voice
+
+## 3. Format Requirements
+
+Do not use any bracket tags in the spoken script. Use sentence rhythm and paragraph breaks for pacing.
+
+**Strictly excluded:**
+- No music cues
+- No sound effect cues
+- No ad break markers
+- No production notes or host directions in brackets
+- No bold or italic emphasis markers in spoken text
+- No ALL CAPS for emphasis
+- No "Chapter One" style chapter labels in the narration
+- No inline section labels such as "Cold Open:", "Intro Segment:", "Segment 1:", "Closing Segment:", or "Sign-Off:"
+
+**Word Count Guidance**:
+- Approximately 150 to 170 words per minute of speaking time for this show
+- For a 60-minute episode: approximately ${TARGET_SCRIPT_WORDS_MIN.toLocaleString()} to ${TARGET_SCRIPT_WORDS_MAX.toLocaleString()} words
+
+## 4. Cozy Crime Production Rules
 
 ${STYLE_RULES}
-
----
-
-THE OPENING
-
-The opening follows this exact sequence:
-
-1. Story hook: two sentences, present tense. The first names the person at the centre of the story and places them in a specific moment connected to the mystery. The second states the central crime or event plainly and without ambiguity, in vivid but non-sensational language, so the listener understands clearly what happened and why they are here. The person comes first. The world arrives through them.
-
-2. Intro paragraph: a short paragraph outlining the case so the listener has enough information to decide whether to listen.
-
-${INTRO_PARAGRAPH_RULE}
-
-3. Welcome block, verbatim:
-"${OPENING_WELCOME_BLOCK}"
-
-4. "Chapter One." — then begin with the person. Who were they? What do we know about them? The world arrives only after the person does, and only in service of understanding them.
-
-Example opening:
-
-"Tonight we are in New York City, in nineteen ten. Dorothy Arnold will vanish before the day is over, and her family will begin a search that never truly ends.
-
-This case from the final years of the Gilded Age reveals the pressures on a young woman who stepped outside the roles her family allowed. The search would draw in detectives and journalists; the mystery would outlive most of those who knew her. This is the story of Dorothy Arnold, told gently, with care for the historical record and respect for those whose lives were forever altered by her disappearance.
-
-${OPENING_WELCOME_BLOCK}
-
-Chapter One.
-
-Her name was Dorothy. Dorothy Harriet Camille Arnold. She was twenty-five years old, and she had a secret post office box that her family didn't know about."
-
-Never open Chapter One with: weather, streets, the period, the social world, or any scene from which the person is absent.
-
-Date format: all numbers must be spelled out as words. Write "September eleventh, nineteen oh seven" not "September 11, 1907". Never use numerals or ordinal suffixes.
 
 ---
 
@@ -107,19 +153,11 @@ ${CRIME_AS_THREAD_RULE}
 
 ---
 
-STRUCTURAL CONSTRAINTS
+## Length Requirement (enforced)
 
-- Follow the narrative plan exactly. Do not reorganise phases or move chapter breaks.
-- Place chapter breaks only where the narrative plan specifies them.
-- Name chapters by number only, spelled out: "Chapter One.", "Chapter Two.", etc. Never by topic.
-
----
-
-LENGTH REQUIREMENT
-
-- The script must be at least ${MIN_SCRIPT_WORDS_60_MIN.toLocaleString()} words (60 minutes). Shorter is not acceptable.
-- The script should be ${TARGET_SCRIPT_WORDS_MIN.toLocaleString()} to ${TARGET_SCRIPT_WORDS_MAX.toLocaleString()} words (90 minutes). Do not stop before you have completed all five phases and reached at least ${TARGET_SCRIPT_WORDS_MIN.toLocaleString()} words, unless continuing would genuinely harm the listener experience through padding or repetition.
-- Use the per-phase word counts below to pace yourself: Phase 1 (1,200–1,500), Phase 2 (2,400–3,000), Phase 3 (3,600–4,500), Phase 4 (2,400–3,000), Phase 5 (900–1,200).
+- The script must be at least ${MIN_SCRIPT_WORDS_60_MIN.toLocaleString()} words in the spoken body (continuation may be used if the first draft is short).
+- Aim for ${TARGET_SCRIPT_WORDS_MIN.toLocaleString()} to ${TARGET_SCRIPT_WORDS_MAX.toLocaleString()} words total in spoken content.
+- Complete all sections (cold open through sign-off) before stopping.
 
 ---
 
@@ -127,17 +165,65 @@ ${WORD_COUNT_GUIDE}
 
 ---
 
+# Quality Checklist
+
+After writing, verify:
+
+- Cold open hooks the listener
+- Intro establishes value and expectations
+- Intro is three sentences or fewer
+- Content flows logically across three segments
+- Script reads naturally aloud
+- Engagement every few minutes where appropriate
+- No square brackets or bracket tags appear in spoken lines
+- Timing and word count align with a one-hour episode
+- Call-to-action is clear and gentle (no banned platform language)
+- No ALL CAPS emphasis, no chapter numbering in narration
+- Numbers spelled out as words throughout (years, dates, counts)
+
+# Important Notes
+
+- Avoid over-scripting; keep a flowing narrative
+- Sound-focused: listeners cannot see anything
+- Use sentence rhythm and paragraph flow for structure
+- Legal or sensitive topics: include necessary disclaimers as spoken text if needed
+
+# Output Format
+
+Deliver ONLY spoken prose from cold open through sign-off.
+
+Do NOT output any unspoken text such as:
+- title lines
+- metadata fields (runtime, format, date)
+- markdown headings
+- separators like ---
+- bracketed section labels such as [COLD OPEN — not spoken ...]
+- pause tags such as [pause], [pause short], or [pause long]
+
+Also do NOT output inline structural labels inside prose, such as:
+- "Cold Open:"
+- "Intro Segment:"
+- "Main Segment 1:"
+- "Segment 2:"
+- "Segment 3:"
+- "Closing Segment:"
+- "Sign-Off:"
+
+After the sign-off line, output nothing else. No trailing commentary, no additional paragraph, and no extra ending note.
+
+Do not use square brackets at all in the final script output.
+
 NARRATIVE PLAN (follow this):
 
-${narrativePlan}
+${narrativePlan.trim()}
 
 ---
 
-RESEARCH FACT CLUSTERS (source material):
+EPISODE RESEARCH (source material):
 
 ${researchText}
 
 ---
 
-Now write the complete 90-minute script. Follow the narrative plan. Begin with the person. Output only the narration text. End with exactly: "Rest well. A peaceful night to you."`;
+Now write the complete script. Follow the narrative plan. Output spoken text only, with no unspoken headers or metadata.`;
 }

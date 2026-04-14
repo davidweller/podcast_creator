@@ -72,14 +72,13 @@ export const OPENING_WELCOME_BLOCK =
   "Good evening, and welcome. There will be no sudden sounds here, no raised voices, nothing to startle you from rest. If you find comfort in these stories and wish to follow us, please do.\n\nClose your eyes whenever you wish. Let your breathing slow. Let's begin.";
 
 /**
- * Full canonical opening sequence for validation purposes.
- * [STORY HOOK (two sentences)] + [INTRO PARAGRAPH] + OPENING_WELCOME_BLOCK + "Chapter One."
+ * Reference description for long-form episode openings (TTS podcast format).
+ * Verbatim welcome block may appear woven into the intro segment in natural language.
  */
-export const OPENING_SEQUENCE_DESCRIPTION = `The opening follows this exact sequence:
-1. Story hook: two sentences, present tense. The first names the person at the centre of the story and places them in a specific moment. The second states the central crime or event plainly and without ambiguity, in vivid but non-sensational language, so the listener understands what story they have come to hear.
-2. Intro paragraph: a short paragraph outlining the case (themes, key elements, case name, gentle framing) so the listener has enough information to decide whether to listen.
-3. Welcome block (verbatim): "${OPENING_WELCOME_BLOCK}"
-4. "Chapter One." Then begin with the person, not the environment.`;
+export const OPENING_SEQUENCE_DESCRIPTION = `Long-form episode scripts use this opening shape:
+1. Cold open (about thirty seconds to one minute): hook and value; person-centred when the case has a clear human core.
+2. Intro segment (about one to two minutes): podcast name and tagline, episode title, overview for the listener, calm welcome tone (the spirit of: "${OPENING_WELCOME_BLOCK}" may appear as natural prose, not necessarily verbatim).
+3. Main Segment 1 begins: foundation and human context first, not atmosphere for its own sake.`;
 
 // ---------------------------------------------------------------------------
 // STYLE RULES
@@ -103,12 +102,12 @@ Language:
 - No gore or graphic description of any kind. Violence happens offstage, in a gap between paragraphs.
 - No exclamation marks. The narrator never raises their voice on the page.
 - No numbered lists, no enumerated points. Legal cases, trial arguments, and theories must be told as story.
-- No markers in the text such as [pause], [music], or [SFX]. The script is clean prose only.
+- No square brackets or bracket tags in spoken script lines. No music cues, SFX cues, or production tags.
 - Never use: subscribe, like, bell icon, content, algorithm. Use: return, join us, you are welcome, you will find us here.
 - Use contractions where natural. Write "don't" not "do not," "wasn't" not "was not," "couldn't" not "could not."
 - Avoid passive voice. Write "Her friends called her Phyllis" not "She was known to her friends as Phyllis."
 - Plain words over literary ones. "He was tired" rather than "weariness had settled upon him."
-- All numbers must be spelled out as words. Write "three" not "3", "twenty-five" not "25", "nineteen ten" not "1910". This includes years, dates, and chapter headings.
+- All numbers must be spelled out as words. Write "three" not "3", "twenty-five" not "25", "nineteen ten" not "1910". This includes years, dates, and any headings that include numbers.
 
 The person, always:
 - The victim is introduced as a person first. Always. Apply the Mother Test: would their family find this account dignified?
@@ -119,60 +118,38 @@ The person, always:
 // PHASE RULES (used in script generation and improvement checking)
 // ---------------------------------------------------------------------------
 
-export const PHASE_RULES = `PHASE RULES
+export const PHASE_RULES = `EPISODE SEGMENT PACING (60-minute narrative script)
 
-Phase 1: Draw In (0-10 min, 1,200-1,500 words):
-- Begins with the person at the centre of the story. Not the street, not the weather, not the period.
-- The world arrives only in service of understanding who this person was.
-- Chapter One opens with: who were they? The mystery arrives through them.
+Follow the narrative plan and keep structure implicit in spoken prose. Do not print segment headers, timestamps, metadata, or other non-spoken scaffolding. Approximate word budgets at 150 to 170 words per minute:
 
-Phase 2: Settle (10-30 min, 2,400-3,000 words):
-- The listener understands the life this person was living: their relationships, their constraints, their private hopes.
-- Context arrives through people. Never as standalone background.
-- The central event remains a felt presence throughout.
+Cold open (about 0:30 to 1:00): roughly 120 to 220 words. Hook and value; person-centred where the case has a clear human core. Start immediately in-scene with no warm-up preamble.
 
-Phase 3: Unfold (30-60 min, 3,600-4,500 words):
-- The events themselves, narrated as memory, not as report.
-- Gaps and uncertainties acknowledged plainly, without drama or cliffhangers.
-- Chapter breaks follow emotional completions, not topic changes.
-- Trials and legal proceedings told as human scenes, not structured arguments.
+Intro segment (about 0:20 to 0:45): roughly 60 to 120 words. Podcast name, tagline, host voice, episode title, what the listener will get. You may weave in the spirit of a calm welcome: no sudden shocks, invitation to rest, no hype. Keep this brief so momentum from the hook is not lost. Hard cap: maximum three sentences.
 
-Phase 4: Sit With It (60-80 min, 2,400-3,000 words):
-- Aftermath, theories, unanswered questions.
-- Theories presented as genuine uncertainties the narrator is weighing, not competing cases.
-- The focus shifts from the puzzle back to the person before this phase ends.
-- Pace is slower and quieter than Phase 3.
+Main content (about 70 to 80 percent of total, roughly 6,300 to 8,000 words) across three segments:
+- Segment 1: foundation, who people were, context through character. About 2,000 to 2,800 words.
+- Segment 2: the heart of the case, tension and developments, trials or investigation as human story. About 2,000 to 2,800 words.
+- Segment 3: aftermath, theories, resolution or open questions, return to the human cost. About 2,000 to 2,800 words.
 
-Phase 5: Rest (80-90 min, 900-1,200 words):
-- Honour. Hold. Release.
-- The narrator speaks about the people by name, with care.
-- At least one full paragraph of quiet human reflection before the closing image.
-- A still physical image from the world of the story. A street, a harbour, a building still standing.
-- The farewell is three sentences at most. Thank the listener. Wish them rest. Do not invite them to return.
-- Never end with a question, a revelation, or a call to action.
-- The script ends with exactly: "Rest well. A peaceful night to you."`;
+Between segments: clear transitions in prose using sentence rhythm and paragraph flow.
+
+Closing segment (about 2 to 3 minutes): roughly 350 to 500 words. Recap two or three takeaways in spoken prose (not a bulleted list in the script body). Gentle call to action: return, join us, you are welcome. No subscribe or algorithm language.
+
+Sign-off (about 0:30): roughly 80 to 150 words. Final line and tagline energy that matches Cozy Crime: warm, calm, respectful.
+
+Do not label spoken sections as "Chapter One" or use chapter numbering in the narration.`;
 
 // ---------------------------------------------------------------------------
 // CHAPTER BREAK RULES
 // ---------------------------------------------------------------------------
 
-export const CHAPTER_BREAK_RULES = `CHAPTER BREAKS
+export const CHAPTER_BREAK_RULES = `STRUCTURE AND TRANSITIONS (no chapter titles in narration)
 
-Chapters are punctuation, not filing cabinets. They mark a breath, a shift, a gentle transition from one emotional register to another. They are never tied to a topic. They are always tied to feeling.
+Do not use "Chapter One," "Chapter Two," or any chapter numbering in the spoken script.
 
-Place a chapter break when:
-- An emotional scene has ended and the story is moving to a different feeling.
-- The focus shifts from one person or group to another.
-- Time moves significantly forward or backward within the narrative.
-- The listener needs a moment of rest before a passage of greater density.
+Use smooth prose transitions between major blocks. Create breath and emphasis through sentence rhythm, not markup.
 
-Never place a chapter break when:
-- A topic has been covered and the next topic is ready to begin.
-- The word count suggests one is due.
-- The previous chapter ended on something unresolved that the next chapter will answer.
-
-Name chapters by number only, spelled out: "Chapter One.", "Chapter Two.", etc. Never by topic.
-A 90-minute episode carries between four and seven chapter breaks. Fewer is usually better.`;
+Shift feeling through sentence rhythm and word choice, not through chapter labels.`;
 
 // ---------------------------------------------------------------------------
 // THE CRIME AS THREAD
@@ -180,7 +157,7 @@ A 90-minute episode carries between four and seven chapter breaks. Fewer is usua
 
 export const CRIME_AS_THREAD_RULE = `THE CRIME AS THREAD
 
-The central event must remain a felt presence throughout every phase. The listener should never go more than a few minutes without understanding how what they are hearing connects to the story they came to hear.
+The central case must remain a felt presence throughout the episode. The listener should never go more than a few minutes without understanding how what they are hearing connects to the story they came to hear.
 
 After any paragraph of context or character introduction, the connection should be clear in the prose. The narrator can say it directly: "And this matters because..." or "Which is part of why nobody was quite prepared for what came next."
 
@@ -190,27 +167,30 @@ Context enriches. It does not replace.`;
 // WORD COUNT
 // ---------------------------------------------------------------------------
 
-/** Minimum script length: 60 minutes at 120 wpm. */
-export const MIN_SCRIPT_WORDS_60_MIN = 7200;
+/**
+ * If the draft is shorter than this, the generator runs a continuation pass.
+ * Set below the target band so minor shortfalls do not always trigger a second call.
+ */
+export const MIN_SCRIPT_WORDS_60_MIN = 8500;
 
-/** Target script length: 90-minute episode (lower bound). */
-export const TARGET_SCRIPT_WORDS_MIN = 10800;
+/** Target script length: 60-minute episode (lower bound), ~150 wpm. */
+export const TARGET_SCRIPT_WORDS_MIN = 9000;
 
-/** Target script length: 90-minute episode (upper bound). */
-export const TARGET_SCRIPT_WORDS_MAX = 11700;
+/** Target script length: 60-minute episode (upper bound), ~165 wpm. */
+export const TARGET_SCRIPT_WORDS_MAX = 10000;
 
 export const WORD_COUNT_GUIDE = `WORD COUNT
 
-Spoken word at a calm, unhurried pace runs at approximately 120 to 130 words per minute.
+Spoken narrative for this show is budgeted at roughly 150 to 170 words per minute for a one-hour episode.
 
-Minimum length: 7,200 words (60 minutes). The script must not be shorter than this.
-Target length: 10,800 to 11,700 words (90 minutes). Aim for this. Do not stop before completing all five phases and reaching at least 10,800 words unless continuing would genuinely harm the listener experience through padding or repetition.
+Target total: 9,000 to 10,000 words. Do not finish far below 9,000 words unless padding would harm the story. If you approach 10,000 words, conclude naturally without repetition.
 
-Phase 1 (Draw In):     1,200-1,500 words
-Phase 2 (Settle):      2,400-3,000 words
-Phase 3 (Unfold):      3,600-4,500 words
-Phase 4 (Sit With It): 2,400-3,000 words
-Phase 5 (Rest):          900-1,200 words`;
+Approximate section budgets:
+- Cold open: 120 to 220 words
+- Intro segment: 60 to 120 words
+- Main content (three segments combined): 6,300 to 8,000 words
+- Closing: 350 to 500 words
+- Sign-off: 80 to 150 words`;
 
 // ---------------------------------------------------------------------------
 // IMPROVEMENT CHECKER QUALITY RULES
@@ -219,42 +199,47 @@ Phase 5 (Rest):          900-1,200 words`;
 
 export const QUALITY_CHECK_RULES = `QUALITY CHECKS: flag any deviation and suggest a fix
 
-OPENING:
-- The story hook consists of exactly two sentences. The first names or directly invokes the person at the centre of the story and places them in a specific moment connected to the mystery. The second states the central crime or event plainly and without ambiguity, in vivid but non-sensational language, so the listener understands clearly what happened and why they are here.
-- After the story hook, an intro paragraph must appear before the welcome block. It outlines the case (themes, key elements, case name, gentle framing) so the listener has enough information to decide whether to listen. Tone must stay within Cozy Crime rules.
-- The story hook does not open with weather, streets, period atmosphere, or a scene from which the person is absent.
-- Nothing before the welcome except the story hook (two sentences) and the intro paragraph. No other preamble or framing.
-- The welcome block appears verbatim: "${OPENING_WELCOME_BLOCK}"
-- Chapter One begins with the person. The world arrives only in service of understanding who they were.
-- All numbers in the opening are spelled out as words, including the year.
+DOCUMENT STRUCTURE:
+- The script covers cold open, intro, main content in three segments, closing, and sign-off as spoken prose only.
+- No unspoken scaffolding in output: no title blocks, metadata lines, markdown headings, separator lines, or bracketed non-spoken section labels.
+- No inline structural labels in prose, such as "Cold Open:", "Intro Segment:", "Segment 1:", "Segment 2:", "Segment 3:", "Closing Segment:", or "Sign-Off:".
+
+OPENING AND HOOKS:
+- Cold open delivers a clear hook and emotional or intellectual pull within the first minute of material.
+- The first line drops directly into a concrete case moment, with no warm-up preamble.
+- Intro establishes podcast identity, episode topic, and what the listener will get.
+- Intro is brief and does not stall momentum from the hook.
+- Intro is three sentences or fewer.
+- Main segments flow logically with transitions; hooks or re-engagement roughly every few minutes of material where appropriate.
 
 STRUCTURE:
-- Total word count is at least 7,200 (60 min). Ideally 10,800 to 11,700 (90 min). Flag if under 7,200; suggest expansion if under 10,800.
-- Between 4 and 7 chapter headings, numbered and spelled out: "Chapter One.", "Chapter Two.", etc.
-- Chapter breaks follow emotional completions, not topic changes.
+- Total word count in the spoken body is ideally 9,000 to 10,000 words for a one-hour show. Flag if under 8,500; suggest expansion if under 9,000 without padding.
+- No "Chapter One" style chapter labels in the spoken narration.
 
 VOICE:
-- The narrator uses "I" and speaks directly to the listener throughout.
-- Contractions are used where natural. No formal "do not," "was not," "could not."
-- Active voice throughout. No passive constructions.
-- Tone is warm, unhurried, conversational. Never tense, urgent, or dramatic.
+- First-person host narration where appropriate for this show; conversational and warm.
+- Contractions where natural. Active voice preferred.
+- Tone matches Cozy Crime: calm, respectful, not sensational or urgent.
 
 STYLE:
 - No em-dashes or en-dashes anywhere.
 - No gore or graphic description.
 - No exclamation marks.
-- No numbered or bulleted lists anywhere in the narration.
-- No markers such as [pause], [music], [SFX].
-- No banned words: subscribe, like, bell icon, content, algorithm.
-- All numbers spelled out as words throughout the script.
+- No numbered or bulleted lists in the spoken narration body (recap takeaways must be spoken sentences, not bullet lists).
+- No square brackets or bracketed markers in spoken content. Flag any bracketed text, music cues, or SFX cues.
+- No ALL CAPS for emphasis. No bold or italic markers in spoken lines.
+- No banned words: subscribe, like, bell icon, content, algorithm. Prefer: return, join us, you are welcome, you will find us here.
+- All numbers spelled out as words throughout the script (Cozy Crime production rule for TTS).
 
 CONTENT:
-- The person at the centre is introduced as a human being, not a role or a victim.
-- Every phase contains at least one reference that connects what the listener is hearing to the central event.
-- Context arrives through people. No paragraph of pure background without a person at its centre.
-- Phase 4 shifts from puzzle to person before it ends.
-- Phase 5 includes at least one full paragraph of quiet human reflection before the closing image.
-- The script ends with exactly: "Rest well. A peaceful night to you."`;
+- People at the centre of the case are treated as human beings, with dignity (Mother Test).
+- The central case or mystery remains connected throughout; no long stretches of pure background without tying back to the story.
+- Legal or sensitive topics use spoken disclaimers where appropriate.
+
+CLOSING:
+- Closing includes recap (as prose), gentle call to action, and sign-off consistent with the show brand.
+- Do not require a specific verbatim closing sentence; the sign-off should feel complete and calm.
+- The sign-off must be the final line. Flag any extra narrative, postscript, epilogue, or trailing note that appears after it.`;
 
 // ---------------------------------------------------------------------------
 // DESCRIPTION TONE RULES

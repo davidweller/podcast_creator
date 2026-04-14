@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getProjectData } from "@/lib/db/projects";
+import { getProject, getProjectData } from "@/lib/db/projects";
 import { updateProjectData, updateProjectStatus } from "@/lib/db/projects";
 import { generateScript90Min } from "@/lib/generation/generator-90min";
 import { parseScriptLlmSelection } from "@/lib/llm/parse-selection";
@@ -18,6 +18,7 @@ export async function POST(
 
     // Get research text
     const projectData = getProjectData(projectId);
+    const project = getProject(projectId);
     if (!projectData || !projectData.research_text) {
       return NextResponse.json(
         { error: "Research text not found. Please add research first." },
@@ -25,12 +26,13 @@ export async function POST(
       );
     }
 
-    // Generate 90-minute script
+    // Generate ~60-minute episode script (stored in script_90min field)
     const result = await generateScript90Min(projectData.research_text, {
       llmModelId,
       useThinking,
       thinkingBudget,
       projectId,
+      episodeTitle: project?.title,
     });
     updateProjectData(projectId, { script_90min: result.script });
     updateProjectStatus(projectId, {

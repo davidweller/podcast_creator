@@ -21,24 +21,12 @@ export interface GenerateScript90MinOptions {
   /** Legacy Anthropic-only config */
   modelConfig?: ScriptModelConfig;
   projectId?: number;
+  /** Episode title for the script header and intro (project title). */
+  episodeTitle?: string | null;
 }
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-const REQUIRED_ENDING_LINE = "Rest well. A peaceful night to you.";
-
-function stripRequiredEnding(script: string): string {
-  const trimmed = script.trim();
-  if (!trimmed.endsWith(REQUIRED_ENDING_LINE)) return trimmed;
-  return trimmed.slice(0, trimmed.length - REQUIRED_ENDING_LINE.length).trimEnd();
-}
-
-function ensureRequiredEnding(script: string): string {
-  const trimmed = script.trimEnd();
-  if (trimmed.endsWith(REQUIRED_ENDING_LINE)) return trimmed;
-  return `${trimmed}\n\n${REQUIRED_ENDING_LINE}`;
 }
 
 function resolveUnifiedOptions(
@@ -71,16 +59,14 @@ function resolveUnifiedOptions(
 }
 
 /**
- * Generate a 90-minute script using a two-stage pipeline:
+ * Generate a ~60-minute episode script using a two-stage pipeline:
  *
- * Stage 1 — Narrative Architecture:
- *   Transforms research into an emotional arc plan with phase assignments,
- *   chapter placements, opening/closing images, and character introductions.
+ * Stage 1 — Narrative plan:
+ *   Transforms research into segment outlines (cold open through sign-off).
  *
- * Stage 2 — Full Script (streamed):
- *   Generates the complete ~11,000-word script in a single pass, guided by
- *   the narrative plan. Uses streaming because the output is large enough
- *   to exceed the Anthropic SDK's 10-minute non-streaming timeout.
+ * Stage 2 — Full script (streamed):
+ *   Generates roughly 9,000 to 10,000 words in one pass, guided by the plan.
+ *   Uses streaming because the output can be large.
  */
 export async function generateScript90Min(
   researchText: string,
@@ -102,7 +88,7 @@ export async function generateScript90Min(
     researchWordCount: countWords(researchText),
   });
 
-  // Stage 1: build the narrative architecture (same model as Stage 2)
+  // Stage 1: narrative plan (same model as Stage 2)
   const architecturePrompt = buildNarrativeArchitecturePrompt(researchText);
   const narrativePlan = await completeLlmText("script", architecturePrompt, {
     modelId: llmModelId,
@@ -119,8 +105,12 @@ export async function generateScript90Min(
     countWords(narrativePlan)
   );
 
-  // Stage 2: generate the full script in one streamed pass
-  const scriptPrompt = buildFullScriptPrompt(researchText, narrativePlan.trim());
+  // Stage 2: full script (streamed)
+  const scriptPrompt = buildFullScriptPrompt(
+    researchText,
+    narrativePlan.trim(),
+    { episodeTitle: options?.episodeTitle }
+  );
   const requestedMaxTokens = useThinking ? 32768 + thinkingBudget : 32768;
 
   console.log("[Script Gen] Stage 2 starting. Requested max_tokens:", requestedMaxTokens);
@@ -153,7 +143,7 @@ export async function generateScript90Min(
     targetWordCount: `${TARGET_SCRIPT_WORDS_MIN.toLocaleString()}-${TARGET_SCRIPT_WORDS_MAX.toLocaleString()}`,
     shortfall:
       scriptWordCount < TARGET_SCRIPT_WORDS_MIN
-        ? `${TARGET_SCRIPT_WORDS_MIN - scriptWordCount} words short of 90-min target`
+        ? `${TARGET_SCRIPT_WORDS_MIN - scriptWordCount} words short of 60-min target`
         : "None",
   });
 
@@ -161,18 +151,18 @@ export async function generateScript90Min(
     console.warn("[Script Gen] WARNING: Output was truncated due to max_tokens limit!");
   } else if (scriptWordCount < MIN_SCRIPT_WORDS_60_MIN) {
     console.warn(
-      `[Script Gen] WARNING: Script below 60-minute minimum (${scriptWordCount} words, need at least ${MIN_SCRIPT_WORDS_60_MIN}).`
+      `[Script Gen] WARNING: Script below continuation threshold (${scriptWordCount} words, target band starts at ${MIN_SCRIPT_WORDS_60_MIN}).`
     );
   } else if (scriptWordCount < TARGET_SCRIPT_WORDS_MIN) {
     console.warn(
-      `[Script Gen] WARNING: Model stopped early (${streamResult.stopReason}) with only ${scriptWordCount} words (90-min target: ${TARGET_SCRIPT_WORDS_MIN}).`
+      `[Script Gen] WARNING: Model stopped early (${streamResult.stopReason}) with only ${scriptWordCount} words (60-min target: ${TARGET_SCRIPT_WORDS_MIN}).`
     );
   }
 
   if (scriptWordCount < MIN_SCRIPT_WORDS_60_MIN) {
-    console.log("[Script Gen] Below 60-minute minimum. Running continuation pass...");
+    console.log("[Script Gen] Below continuation threshold. Running continuation pass...");
 
-    const baseScript = stripRequiredEnding(script);
+    const baseScript = script.trim();
     const baseWordCount = countWords(baseScript);
 
     const continuationPrompt = buildScriptContinuationPrompt({
@@ -216,19 +206,15 @@ export async function generateScript90Min(
       outputTokens: continuationResult.outputTokens,
     });
 
-    script = ensureRequiredEnding(
-      `${baseScript}\n\n${stripRequiredEnding(continuationText)}`.trim()
-    );
+    script = `${baseScript}\n\n${continuationText}`.trim();
 
     const finalWordCount = countWords(script);
     console.log("[Script Gen] Final script word count after continuation:", finalWordCount);
     if (finalWordCount < MIN_SCRIPT_WORDS_60_MIN) {
       console.warn(
-        `[Script Gen] WARNING: Still below 60-minute minimum after continuation (${finalWordCount} words, need at least ${MIN_SCRIPT_WORDS_60_MIN}).`
+        `[Script Gen] WARNING: Still below continuation threshold after continuation (${finalWordCount} words, need at least ${MIN_SCRIPT_WORDS_60_MIN}).`
       );
     }
-  } else {
-    script = ensureRequiredEnding(stripRequiredEnding(script));
   }
 
   return { script, narrativePlan: narrativePlan.trim(), attempts };

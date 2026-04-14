@@ -40,7 +40,7 @@ export async function POST(
     const template = readFileSync(RESEARCH_PROMPT_PATH, "utf-8");
     const systemPrompt = template.replace("[Topic]", topic);
     const userMessage =
-      "Produce the structured fact clusters for the topic above. Follow the four cluster templates exactly.";
+      "Produce the full research packet for the episode topic in the system prompt. Follow the Output Format: use clearly labeled sections matching the structure given (sections 1–8). Be specific and ground claims in reputable sources.";
 
     const { llmModelId, useThinking, thinkingBudget } =
       parseLlmCompletionOptions(body, "research");

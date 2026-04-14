@@ -6,6 +6,7 @@ import {
 import {
   getLlmModelOrThrow,
   resolveOpenRouterApiModel,
+  type LlmModelEntry,
 } from "@/lib/models/registry";
 import type { LlmStage } from "@/lib/models/types";
 import { resolveProviderApiKey } from "@/lib/keys/resolve";
@@ -13,8 +14,25 @@ import {
   openRouterChatCompletion,
   openRouterChatCompletionStream,
   type OpenRouterMessage,
+  type OpenRouterReasoningBody,
 } from "@/lib/openrouter/client";
 import { logLlmUsage } from "@/lib/usage/llm-usage";
+
+function openRouterReasoningForEntry(
+  entry: LlmModelEntry,
+  useThinking: boolean,
+  thinkingBudget?: number
+): OpenRouterReasoningBody | undefined {
+  if (entry.provider !== "openrouter" || !entry.openRouterReasoningViaBody) {
+    return undefined;
+  }
+  if (!useThinking || !entry.supportsThinking) return undefined;
+  const max_tokens =
+    typeof thinkingBudget === "number" && thinkingBudget > 0
+      ? Math.floor(thinkingBudget)
+      : 10000;
+  return { max_tokens };
+}
 
 export async function completeLlmText(
   stage: LlmStage,
@@ -73,19 +91,25 @@ export async function completeLlmText(
   }
 
   const apiKey = resolveProviderApiKey("openrouter") ?? undefined;
-  const model = resolveOpenRouterApiModel(entry, false);
+  const model = resolveOpenRouterApiModel(entry, useThinking);
   const messages: OpenRouterMessage[] = [];
   if (options.system) {
     messages.push({ role: "system", content: options.system });
   }
   messages.push({ role: "user", content: prompt });
 
+  const reasoning = openRouterReasoningForEntry(
+    entry,
+    useThinking,
+    options.thinkingBudget
+  );
   const { text, inputTokens, outputTokens } = await openRouterChatCompletion({
     model,
     messages,
     maxTokens: options.maxTokens,
-    temperature: options.temperature,
+    temperature: useThinking ? 1 : options.temperature,
     apiKey,
+    reasoning,
   });
   logLlmUsage({
     stage,
@@ -147,13 +171,20 @@ export async function streamLlmText(
   }
   messages.push({ role: "user", content: prompt });
 
+  // Past the Anthropic branch, only OpenRouter remains.
   const streamTemp = useThinking ? 1 : options.temperature;
+  const reasoning = openRouterReasoningForEntry(
+    entry,
+    useThinking,
+    options.thinkingBudget
+  );
   const result = await openRouterChatCompletionStream({
     model,
     messages,
     maxTokens: options.maxTokens,
     temperature: streamTemp,
     apiKey,
+    reasoning,
     onChunk,
   });
   logLlmUsage({

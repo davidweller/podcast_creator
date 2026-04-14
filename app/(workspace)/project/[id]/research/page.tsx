@@ -143,7 +143,7 @@ export default function ResearchPage() {
       <section className="mb-6 p-4 border border-slate-200 rounded-lg bg-slate-50">
         <h3 className="text-lg font-semibold text-slate-800 mb-2">Request research</h3>
         <p className="text-sm text-slate-600 mb-3">
-          Enter a historical topic and Claude will produce structured fact clusters (The World, The People, The Events, The Aftermath) for script writing.
+          Enter a historical topic and the model will produce a research packet (facts, story bank, hooks, segments, takeaways, pitfalls) for script writing.
         </p>
         <div className="flex gap-3 flex-wrap items-end">
           <label className="text-sm text-slate-700">

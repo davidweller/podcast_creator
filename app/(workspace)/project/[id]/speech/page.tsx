@@ -227,13 +227,13 @@ export default function SpeechPage() {
               onChange={(e) => setScriptSource(e.target.value as ScriptSource)}
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400"
             >
-              <option value="90min">90-Minute Script</option>
+              <option value="90min">Episode script (about 60 min)</option>
               <option value="shorts">Shorts Script</option>
               <option value="custom">Custom Text</option>
             </select>
             {!hasScript && scriptSource !== "custom" && (
               <p className="mt-1 text-sm text-amber-600">
-                No {scriptSource === "90min" ? "90-minute" : "shorts"} script available
+                No {scriptSource === "90min" ? "episode" : "shorts"} script available
               </p>
             )}
           </div>
