@@ -140,22 +140,22 @@ export default function ScriptShortsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">YouTube Short</h3>
-        <p className="text-sm text-slate-600 mb-4">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-2">YouTube Short</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
           Generate a 50-100 word YouTube Shorts trailer script from your episode
           title and research.
         </p>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-4 bg-red-100 dark:bg-red-950/40 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 rounded">
             {error}
           </div>
         )}
 
         <div className="mb-4 flex flex-wrap items-center gap-4">
           <div className="flex flex-wrap items-center gap-2">
-            <label className="text-sm font-medium text-slate-700">Model:</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Model:</label>
             <select
               value={llmModelId}
               onChange={(e) => {
@@ -165,7 +165,7 @@ export default function ScriptShortsPage() {
                 if (!m?.supportsThinking) setUseThinking(false);
               }}
               disabled={loading}
-              className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[14rem]"
+              className="text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-w-[14rem]"
             >
               {[...new Set(SOCIAL_MODELS.map((m) => m.group))].map((group) => (
                 <optgroup key={group} label={group}>
@@ -179,13 +179,13 @@ export default function ScriptShortsPage() {
             </select>
           </div>
           {thinkingSupported && (
-            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={useThinking}
                 onChange={(e) => setUseThinking(e.target.checked)}
                 disabled={loading}
-                className="rounded border-slate-300"
+                className="rounded border-slate-300 dark:border-slate-600 dark:bg-slate-900"
               />
               Extended thinking
             </label>
@@ -196,14 +196,14 @@ export default function ScriptShortsPage() {
           <button
             onClick={generateShorts}
             disabled={loading}
-            className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? "Generating..." : "Generate Shorts Script"}
           </button>
           {shorts && (
             <button
               onClick={downloadShorts}
-              className="px-6 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+              className="px-6 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
             >
               Download TXT
             </button>
@@ -212,13 +212,13 @@ export default function ScriptShortsPage() {
       </div>
 
       {shorts && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-slate-900">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">
               Generated Shorts Script
             </h3>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-slate-600 dark:text-slate-400">
                 {wordCount} words
                 {generatedAt ? ` • Generated: ${generatedAt}` : ""}{" "}
                 {wordCount >= 50 && wordCount <= 100 ? "✓" : "(target: 50-100)"}
@@ -238,7 +238,7 @@ export default function ScriptShortsPage() {
           <textarea
             value={shorts}
             onChange={(e) => handleShortsChange(e.target.value)}
-            className="w-full h-[400px] border border-slate-200 rounded p-4 bg-slate-50 font-sans text-sm text-slate-900 resize-y focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="w-full h-[400px] border border-slate-200 dark:border-slate-700 rounded p-4 bg-slate-50 dark:bg-slate-950 font-sans text-sm text-slate-900 dark:text-slate-100 resize-y focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
           />
         </div>
       )}

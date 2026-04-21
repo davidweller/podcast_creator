@@ -249,15 +249,15 @@ export default function ImagesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Images</h2>
-        <p className="text-sm text-slate-600 mb-6">
-          36 illustrated scene images plus a YouTube thumbnail. Style: period-accurate, Rick and Morty–esque illustrated. Generate prompts with your chosen LLM, then generate images with Nano Banana (Gemini image).
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">Images</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+          12 illustrated scene images plus a YouTube thumbnail. Style: period-accurate, Rick and Morty–esque illustrated. Generate prompts with your chosen LLM, then generate images with Nano Banana (Gemini image).
         </p>
 
         <div className="mb-4 flex flex-wrap gap-6 items-end">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Prompt LLM</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Prompt LLM</label>
             <div className="flex flex-wrap items-center gap-3">
               <select
                 value={llmModelId}
@@ -268,7 +268,7 @@ export default function ImagesPage() {
                   if (!m?.supportsThinking) setUseThinking(false);
                 }}
                 disabled={loadingPrompts}
-                className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[12rem]"
+                className="text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-w-[12rem]"
               >
                 {[...new Set(IMAGE_PROMPT_MODELS.map((m) => m.group))].map((group) => (
                   <optgroup key={group} label={group}>
@@ -281,13 +281,13 @@ export default function ImagesPage() {
                 ))}
               </select>
               {promptThinkingSupported && (
-                <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={useThinking}
                     onChange={(e) => setUseThinking(e.target.checked)}
                     disabled={loadingPrompts}
-                    className="rounded border-slate-300"
+                    className="rounded border-slate-300 dark:border-slate-600 dark:bg-slate-900"
                   />
                   Extended thinking
                 </label>
@@ -295,12 +295,12 @@ export default function ImagesPage() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Image model (Nano Banana)</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Image model (Nano Banana)</label>
             <select
               value={geminiImageModel}
               onChange={(e) => setGeminiImageModel(e.target.value as typeof DEFAULT_GEMINI_IMAGE_MODEL)}
               disabled={loadingAll || loadingSlot !== null}
-              className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[12rem]"
+              className="text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-w-[12rem]"
             >
               {GEMINI_IMAGE_MODELS.map((m) => (
                 <option key={m.id} value={m.id}>
@@ -312,7 +312,7 @@ export default function ImagesPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-4 bg-red-100 dark:bg-red-950/40 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 rounded">
             {error}
           </div>
         )}
@@ -321,7 +321,7 @@ export default function ImagesPage() {
           <button
             onClick={generateAllPrompts}
             disabled={loadingPrompts}
-            className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
           >
             {loadingPrompts ? `Generating… (${formatTime(promptsElapsedTime)})` : "Generate all prompts"}
           </button>
@@ -330,12 +330,12 @@ export default function ImagesPage() {
             disabled={loadingAll || images.every((i) => !i.prompt?.trim())}
             className="px-6 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
           >
-            {loadingAll ? (generateAllProgress != null ? `Generating ${generateAllProgress}/37… (${formatTime(imagesElapsedTime)})` : `Generating… (${formatTime(imagesElapsedTime)})`) : "Generate all images"}
+            {loadingAll ? (generateAllProgress != null ? `Generating ${generateAllProgress}/${ILLUSTRATED_SLOTS.length}… (${formatTime(imagesElapsedTime)})` : `Generating… (${formatTime(imagesElapsedTime)})`) : "Generate all images"}
           </button>
           <button
             onClick={downloadAllImages}
             disabled={imagesWithFiles.length === 0}
-            className="px-6 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed transition-colors"
           >
             Download all images ({imagesWithFiles.length})
           </button>
@@ -343,14 +343,14 @@ export default function ImagesPage() {
       </div>
 
       {/* YouTube thumbnail */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-slate-900 mb-4">YouTube thumbnail</h3>
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">YouTube thumbnail</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700">Title (for overlay)</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Title (for overlay)</label>
             <input
               type="text"
-              className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900"
+              className="w-full border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950"
               placeholder="Thumbnail title"
               value={thumbnailRow?.thumbnail_title ?? ""}
               onChange={(e) => {
@@ -363,9 +363,9 @@ export default function ImagesPage() {
                 if (thumbnailRow) savePrompt("thumbnail", thumbnailRow.prompt, e.target.value || null);
               }}
             />
-            <label className="block text-sm font-medium text-slate-700 mt-2">Prompt</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mt-2">Prompt</label>
             <textarea
-              className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 min-h-[100px] text-sm"
+              className="w-full border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950 min-h-[100px] text-sm"
               placeholder="Thumbnail image prompt…"
               value={thumbnailRow?.prompt ?? ""}
               onChange={(e) => {
@@ -379,14 +379,14 @@ export default function ImagesPage() {
               <button
                 onClick={() => thumbnailRow?.prompt && generateOne("thumbnail", thumbnailRow.prompt)}
                 disabled={loadingSlot === "thumbnail" || !thumbnailRow?.prompt?.trim()}
-                className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-sm"
+                className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 dark:hover:bg-slate-600 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-sm"
               >
                 {loadingSlot === "thumbnail" ? "Generating…" : "Generate thumbnail"}
               </button>
               {thumbnailRow?.image_path && (
                 <button
                   onClick={() => downloadImage("thumbnail")}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 text-sm"
+                  className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 text-sm"
                 >
                   Download
                 </button>
@@ -398,10 +398,10 @@ export default function ImagesPage() {
               <img
                 src={`/api/projects/${projectId}/images/thumbnail?v=${thumbnailBust}`}
                 alt="Thumbnail"
-                className="max-w-full rounded border border-slate-200"
+                className="max-w-full rounded border border-slate-200 dark:border-slate-700"
               />
             ) : (
-              <div className="aspect-video bg-slate-100 rounded border border-slate-200 flex items-center justify-center text-slate-500 text-sm">
+              <div className="aspect-video bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
                 No thumbnail yet
               </div>
             )}
@@ -409,9 +409,9 @@ export default function ImagesPage() {
         </div>
       </div>
 
-      {/* 36 scene images */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-slate-900 mb-4">Scene images (1–36)</h3>
+      {/* 12 scene images */}
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">Scene images (1–12)</h3>
         <div className="space-y-6">
           {sceneSlots.map((slot) => {
             const row = images.find((i) => i.slot === slot);
@@ -420,9 +420,9 @@ export default function ImagesPage() {
             return (
               <div
                 key={slot}
-                className="border border-slate-200 rounded-lg p-4 flex flex-col md:flex-row gap-4"
+                className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 flex flex-col md:flex-row gap-4"
               >
-                <div className="flex-shrink-0 w-full md:w-80 aspect-video flex items-center justify-center bg-slate-100 rounded overflow-hidden">
+                <div className="flex-shrink-0 w-full md:w-80 aspect-video flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded overflow-hidden">
                   {hasImage ? (
                     <img
                       src={`/api/projects/${projectId}/images/${slot}`}
@@ -430,13 +430,13 @@ export default function ImagesPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-slate-400 text-xs">#{slot}</span>
+                    <span className="text-slate-400 dark:text-slate-500 text-xs">#{slot}</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col">
-                  <label className="block text-xs font-medium text-slate-500 mb-1 flex-shrink-0">Prompt</label>
+                  <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex-shrink-0">Prompt</label>
                   <textarea
-                    className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 text-sm flex-1 min-h-0 resize-y"
+                    className="w-full border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950 text-sm flex-1 min-h-0 resize-y"
                     placeholder={`Prompt for image ${slot}…`}
                     value={prompt}
                     onChange={(e) => {
@@ -451,14 +451,14 @@ export default function ImagesPage() {
                   <button
                     onClick={() => generateOne(slot, prompt)}
                     disabled={loadingSlot === slot || loadingAll || !prompt.trim()}
-                    className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-sm whitespace-nowrap w-full md:w-auto"
+                    className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 dark:hover:bg-slate-600 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-sm whitespace-nowrap w-full md:w-auto"
                   >
                     {loadingSlot === slot ? "…" : "Generate"}
                   </button>
                   {hasImage && (
                     <button
                       onClick={() => downloadImage(slot)}
-                      className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 text-sm whitespace-nowrap w-full md:w-auto"
+                      className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 text-sm whitespace-nowrap w-full md:w-auto"
                     >
                       Download
                     </button>

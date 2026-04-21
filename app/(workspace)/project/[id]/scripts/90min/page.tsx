@@ -409,23 +409,23 @@ export default function Script90MinPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">Episode script (about 60 min)</h3>
-        <p className="text-sm text-slate-600 mb-4">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+        <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-2">Episode script (about 60 min)</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
           10,800-11,700 words • 5 phases (Descending Spiral)
         </p>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-4 bg-red-100 dark:bg-red-950/40 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 rounded">
             {error}
           </div>
         )}
 
         {/* Model Selection */}
-        <div className="mb-4 p-4 bg-slate-50 border border-slate-200 rounded">
+        <div className="mb-4 p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
-              <label htmlFor="model-select" className="text-sm font-medium text-slate-700">
+              <label htmlFor="model-select" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Model:
               </label>
               <select
@@ -438,7 +438,7 @@ export default function Script90MinPage() {
                   if (!m?.supportsThinking) setUseThinking(false);
                 }}
                 disabled={loading}
-                className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white disabled:bg-slate-100 disabled:cursor-not-allowed min-w-[14rem]"
+                className="text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed min-w-[14rem]"
               >
                 {[...new Set(SCRIPT_MODELS.map((m) => m.group))].map((group) => (
                   <optgroup key={group} label={group}>
@@ -457,12 +457,12 @@ export default function Script90MinPage() {
                 checked={useThinking}
                 onChange={(e) => setUseThinking(e.target.checked)}
                 disabled={loading || !thinkingSupported}
-                className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 disabled:cursor-not-allowed"
+                className="w-4 h-4 text-blue-600 border-slate-300 dark:border-slate-600 dark:bg-slate-900 rounded focus:ring-blue-500 disabled:cursor-not-allowed"
               />
-              <span className="text-sm text-slate-700">Extended Thinking</span>
+              <span className="text-sm text-slate-700 dark:text-slate-300">Extended Thinking</span>
             </label>
             {thinkingSupported && useThinking && (
-              <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+              <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-1 rounded">
                 Slower but more thoughtful
               </span>
             )}
@@ -474,21 +474,21 @@ export default function Script90MinPage() {
             <button
               onClick={generateScript}
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? "Generating..." : "Generate episode script"}
             </button>
             {script && (
               <button
                 onClick={downloadScript}
-                className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
               >
                 Download TXT
               </button>
             )}
           </div>
           {loading && (
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Elapsed: {formatElapsed(elapsedSeconds)} • Approx. {ESTIMATE_SCRIPT_GEN} remaining
             </p>
           )}
@@ -515,8 +515,8 @@ export default function Script90MinPage() {
 
         {/* Analysis progress indicator */}
         {loadingImprovements && analysisPhaseIndex >= 0 && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
-            <p className="font-semibold text-blue-900 mb-3">Analyzing script...</p>
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded">
+            <p className="font-semibold text-blue-900 dark:text-blue-200 mb-3">Analyzing script...</p>
             <div className="space-y-2">
               {ANALYSIS_PHASES.map((phase, i) => {
                 const isComplete = i < analysisPhaseIndex;
@@ -525,7 +525,7 @@ export default function Script90MinPage() {
                   <div 
                     key={phase.id}
                     className={`flex items-center gap-2 text-sm transition-all duration-300 ${
-                      isComplete ? "text-green-700" : isCurrent ? "text-blue-700 font-medium" : "text-slate-400"
+                      isComplete ? "text-green-700 dark:text-green-400" : isCurrent ? "text-blue-700 dark:text-blue-300 font-medium" : "text-slate-400 dark:text-slate-500"
                     }`}
                   >
                     <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
@@ -541,7 +541,7 @@ export default function Script90MinPage() {
                         </svg>
                       )}
                       {!isComplete && !isCurrent && (
-                        <div className="w-2 h-2 bg-slate-300 rounded-full" />
+                        <div className="w-2 h-2 bg-slate-300 dark:bg-slate-600 rounded-full" />
                       )}
                     </div>
                     <span>{phase.label}</span>
@@ -554,10 +554,10 @@ export default function Script90MinPage() {
         </div>
 
         {improvements && improvements.suggestions.length > 0 && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded">
             <div className="flex items-center justify-between mb-3">
-              <p className="font-semibold text-blue-900">{improvements.summary}</p>
-              <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+              <p className="font-semibold text-blue-900 dark:text-blue-200">{improvements.summary}</p>
+              <span className="text-xs text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded">
                 {improvements.suggestions.filter((_, i) => suggestionStatuses.get(i) === "applied").length} / {improvements.suggestions.length} applied
               </span>
             </div>
@@ -572,12 +572,12 @@ export default function Script90MinPage() {
                     key={i} 
                     className={`px-3 py-2 rounded border transition-all duration-300 ${
                       status === "applied" 
-                        ? "bg-green-50 border-green-300" 
+                        ? "bg-green-50 dark:bg-green-950/40 border-green-300 dark:border-green-700" 
                         : status === "applying" 
-                        ? "bg-blue-100 border-blue-300" 
+                        ? "bg-blue-100 dark:bg-blue-950/50 border-blue-300 dark:border-blue-700" 
                         : status === "error"
-                        ? "bg-red-50 border-red-300"
-                        : "bg-white border-blue-100"
+                        ? "bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-700"
+                        : "bg-white dark:bg-slate-950 border-blue-100 dark:border-blue-800"
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -600,7 +600,7 @@ export default function Script90MinPage() {
                             </svg>
                           )}
                           {status === "pending" && (
-                            <div className="w-2 h-2 bg-slate-300 rounded-full" />
+                            <div className="w-2 h-2 bg-slate-300 dark:bg-slate-600 rounded-full" />
                           )}
                         </div>
                         {status === "applying" && applyElapsed > 0 && (
@@ -617,20 +617,20 @@ export default function Script90MinPage() {
                       <button
                         onClick={() => hasDetails && toggleExpanded(i)}
                         className={`flex-1 text-left text-sm ${
-                          status === "applied" ? "text-green-800" : 
-                          status === "applying" ? "text-blue-800 font-medium" : 
-                          "text-slate-700"
-                        } ${hasDetails ? "cursor-pointer hover:text-slate-900" : "cursor-default"} ${isExpanded ? "" : "truncate"}`}
+                          status === "applied" ? "text-green-800 dark:text-green-300" : 
+                          status === "applying" ? "text-blue-800 dark:text-blue-200 font-medium" : 
+                          "text-slate-700 dark:text-slate-300"
+                        } ${hasDetails ? "cursor-pointer hover:text-slate-900 dark:hover:text-slate-100" : "cursor-default"} ${isExpanded ? "" : "truncate"}`}
                       >
                         {suggestion.description}
                         {suggestion.location && (
-                          <span className="text-slate-400 ml-1">({suggestion.location})</span>
+                          <span className="text-slate-400 dark:text-slate-500 ml-1">({suggestion.location})</span>
                         )}
                       </button>
                       {hasDetails && (
                         <button
                           onClick={() => toggleExpanded(i)}
-                          className="flex-shrink-0 p-1 text-slate-400 hover:text-slate-600"
+                          className="flex-shrink-0 p-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                           title={isExpanded ? "Collapse" : "Expand"}
                         >
                           <svg 
@@ -658,9 +658,9 @@ export default function Script90MinPage() {
                     
                     {/* Expanded details */}
                     {isExpanded && hasDetails && (
-                      <div className="mt-2 pl-7 text-sm border-t border-slate-200 pt-2">
+                      <div className="mt-2 pl-7 text-sm border-t border-slate-200 dark:border-slate-700 pt-2">
                         {suggestion.suggestion && (
-                          <p className="text-slate-600 mb-2">{suggestion.suggestion}</p>
+                          <p className="text-slate-600 dark:text-slate-400 mb-2">{suggestion.suggestion}</p>
                         )}
                         {suggestion.original && suggestion.improved && (
                           <div className="space-y-1">
@@ -679,12 +679,12 @@ export default function Script90MinPage() {
       </div>
 
       {script && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-xl font-bold text-slate-900">Episode script</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Episode script</h3>
             <div className="flex items-center gap-2">
               {hasUnsavedChanges && (
-                <span className="text-sm text-amber-600">Unsaved changes</span>
+                <span className="text-sm text-amber-600 dark:text-amber-400">Unsaved changes</span>
               )}
               <button
                 onClick={saveScript}
@@ -695,7 +695,7 @@ export default function Script90MinPage() {
               </button>
             </div>
           </div>
-          <p className="text-sm text-slate-600 mb-4">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
             {(() => {
               const { wordCount } = getScriptStats90(script);
               const generated = generatedAt ? ` • Generated: ${generatedAt}` : "";
@@ -706,7 +706,7 @@ export default function Script90MinPage() {
           <textarea
             value={script}
             onChange={(e) => handleScriptChange(e.target.value)}
-            className="w-full h-[600px] border border-slate-200 rounded p-4 bg-slate-50 font-sans text-sm text-slate-900 resize-y focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="w-full h-[600px] border border-slate-200 dark:border-slate-700 rounded p-4 bg-slate-50 dark:bg-slate-950 font-sans text-sm text-slate-900 dark:text-slate-100 resize-y focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
           />
         </div>
       )}

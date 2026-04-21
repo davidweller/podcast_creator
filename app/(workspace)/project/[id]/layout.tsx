@@ -83,14 +83,14 @@ export default function ProjectLayout({
   const currentTab = tabs.find((tab) => pathSegment === tab.id)?.id || "research";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="bg-white border-b border-slate-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 pr-16">
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-8 py-4">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
             <Link
               href="/"
-              className="text-sm text-slate-600 hover:text-slate-900 mb-2 inline-block"
+              className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 mb-2 inline-block"
             >
               ← Back to Projects
             </Link>
@@ -109,17 +109,17 @@ export default function ProjectLayout({
                       }}
                       onBlur={saveRename}
                       disabled={isSaving}
-                      className="text-2xl font-bold text-slate-900 border border-slate-300 rounded px-2 py-1 w-full max-w-md focus:outline-none focus:ring-2 focus:ring-slate-400"
+                      className="text-2xl font-bold text-slate-900 dark:text-slate-50 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-950 rounded px-2 py-1 w-full max-w-md focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
                       aria-label="Project name"
                     />
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 group">
-                    <h1 className="text-2xl font-bold text-slate-900">{project.title}</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">{project.title}</h1>
                     <button
                       type="button"
                       onClick={startRename}
-                      className="p-1.5 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none transition-opacity"
+                      className="p-1.5 rounded text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none transition-opacity"
                       title="Rename project"
                       aria-label="Rename project"
                     >
@@ -130,13 +130,13 @@ export default function ProjectLayout({
                     </button>
                   </div>
                 )}
-                <p className="text-sm text-slate-600">{project.era_location}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{project.era_location}</p>
               </div>
             )}
             </div>
             <Link
               href="/settings"
-              className="text-sm font-medium text-slate-700 hover:text-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               Settings
             </Link>
@@ -150,8 +150,8 @@ export default function ProjectLayout({
                   href={tab.href(projectId)}
                   className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors whitespace-nowrap ${
                     isActive
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
                   {tab.label}

@@ -14,7 +14,7 @@ export default function ShortsPage() {
 
   return (
     <div className="flex items-center justify-center min-h-[400px]">
-      <div className="text-slate-600">Redirecting...</div>
+      <div className="text-slate-600 dark:text-slate-400">Redirecting...</div>
     </div>
   );
 }

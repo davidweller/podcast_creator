@@ -225,9 +225,9 @@ export default function DescriptionPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-4 border border-slate-200 flex flex-wrap items-center gap-4">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-4 border border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-4">
         <div>
-          <label className="text-sm font-medium text-slate-700 mr-2">LLM for social copy:</label>
+          <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mr-2">LLM for social copy:</label>
           <select
             value={llmModelId}
             onChange={(e) => {
@@ -236,7 +236,7 @@ export default function DescriptionPage() {
               const m = SOCIAL_MODELS.find((x) => x.id === v);
               if (!m?.supportsThinking) setUseThinking(false);
             }}
-            className="text-sm border border-slate-300 rounded px-2 py-1.5 bg-white min-w-[14rem]"
+            className="text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-w-[14rem]"
           >
             {[...new Set(SOCIAL_MODELS.map((m) => m.group))].map((group) => (
               <optgroup key={group} label={group}>
@@ -250,27 +250,27 @@ export default function DescriptionPage() {
           </select>
         </div>
         {thinkingSupported && (
-          <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
             <input
               type="checkbox"
               checked={useThinking}
               onChange={(e) => setUseThinking(e.target.checked)}
-              className="rounded border-slate-300"
+              className="rounded border-slate-300 dark:border-slate-600 dark:bg-slate-900"
             />
             Extended thinking
           </label>
         )}
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
         <div className="flex items-center justify-between mb-3 gap-3">
-          <h2 className="text-2xl font-bold text-slate-900">Title</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Title</h2>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={generateSocialTitle}
               disabled={!project}
-              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
               Generate Title
             </button>
@@ -283,13 +283,13 @@ export default function DescriptionPage() {
                 });
               }}
               disabled={!socialTitle}
-              className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
               Copy Title
             </button>
           </div>
         </div>
-        <p className="text-sm text-slate-600 mb-4">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
           Generate a canonical episode title for this case, using the format{" "}
           <span className="font-mono font-semibold">
             004 | The Cock Lane Ghost Affair: Scratching in the Dark | London, 1761
@@ -299,7 +299,7 @@ export default function DescriptionPage() {
         </p>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-slate-700 uppercase tracking-wide">
+            <label className="text-xs font-medium text-slate-700 dark:text-slate-300 uppercase tracking-wide">
               Episode Title
             </label>
             <input
@@ -307,21 +307,21 @@ export default function DescriptionPage() {
               value={socialTitle}
               onChange={(e) => setSocialTitle(e.target.value)}
               placeholder="004 | The Cock Lane Ghost Affair: Scratching in the Dark | London, 1761"
-              className="w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-900 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+              className="w-full rounded border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 dark:focus:border-slate-500"
             />
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
         <div className="flex items-center justify-between mb-4 gap-3">
-          <h3 className="text-xl font-bold text-slate-900">YouTube Description</h3>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">YouTube Description</h3>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={generateAll}
               disabled={loading}
-              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
               {loading ? "Generating..." : "Generate Description & Package"}
             </button>
@@ -334,19 +334,19 @@ export default function DescriptionPage() {
                 });
               }}
               disabled={!description}
-              className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
               Copy
             </button>
           </div>
         </div>
-        <div className="max-h-[500px] overflow-y-auto border border-slate-200 rounded p-4 bg-slate-50">
+        <div className="max-h-[500px] overflow-y-auto border border-slate-200 dark:border-slate-700 rounded p-4 bg-slate-50 dark:bg-slate-950/50">
           {description ? (
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900">
+            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900 dark:text-slate-100">
               {description}
             </pre>
           ) : (
-            <p className="text-sm text-slate-500 italic">
+            <p className="text-sm text-slate-500 dark:text-slate-400 italic">
               No YouTube description yet. Click &quot;Generate Description &amp; Package&quot; to create one.
             </p>
           )}
@@ -354,39 +354,39 @@ export default function DescriptionPage() {
       </div>
 
       {metadata && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
           <div className="flex items-center justify-between mb-4 gap-3">
-            <h3 className="text-xl font-bold text-slate-900">Tags</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Tags</h3>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={generateAll}
                 disabled={loading}
-                className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
-              >
-                {loading ? "Generating..." : "Regenerate Tags"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const text = tagsText || metadata;
-                  if (!text) return;
-                  navigator.clipboard.writeText(text).catch((err) => {
-                    console.error("Failed to copy tags:", err);
-                  });
-                }}
-                disabled={!tagsText && !metadata}
-                className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+            >
+              {loading ? "Generating..." : "Regenerate Tags"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const text = tagsText || metadata;
+                if (!text) return;
+                navigator.clipboard.writeText(text).catch((err) => {
+                  console.error("Failed to copy tags:", err);
+                });
+              }}
+              disabled={!tagsText && !metadata}
+              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
               >
                 Copy
               </button>
             </div>
           </div>
-          <p className="text-sm text-slate-600 mb-3">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
             Practical upload tags for this single video, pulled from the social media packaging output.
           </p>
-          <div className="max-h-[300px] overflow-y-auto border border-slate-200 rounded p-4 bg-slate-50">
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900">
+          <div className="max-h-[300px] overflow-y-auto border border-slate-200 dark:border-slate-700 rounded p-4 bg-slate-50 dark:bg-slate-950/50">
+            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900 dark:text-slate-100">
               {tagsText || metadata}
             </pre>
           </div>
@@ -394,54 +394,54 @@ export default function DescriptionPage() {
       )}
 
       {metadata && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
           <div className="flex items-center justify-between mb-4 gap-3">
-            <h3 className="text-xl font-bold text-slate-900">Thumbnail Overlays</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Thumbnail Overlays</h3>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={generateAll}
                 disabled={loading}
-                className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
-              >
-                {loading ? "Generating..." : "Regenerate Overlays"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const text = thumbnailText || metadata;
-                  if (!text) return;
-                  navigator.clipboard.writeText(text).catch((err) => {
-                    console.error("Failed to copy thumbnail overlays:", err);
-                  });
-                }}
-                disabled={!thumbnailText && !metadata}
-                className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+            >
+              {loading ? "Generating..." : "Regenerate Overlays"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const text = thumbnailText || metadata;
+                if (!text) return;
+                navigator.clipboard.writeText(text).catch((err) => {
+                  console.error("Failed to copy thumbnail overlays:", err);
+                });
+              }}
+              disabled={!thumbnailText && !metadata}
+              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
               >
                 Copy
               </button>
             </div>
           </div>
-          <p className="text-sm text-slate-600 mb-3">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
             Concise text options for YouTube thumbnail overlays, staying calm, atmospheric, and sleep-safe.
           </p>
-          <div className="max-h-[300px] overflow-y-auto border border-slate-200 rounded p-4 bg-slate-50">
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900">
+          <div className="max-h-[300px] overflow-y-auto border border-slate-200 dark:border-slate-700 rounded p-4 bg-slate-50 dark:bg-slate-950/50">
+            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900 dark:text-slate-100">
               {thumbnailText || metadata}
             </pre>
           </div>
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
         <div className="flex items-center justify-between mb-4 gap-3">
-          <h3 className="text-xl font-bold text-slate-900">Spotify Description</h3>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Spotify Description</h3>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={generateSpotify}
               disabled={loadingSpotify}
-              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
               {loadingSpotify ? "Generating..." : "Generate Spotify Description"}
             </button>
@@ -454,19 +454,19 @@ export default function DescriptionPage() {
                 });
               }}
               disabled={!spotifyDescription}
-              className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
               Copy
             </button>
           </div>
         </div>
-        <div className="max-h-[500px] overflow-y-auto border border-slate-200 rounded p-4 bg-slate-50">
+        <div className="max-h-[500px] overflow-y-auto border border-slate-200 dark:border-slate-700 rounded p-4 bg-slate-50 dark:bg-slate-950/50">
           {spotifyDescription ? (
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900">
+            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900 dark:text-slate-100">
               {spotifyDescription}
             </pre>
           ) : (
-            <p className="text-sm text-slate-500 italic">
+            <p className="text-sm text-slate-500 dark:text-slate-400 italic">
               No Spotify description yet. Click &quot;Generate Spotify Description&quot; to create one.
             </p>
           )}

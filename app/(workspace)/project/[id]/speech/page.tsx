@@ -202,50 +202,50 @@ export default function SpeechPage() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold text-slate-900 mb-4">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-4">
           Speech Generation
         </h2>
-        <p className="text-sm text-slate-600 mb-6">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
           Convert your script to speech using Google Cloud Text-to-Speech with Chirp 3 HD voices.
           Output is saved as an MP3 file generated in chunks for long scripts.
         </p>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-4 bg-red-100 dark:bg-red-950/40 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 rounded">
             {error}
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Script Source
             </label>
             <select
               value={scriptSource}
               onChange={(e) => setScriptSource(e.target.value as ScriptSource)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
             >
               <option value="90min">Episode script (about 60 min)</option>
               <option value="shorts">Shorts Script</option>
               <option value="custom">Custom Text</option>
             </select>
             {!hasScript && scriptSource !== "custom" && (
-              <p className="mt-1 text-sm text-amber-600">
+              <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
                 No {scriptSource === "90min" ? "episode" : "shorts"} script available
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Language
             </label>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
             >
               {SUPPORTED_LANGUAGES.map((lang) => (
                 <option key={lang.code} value={lang.code}>
@@ -256,13 +256,13 @@ export default function SpeechPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Voice
             </label>
             <select
               value={voice}
               onChange={(e) => setVoice(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
             >
               <optgroup label="Female Voices">
                 {CHIRP3_HD_VOICES.female.map((v) => (
@@ -282,7 +282,7 @@ export default function SpeechPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Speed: {speed.toFixed(2)}x
             </label>
             <input
@@ -292,9 +292,9 @@ export default function SpeechPage() {
               step="0.05"
               value={speed}
               onChange={(e) => setSpeed(parseFloat(e.target.value))}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-slate-900 dark:accent-slate-300"
             />
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
+            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
               <span>0.25x (Slow)</span>
               <span>1.0x (Normal)</span>
               <span>2.0x (Fast)</span>
@@ -303,13 +303,13 @@ export default function SpeechPage() {
         </div>
 
         {hasScript && (
-          <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="flex justify-between items-center text-sm text-slate-600">
+          <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div className="flex justify-between items-center text-sm text-slate-600 dark:text-slate-400">
               <span>Word count: {wordCount.toLocaleString()}</span>
               <span>Estimated audio duration: ~{estimatedMinutes} min at {speed}x speed</span>
             </div>
             {wordCount > 500 && (
-              <p className="mt-2 text-sm text-amber-600">
+              <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
                 Long scripts are generated in multiple segments and stitched into one MP3. This may take several minutes.
               </p>
             )}
@@ -320,19 +320,19 @@ export default function SpeechPage() {
           <button
             onClick={generateSpeech}
             disabled={loading || !hasScript}
-            className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? "Generating..." : "Generate Speech"}
           </button>
           {loading && (
-            <span className="text-sm text-slate-600">
+            <span className="text-sm text-slate-600 dark:text-slate-400">
               Processing... This may take a few minutes for long scripts.
             </span>
           )}
           {audioUrl && !loading && (
             <button
               onClick={downloadAudio}
-              className="px-6 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+              className="px-6 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
             >
               Download MP3
             </button>
@@ -341,10 +341,10 @@ export default function SpeechPage() {
       </div>
 
       {audioUrl && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-bold text-slate-900 mb-4">Generated Audio</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">Generated Audio</h3>
           {generatedAt && (
-            <p className="text-sm text-slate-500 mb-4">Generated at: {generatedAt}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Generated at: {generatedAt}</p>
           )}
           <audio
             ref={audioRef}
@@ -358,16 +358,16 @@ export default function SpeechPage() {
       )}
 
       {scriptSource === "custom" && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-bold text-slate-900 mb-4">Custom Script</h3>
-          <p className="text-sm text-slate-600 mb-4">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">Custom Script</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
             Enter or paste your custom text below. This text will be converted to speech.
           </p>
           <textarea
             value={customText}
             onChange={(e) => setCustomText(e.target.value)}
             placeholder="Enter your text here..."
-            className="w-full h-[400px] p-4 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-400 font-sans text-sm text-slate-900 resize-y"
+            className="w-full h-[400px] p-4 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 font-sans text-sm text-slate-900 dark:text-slate-100 resize-y"
           />
         </div>
       )}

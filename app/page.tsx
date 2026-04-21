@@ -103,27 +103,27 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8 pr-20 dark:from-slate-950 dark:to-slate-900">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8 flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">
+            <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-50 mb-2">
               Cozy Crime Creator Suite
             </h1>
-            <p className="text-slate-600">
+            <p className="text-slate-600 dark:text-slate-400">
               Transform historical research into publish-ready scripts
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Link
               href="/settings"
-              className="px-4 py-3 border border-slate-300 text-slate-800 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+              className="px-4 py-3 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-medium"
             >
               Settings
             </Link>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors font-medium"
+              className="px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-slate-700 transition-colors font-medium"
             >
               Create New Project
             </button>
@@ -131,13 +131,13 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-slate-600">Loading projects...</div>
+          <div className="text-center py-12 text-slate-600 dark:text-slate-400">Loading projects...</div>
         ) : projects.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-slate-600 mb-4">No projects yet</p>
+            <p className="text-slate-600 dark:text-slate-400 mb-4">No projects yet</p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+              className="px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
             >
               Create Your First Project
             </button>
@@ -147,43 +147,43 @@ export default function Home() {
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+                className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border border-transparent dark:border-slate-700"
               >
                 <div className="mb-4">
-                  <h2 className="text-xl font-semibold text-slate-900 mb-1">
+                  <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-1">
                     {project.title}
                   </h2>
-                  <p className="text-sm text-slate-600">{project.era_location}</p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{project.era_location}</p>
                 </div>
 
-                <div className="mb-4 text-xs text-slate-500 space-y-1">
+                <div className="mb-4 text-xs text-slate-500 dark:text-slate-500 space-y-1">
                   <div>Created: {formatDate(project.created_at)}</div>
                   <div>Updated: {formatDate(project.updated_at)}</div>
                 </div>
 
                 <div className="mb-4 flex flex-wrap gap-2">
                   {project.status.script_90min_generated && (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                    <span className="px-2 py-1 bg-green-100 dark:bg-green-950/50 text-green-800 dark:text-green-300 text-xs rounded">
                       Script
                     </span>
                   )}
                   {project.status.description_generated && (
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 text-xs rounded">
                       Description
                     </span>
                   )}
                   {project.status.shorts_generated && (
-                    <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
+                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 text-xs rounded">
                       Shorts
                     </span>
                   )}
                   {project.status.metadata_generated && (
-                    <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">
+                    <span className="px-2 py-1 bg-orange-100 dark:bg-orange-950/50 text-orange-800 dark:text-orange-300 text-xs rounded">
                       Metadata
                     </span>
                   )}
                   {project.status.image_prompt_generated && (
-                    <span className="px-2 py-1 bg-pink-100 text-pink-800 text-xs rounded">
+                    <span className="px-2 py-1 bg-pink-100 dark:bg-pink-950/50 text-pink-800 dark:text-pink-300 text-xs rounded">
                       Image
                     </span>
                   )}
@@ -192,20 +192,20 @@ export default function Home() {
                 <div className="flex gap-2">
                   <Link
                     href={`/project/${project.id}/research`}
-                    className="flex-1 px-4 py-2 bg-slate-900 text-white text-center rounded hover:bg-slate-800 transition-colors text-sm"
+                    className="flex-1 px-4 py-2 bg-slate-900 text-white text-center rounded hover:bg-slate-800 dark:hover:bg-slate-700 transition-colors text-sm"
                   >
                     Open
                   </Link>
                   <button
                     onClick={() => handleDuplicateProject(project.id)}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors text-sm"
+                    className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm"
                     title="Duplicate"
                   >
                     Copy
                   </button>
                   <button
                     onClick={() => handleDeleteProject(project.id)}
-                    className="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
+                    className="px-4 py-2 bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
                     title="Delete"
                   >
                     Delete
@@ -217,14 +217,14 @@ export default function Home() {
         )}
 
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h2 className="text-2xl font-bold mb-4 text-slate-900">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
+            <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 border border-slate-200 dark:border-slate-700">
+              <h2 className="text-2xl font-bold mb-4 text-slate-900 dark:text-slate-50">
                 Create New Project
               </h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Case Title
                   </label>
                   <input
@@ -232,7 +232,7 @@ export default function Home() {
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     placeholder="e.g., The Mysterious Disappearance"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent"
                     autoFocus
                   />
                 </div>
@@ -240,7 +240,7 @@ export default function Home() {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleCreateProject}
-                  className="flex-1 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"
+                  className="flex-1 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
                 >
                   Create
                 </button>
@@ -249,7 +249,7 @@ export default function Home() {
                     setShowCreateModal(false);
                     setNewTitle("");
                   }}
-                  className="flex-1 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors"
+                  className="flex-1 px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                 >
                   Cancel
                 </button>

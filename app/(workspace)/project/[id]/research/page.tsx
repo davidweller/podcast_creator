@@ -125,14 +125,14 @@ export default function ResearchPage() {
   }
 
   if (loading) {
-    return <div className="text-center py-12 text-slate-600">Loading research...</div>;
+    return <div className="text-center py-12 text-slate-600 dark:text-slate-400">Loading research...</div>;
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-slate-900">Research</h2>
-        <div className="flex items-center gap-4 text-sm text-slate-600">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Research</h2>
+        <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
           {saving && <span>Saving...</span>}
           {lastSaved && !saving && (
             <span>Saved at {lastSaved.toLocaleTimeString()}</span>
@@ -140,13 +140,13 @@ export default function ResearchPage() {
         </div>
       </div>
 
-      <section className="mb-6 p-4 border border-slate-200 rounded-lg bg-slate-50">
-        <h3 className="text-lg font-semibold text-slate-800 mb-2">Request research</h3>
-        <p className="text-sm text-slate-600 mb-3">
+      <section className="mb-6 p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-2">Request research</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
           Enter a historical topic and the model will produce a research packet (facts, story bank, hooks, segments, takeaways, pitfalls) for script writing.
         </p>
         <div className="flex gap-3 flex-wrap items-end">
-          <label className="text-sm text-slate-700">
+          <label className="text-sm text-slate-700 dark:text-slate-300">
             <span className="block mb-1 font-medium">Model</span>
             <select
               value={llmModelId}
@@ -157,7 +157,7 @@ export default function ResearchPage() {
                 if (!m?.supportsThinking) setUseThinking(false);
               }}
               disabled={researching}
-              className="text-sm border border-slate-300 rounded px-2 py-2 bg-white min-w-[12rem]"
+              className="text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-2 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-w-[12rem]"
             >
               {[...new Set(RESEARCH_MODELS.map((m) => m.group))].map((group) => (
                 <optgroup key={group} label={group}>
@@ -171,13 +171,13 @@ export default function ResearchPage() {
             </select>
           </label>
           {thinkingSupported && (
-            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={useThinking}
                 onChange={(e) => setUseThinking(e.target.checked)}
                 disabled={researching}
-                className="rounded border-slate-300"
+                className="rounded border-slate-300 dark:border-slate-600 dark:bg-slate-900"
               />
               Extended thinking
             </label>
@@ -190,7 +190,7 @@ export default function ResearchPage() {
               onChange={(e) => setTopic(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleRequestResearch()}
               placeholder="e.g. The disappearance of Benjamin Bathurst, 1809"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent text-slate-900 placeholder-slate-400"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-950 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
               disabled={researching}
               aria-label="Research topic"
             />
@@ -199,7 +199,7 @@ export default function ResearchPage() {
             type="button"
             onClick={handleRequestResearch}
             disabled={researching || !topic.trim()}
-            className="px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+            className="px-4 py-2 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
           >
             {researching ? "Researching…" : "Research this topic"}
           </button>
@@ -212,22 +212,22 @@ export default function ResearchPage() {
       </section>
 
       <section>
-        <h3 className="text-lg font-semibold text-slate-800 mb-2">Your research</h3>
-        <p className="text-sm text-slate-600 mb-2">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-2">Your research</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
           Paste your own research here, or use the request above to generate it. This content is used for script and asset generation.
         </p>
-        <p className="text-sm text-slate-500 mb-4">
+        <p className="text-sm text-slate-500 dark:text-slate-500 mb-4">
           For best script quality, include: at least 500 words; era or period (e.g. Victorian, century); named people and places.
         </p>
         <textarea
           value={researchText}
           onChange={handleTextChange}
           placeholder="Paste your research here..."
-          className="w-full h-[500px] p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent font-mono text-sm resize-none disabled:opacity-70"
+          className="w-full h-[500px] p-4 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 focus:border-transparent font-mono text-sm resize-none disabled:opacity-70"
           disabled={researching}
           aria-label="Research content"
         />
-        <div className="mt-4 text-sm text-slate-600">
+        <div className="mt-4 text-sm text-slate-600 dark:text-slate-400">
           Word count: {researchText.split(/\s+/).filter(Boolean).length}
         </div>
       </section>

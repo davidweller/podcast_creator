@@ -25,7 +25,7 @@ export async function POST(
 
     if (!slot || !VALID_SLOTS.has(slot as ImageSlot)) {
       return NextResponse.json(
-        { error: "Invalid or missing slot. Use 1-36 or 'thumbnail'." },
+        { error: "Invalid or missing slot. Use 1-12 or 'thumbnail'." },
         { status: 400 }
       );
     }

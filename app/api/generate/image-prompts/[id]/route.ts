@@ -5,12 +5,15 @@ import { getProjectImages, setProjectImagesPrompts } from "@/lib/db/project-imag
 import { completeLlmText } from "@/lib/llm/unified";
 import { parseLlmCompletionOptions } from "@/lib/llm/parse-selection";
 import { PROMPT_IMAGE_SET } from "@/lib/prompts/image-set";
+import { IMAGE_SLOTS } from "@/types/database";
 
 interface ImageSetResponse {
   characters?: { name: string; appearance: string }[];
   images: { slot: string; prompt: string }[];
   thumbnail: { slot: string; prompt: string; title: string };
 }
+
+const EXPECTED_SCENE_SLOT_COUNT = IMAGE_SLOTS.length - 1;
 
 function parseImageSetResponse(text: string): ImageSetResponse {
   let jsonStr = text.trim();
@@ -55,7 +58,7 @@ ${projectData.research_text}`;
 
     const raw = await completeLlmText("imagePrompt", prompt, {
       modelId: llmModelId,
-      maxTokens: 16384, // Increased to ensure all 36 prompts fit
+      maxTokens: 16384, // Increased to ensure all scene prompts fit
       temperature: 0.6,
       projectId,
       useThinking,
@@ -95,8 +98,10 @@ ${projectData.research_text}`;
     });
     console.log(`Generated prompts for ${items.length} slots. Scene slots: ${sceneSlots.join(", ")}`);
     
-    if (sceneSlots.length < 36) {
-      console.warn(`Warning: Only ${sceneSlots.length} scene slots generated, expected 36. Missing slots may not have prompts.`);
+    if (sceneSlots.length < EXPECTED_SCENE_SLOT_COUNT) {
+      console.warn(
+        `Warning: Only ${sceneSlots.length} scene slots generated, expected ${EXPECTED_SCENE_SLOT_COUNT}. Missing slots may not have prompts.`
+      );
     }
 
     setProjectImagesPrompts(projectId, items);
