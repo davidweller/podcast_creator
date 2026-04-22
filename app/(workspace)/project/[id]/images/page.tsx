@@ -5,24 +5,26 @@ import { useState, useEffect, useCallback } from "react";
 import type { ProjectImage } from "@/types/database";
 import { ILLUSTRATED_SLOTS } from "@/types/database";
 import {
-  DEFAULT_GEMINI_IMAGE_MODEL,
+  DEFAULT_IMAGE_MODEL,
   DEFAULT_LLM_BY_STAGE,
-  GEMINI_IMAGE_MODELS,
+  IMAGE_MODELS,
   listModelsForStage,
 } from "@/lib/models/registry";
 
 const IMAGE_PROMPT_MODELS = listModelsForStage("imagePrompt");
 const LS_IMAGE_PROMPT_MODEL = "cozycrime:llm:imagePrompt";
 const LS_IMAGE_PROMPT_THINKING = "cozycrime:llm:imagePrompt:thinking";
+const LS_IMAGE_MODEL = "cozycrime:image:model";
 const LS_GEMINI_IMAGE = "cozycrime:gemini:imageModel";
 
 export default function ImagesPage() {
   const params = useParams();
   const projectId = params.id as string;
   const [images, setImages] = useState<ProjectImage[]>([]);
-  const [thumbnailBust, setThumbnailBust] = useState(0);
+  const [thumbnailBust, setThumbnailBust] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const [loadingPrompts, setLoadingPrompts] = useState(false);
+  const [loadingThumbnailPromptSlot, setLoadingThumbnailPromptSlot] = useState<string | null>(null);
   const [loadingSlot, setLoadingSlot] = useState<string | null>(null);
   const [loadingAll, setLoadingAll] = useState(false);
   const [generateAllProgress, setGenerateAllProgress] = useState<number | null>(null);
@@ -30,16 +32,22 @@ export default function ImagesPage() {
   const [imagesElapsedTime, setImagesElapsedTime] = useState(0);
   const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.imagePrompt);
   const [useThinking, setUseThinking] = useState(false);
-  const [geminiImageModel, setGeminiImageModel] = useState(DEFAULT_GEMINI_IMAGE_MODEL);
+  const [imageModel, setImageModel] = useState(DEFAULT_IMAGE_MODEL);
 
   useEffect(() => {
     try {
       const s = localStorage.getItem(LS_IMAGE_PROMPT_MODEL);
       if (s && IMAGE_PROMPT_MODELS.some((m) => m.id === s)) setLlmModelId(s);
       if (localStorage.getItem(LS_IMAGE_PROMPT_THINKING) === "1") setUseThinking(true);
-      const g = localStorage.getItem(LS_GEMINI_IMAGE);
-      if (g && GEMINI_IMAGE_MODELS.some((m) => m.id === g)) {
-        setGeminiImageModel(g as typeof DEFAULT_GEMINI_IMAGE_MODEL);
+      const genericModel = localStorage.getItem(LS_IMAGE_MODEL);
+      if (genericModel && IMAGE_MODELS.some((m) => m.id === genericModel)) {
+        setImageModel(genericModel as typeof DEFAULT_IMAGE_MODEL);
+      } else {
+        // Backward compatibility for previously saved Gemini-only preference.
+        const legacyGemini = localStorage.getItem(LS_GEMINI_IMAGE);
+        if (legacyGemini === "gemini-2.5-flash-image") {
+          setImageModel("gemini/gemini-2.5-flash-image");
+        }
       }
     } catch {
       /* ignore */
@@ -50,11 +58,14 @@ export default function ImagesPage() {
     try {
       localStorage.setItem(LS_IMAGE_PROMPT_MODEL, llmModelId);
       localStorage.setItem(LS_IMAGE_PROMPT_THINKING, useThinking ? "1" : "0");
-      localStorage.setItem(LS_GEMINI_IMAGE, geminiImageModel);
+      localStorage.setItem(LS_IMAGE_MODEL, imageModel);
+      if (imageModel === "gemini/gemini-2.5-flash-image") {
+        localStorage.setItem(LS_GEMINI_IMAGE, "gemini-2.5-flash-image");
+      }
     } catch {
       /* ignore */
     }
-  }, [llmModelId, useThinking, geminiImageModel]);
+  }, [llmModelId, useThinking, imageModel]);
 
   const selectedPromptModel = IMAGE_PROMPT_MODELS.find((m) => m.id === llmModelId);
   const promptThinkingSupported = selectedPromptModel?.supportsThinking ?? false;
@@ -138,6 +149,32 @@ export default function ImagesPage() {
     }
   }
 
+  async function generateThumbnailPrompt(slot: "thumbnail_cozy" | "thumbnail_cinematic") {
+    setLoadingThumbnailPromptSlot(slot);
+    setError(null);
+    try {
+      const res = await fetch(`/api/generate/image-prompts/${projectId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          llmModelId,
+          useThinking: promptThinkingSupported && useThinking,
+          thumbnailVariant: slot === "thumbnail_cozy" ? "cozy" : "cinematic",
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setImages(data.images ?? []);
+      } else {
+        setError(data.error || "Failed to generate thumbnail prompt");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to generate thumbnail prompt");
+    } finally {
+      setLoadingThumbnailPromptSlot(null);
+    }
+  }
+
   async function savePrompt(slot: string, prompt: string | null, thumbnail_title?: string | null) {
     try {
       await fetch(`/api/projects/${projectId}/images`, {
@@ -162,12 +199,14 @@ export default function ImagesPage() {
       const res = await fetch(`/api/generate/image/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot, prompt, geminiImageModel }),
+        body: JSON.stringify({ slot, prompt, imageModel }),
       });
       const data = await res.json();
       if (res.ok) {
         await loadImages();
-        if (slot === "thumbnail") setThumbnailBust(Date.now());
+        if (slot === "thumbnail_cozy" || slot === "thumbnail_cinematic") {
+          setThumbnailBust((prev) => ({ ...prev, [slot]: Date.now() }));
+        }
       } else {
         const errorMsg = data.error || `Failed to generate image for slot ${slot}`;
         console.error(`Error generating image for slot ${slot}:`, errorMsg, data);
@@ -190,7 +229,7 @@ export default function ImagesPage() {
       const res = await fetch(`/api/generate/images-all/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ geminiImageModel }),
+        body: JSON.stringify({ imageModel }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -209,7 +248,12 @@ export default function ImagesPage() {
 
   function downloadImage(slot: string) {
     const url = `/api/projects/${projectId}/images/${slot}`;
-    const filename = slot === "thumbnail" ? "thumbnail.png" : `image-${slot}.png`;
+    const filename =
+      slot === "thumbnail_cozy"
+        ? "thumbnail-cozy.png"
+        : slot === "thumbnail_cinematic"
+        ? "thumbnail-cinematic.png"
+        : `image-${slot}.png`;
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
@@ -244,15 +288,18 @@ export default function ImagesPage() {
   }
 
   const imagesWithFiles = images.filter((i) => i.image_path);
-  const sceneSlots = ILLUSTRATED_SLOTS.filter((s) => s !== "thumbnail");
-  const thumbnailRow = images.find((i) => i.slot === "thumbnail");
+  const sceneSlots = ILLUSTRATED_SLOTS.filter((s) => s !== "thumbnail_cozy" && s !== "thumbnail_cinematic");
+  const thumbnailVariants = [
+    { slot: "thumbnail_cozy", label: "Cozy thumbnail" },
+    { slot: "thumbnail_cinematic", label: "Cinematic thumbnail" },
+  ] as const;
 
   return (
     <div className="space-y-8">
       <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">Images</h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-          12 illustrated scene images plus a YouTube thumbnail. Style: period-accurate, Rick and Morty–esque illustrated. Generate prompts with your chosen LLM, then generate images with Nano Banana (Gemini image).
+          12 illustrated scene images plus cozy and cinematic YouTube thumbnails. Style: period-accurate, Rick and Morty–esque illustrated. Generate prompts with your chosen LLM, then generate images with your selected model (Gemini or ChatGPT Images 2.0).
         </p>
 
         <div className="mb-4 flex flex-wrap gap-6 items-end">
@@ -295,17 +342,24 @@ export default function ImagesPage() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Image model (Nano Banana)</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Image model</label>
             <select
-              value={geminiImageModel}
-              onChange={(e) => setGeminiImageModel(e.target.value as typeof DEFAULT_GEMINI_IMAGE_MODEL)}
+              value={imageModel}
+              onChange={(e) => setImageModel(e.target.value as typeof DEFAULT_IMAGE_MODEL)}
               disabled={loadingAll || loadingSlot !== null}
               className="text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-w-[12rem]"
             >
-              {GEMINI_IMAGE_MODELS.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label}
-                </option>
+              {[...new Set(IMAGE_MODELS.map((m) => m.provider))].map((provider) => (
+                <optgroup
+                  key={provider}
+                  label={provider === "google_gemini" ? "Google Gemini" : "OpenAI"}
+                >
+                  {IMAGE_MODELS.filter((m) => m.provider === provider).map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>
@@ -342,70 +396,88 @@ export default function ImagesPage() {
         </div>
       </div>
 
-      {/* YouTube thumbnail */}
+      {/* YouTube thumbnails */}
       <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">YouTube thumbnail</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Title (for overlay)</label>
-            <input
-              type="text"
-              className="w-full border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950"
-              placeholder="Thumbnail title"
-              value={thumbnailRow?.thumbnail_title ?? ""}
-              onChange={(e) => {
-                const next = images.map((i) =>
-                  i.slot === "thumbnail" ? { ...i, thumbnail_title: e.target.value } : i
-                );
-                setImages(next);
-              }}
-              onBlur={(e) => {
-                if (thumbnailRow) savePrompt("thumbnail", thumbnailRow.prompt, e.target.value || null);
-              }}
-            />
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mt-2">Prompt</label>
-            <textarea
-              className="w-full border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950 min-h-[100px] text-sm"
-              placeholder="Thumbnail image prompt…"
-              value={thumbnailRow?.prompt ?? ""}
-              onChange={(e) => {
-                setImages((prev) =>
-                  prev.map((i) => (i.slot === "thumbnail" ? { ...i, prompt: e.target.value } : i))
-                );
-              }}
-              onBlur={(e) => savePrompt("thumbnail", e.target.value || null, thumbnailRow?.thumbnail_title ?? null)}
-            />
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => thumbnailRow?.prompt && generateOne("thumbnail", thumbnailRow.prompt)}
-                disabled={loadingSlot === "thumbnail" || !thumbnailRow?.prompt?.trim()}
-                className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 dark:hover:bg-slate-600 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-sm"
-              >
-                {loadingSlot === "thumbnail" ? "Generating…" : "Generate thumbnail"}
-              </button>
-              {thumbnailRow?.image_path && (
-                <button
-                  onClick={() => downloadImage("thumbnail")}
-                  className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 text-sm"
-                >
-                  Download
-                </button>
-              )}
-            </div>
-          </div>
-          <div>
-            {thumbnailRow?.image_path ? (
-              <img
-                src={`/api/projects/${projectId}/images/thumbnail?v=${thumbnailBust}`}
-                alt="Thumbnail"
-                className="max-w-full rounded border border-slate-200 dark:border-slate-700"
-              />
-            ) : (
-              <div className="aspect-video bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
-                No thumbnail yet
+        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-4">YouTube thumbnails</h3>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          {thumbnailVariants.map((variant) => {
+            const row = images.find((i) => i.slot === variant.slot);
+            return (
+              <div key={variant.slot} className="space-y-4 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100">{variant.label}</h4>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Overlay text (2-4 words)</label>
+                  <input
+                    type="text"
+                    className="w-full border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950"
+                    placeholder={`${variant.label} overlay text`}
+                    value={row?.thumbnail_title ?? ""}
+                    onChange={(e) => {
+                      setImages((prev) =>
+                        prev.map((i) => (i.slot === variant.slot ? { ...i, thumbnail_title: e.target.value } : i))
+                      );
+                    }}
+                    onBlur={(e) => {
+                      if (row) savePrompt(variant.slot, row.prompt, e.target.value || null);
+                    }}
+                  />
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mt-2">Prompt</label>
+                  <textarea
+                    className="w-full border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950 min-h-[100px] text-sm"
+                    placeholder={`${variant.label} image prompt...`}
+                    value={row?.prompt ?? ""}
+                    onChange={(e) => {
+                      setImages((prev) =>
+                        prev.map((i) => (i.slot === variant.slot ? { ...i, prompt: e.target.value } : i))
+                      );
+                    }}
+                    onBlur={(e) => savePrompt(variant.slot, e.target.value || null, row?.thumbnail_title ?? null)}
+                  />
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={() =>
+                        generateThumbnailPrompt(variant.slot as "thumbnail_cozy" | "thumbnail_cinematic")
+                      }
+                      disabled={loadingThumbnailPromptSlot === variant.slot || loadingPrompts}
+                      className="px-4 py-2 bg-indigo-700 text-white rounded hover:bg-indigo-800 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-sm"
+                    >
+                      {loadingThumbnailPromptSlot === variant.slot
+                        ? "Generating prompt..."
+                        : "Generate thumbnail prompt"}
+                    </button>
+                    <button
+                      onClick={() => row?.prompt && generateOne(variant.slot, row.prompt)}
+                      disabled={loadingSlot === variant.slot || !row?.prompt?.trim()}
+                      className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 dark:hover:bg-slate-600 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-sm"
+                    >
+                      {loadingSlot === variant.slot ? "Generating..." : `Generate ${variant.label.toLowerCase()}`}
+                    </button>
+                    {row?.image_path && (
+                      <button
+                        onClick={() => downloadImage(variant.slot)}
+                        className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 text-sm"
+                      >
+                        Download
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  {row?.image_path ? (
+                    <img
+                      src={`/api/projects/${projectId}/images/${variant.slot}?v=${thumbnailBust[variant.slot] ?? 0}`}
+                      alt={variant.label}
+                      className="max-w-full rounded border border-slate-200 dark:border-slate-700"
+                    />
+                  ) : (
+                    <div className="aspect-video bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm">
+                      No image yet
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
+            );
+          })}
         </div>
       </div>
 

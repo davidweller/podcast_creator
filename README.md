@@ -11,6 +11,7 @@ Transform historical research into publish-ready Cozy Crime scripts and assets.
 - **Shorts Generator**: Create YouTube Shorts trailer scripts
 - **Title & Metadata**: Generate episode titles, summaries, keywords, and tags
 - **Image Prompt Generator**: Create AI image prompts for background visuals
+- **Image Generation Providers**: Generate images with Gemini or ChatGPT Images 2.0 (`gpt-image-2`)
 
 ## Setup
 

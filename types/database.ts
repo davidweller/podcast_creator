@@ -35,7 +35,7 @@ export interface ProjectWithStatus extends Project {
 
 export type ImageSlot = 
   | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" 
-  | "11" | "12" | "thumbnail";
+  | "11" | "12" | "thumbnail_cozy" | "thumbnail_cinematic";
 
 export interface ProjectImage {
   project_id: number;
@@ -47,10 +47,10 @@ export interface ProjectImage {
 
 export const IMAGE_SLOTS: ImageSlot[] = [
   "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-  "11", "12", "thumbnail"
+  "11", "12", "thumbnail_cozy", "thumbnail_cinematic"
 ];
 
 export const ILLUSTRATED_SLOTS: ImageSlot[] = [
   "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-  "11", "12", "thumbnail"
+  "11", "12", "thumbnail_cozy", "thumbnail_cinematic"
 ];

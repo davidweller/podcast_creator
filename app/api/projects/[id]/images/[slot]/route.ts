@@ -24,7 +24,12 @@ export async function GET(
     }
 
     const dir = getProjectImagesDir(projectId);
-    const filename = slotKey === "thumbnail" ? "thumbnail.png" : `${slotKey}.png`;
+    const filename =
+      slotKey === "thumbnail_cozy"
+        ? "thumbnail-cozy.png"
+        : slotKey === "thumbnail_cinematic"
+        ? "thumbnail-cinematic.png"
+        : `${slotKey}.png`;
     const filePath = path.join(dir, filename);
     if (!existsSync(filePath)) {
       return NextResponse.json({ error: "Image not found" }, { status: 404 });

@@ -1,9 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { resolveProviderApiKey } from "@/lib/keys/resolve";
 import {
-  DEFAULT_GEMINI_IMAGE_MODEL,
-  getGeminiImageModelOrThrow,
-  type GeminiImageModelId,
+  DEFAULT_IMAGE_MODEL,
+  getImageModelOrThrow,
 } from "@/lib/models/registry";
 
 function getClient(apiKeyOverride?: string) {
@@ -23,11 +22,11 @@ function getClient(apiKeyOverride?: string) {
  */
 export async function generateImage(
   prompt: string,
-  options?: { model?: GeminiImageModelId; apiKey?: string }
+  options?: { model?: string; apiKey?: string }
 ): Promise<Buffer> {
   const modelId = options?.model
-    ? getGeminiImageModelOrThrow(options.model)
-    : DEFAULT_GEMINI_IMAGE_MODEL;
+    ? getImageModelOrThrow(options.model).apiModel
+    : getImageModelOrThrow(DEFAULT_IMAGE_MODEL).apiModel;
   const ai = getClient(options?.apiKey);
   const response = await ai.models.generateContent({
     model: modelId,

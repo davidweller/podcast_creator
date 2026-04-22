@@ -18,7 +18,12 @@ export function ensureProjectImagesDir(projectId: number): string {
 
 export function getImageFilePath(projectId: number, slot: string): string {
   const dir = ensureProjectImagesDir(projectId);
-  const filename = slot === "thumbnail" ? "thumbnail.png" : `${slot}.png`;
+  const filename =
+    slot === "thumbnail_cozy"
+      ? "thumbnail-cozy.png"
+      : slot === "thumbnail_cinematic"
+      ? "thumbnail-cinematic.png"
+      : `${slot}.png`;
   return path.join(dir, filename);
 }
 
@@ -30,7 +35,12 @@ export function saveProjectImage(projectId: number, slot: string, buffer: Buffer
 
 export function readProjectImage(projectId: number, slot: string): Buffer | null {
   const dir = getProjectImagesDir(projectId);
-  const filename = slot === "thumbnail" ? "thumbnail.png" : `${slot}.png`;
+  const filename =
+    slot === "thumbnail_cozy"
+      ? "thumbnail-cozy.png"
+      : slot === "thumbnail_cinematic"
+      ? "thumbnail-cinematic.png"
+      : `${slot}.png`;
   const filePath = path.join(dir, filename);
   if (!existsSync(filePath)) return null;
   return readFileSync(filePath);

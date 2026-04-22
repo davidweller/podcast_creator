@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectImages, updateProjectImage } from "@/lib/db/project-images";
 import { generateImage } from "@/lib/gemini/client";
-import { DEFAULT_GEMINI_IMAGE_MODEL, getGeminiImageModelOrThrow } from "@/lib/models/registry";
+import { generateOpenAiImage } from "@/lib/openai/image-client";
+import { DEFAULT_IMAGE_MODEL, getImageModelOrThrow } from "@/lib/models/registry";
 import { ensure16x9 } from "@/lib/images/ensure-16-9";
 import { saveProjectImage } from "@/lib/images/storage";
 import { IMAGE_SLOTS } from "@/types/database";
@@ -20,10 +21,13 @@ export async function POST(
     const { id } = await params;
     const projectId = parseInt(id);
     const body = await request.json().catch(() => ({}));
-    const geminiImageModel =
-      typeof body.geminiImageModel === "string"
-        ? getGeminiImageModelOrThrow(body.geminiImageModel)
-        : DEFAULT_GEMINI_IMAGE_MODEL;
+    const requestedImageModel =
+      typeof body.imageModel === "string"
+        ? body.imageModel
+        : typeof body.geminiImageModel === "string"
+          ? body.geminiImageModel
+          : DEFAULT_IMAGE_MODEL;
+    const imageModel = getImageModelOrThrow(requestedImageModel);
     const images = getProjectImages(projectId);
     console.log(`Processing ${images.length} image slots for project ${projectId}`);
 
@@ -51,7 +55,10 @@ export async function POST(
         continue;
       }
       try {
-        const buffer = await generateImage(prompt, { model: geminiImageModel });
+        const buffer =
+          imageModel.provider === "google_gemini"
+            ? await generateImage(prompt, { model: imageModel.id })
+            : await generateOpenAiImage(prompt, { model: imageModel.apiModel });
         const buffer16x9 = await ensure16x9(buffer);
         const relativePath = saveProjectImage(projectId, slot, buffer16x9);
         updateProjectImage(projectId, slot, { image_path: relativePath });
@@ -77,6 +84,8 @@ export async function POST(
         error:
           error.message?.includes("GOOGLE_GEMINI_API_KEY")
             ? "Gemini API key not configured. Set GOOGLE_GEMINI_API_KEY in .env"
+            : error.message?.includes("OPENAI_API_KEY")
+              ? "OpenAI API key not configured. Set OPENAI_API_KEY in .env"
             : error.message || "Failed to generate images",
       },
       { status: 500 }

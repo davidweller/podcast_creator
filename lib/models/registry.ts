@@ -112,22 +112,38 @@ export const DEFAULT_LLM_BY_STAGE: Record<LlmStage, string> = {
   social: "openrouter/qwen/qwen3.6-plus",
 };
 
-/** Gemini image generation models (allowlist). Nano Banana = gemini-2.5-flash-image per Google docs. */
-export const GEMINI_IMAGE_MODELS = [
+export interface ImageModelEntry {
+  id: string;
+  label: string;
+  provider: "google_gemini" | "openai";
+  apiModel: string;
+}
+
+/** Image generation models (allowlist). */
+export const IMAGE_MODELS = [
   {
-    id: "gemini-2.5-flash-image",
+    id: "gemini/gemini-2.5-flash-image",
     label: "Nano Banana (Gemini 2.5 Flash Image)",
+    provider: "google_gemini",
+    apiModel: "gemini-2.5-flash-image",
   },
-] as const;
+  {
+    id: "openai/gpt-image-2",
+    label: "ChatGPT Images 2.0 (gpt-image-2)",
+    provider: "openai",
+    apiModel: "gpt-image-2",
+  },
+] as const satisfies readonly ImageModelEntry[];
 
-export type GeminiImageModelId = (typeof GEMINI_IMAGE_MODELS)[number]["id"];
+export type ImageModelId = (typeof IMAGE_MODELS)[number]["id"];
+export type ImageModelProvider = (typeof IMAGE_MODELS)[number]["provider"];
 
-export const DEFAULT_GEMINI_IMAGE_MODEL: GeminiImageModelId = "gemini-2.5-flash-image";
+export const DEFAULT_IMAGE_MODEL: ImageModelId = "gemini/gemini-2.5-flash-image";
 
-export function getGeminiImageModelOrThrow(id: string): GeminiImageModelId {
-  const found = GEMINI_IMAGE_MODELS.find((m) => m.id === id);
+export function getImageModelOrThrow(id: string): (typeof IMAGE_MODELS)[number] {
+  const found = IMAGE_MODELS.find((m) => m.id === id);
   if (!found) {
-    throw new Error(`Unknown Gemini image model: ${id}`);
+    throw new Error(`Unknown image model: ${id}`);
   }
-  return found.id;
+  return found;
 }

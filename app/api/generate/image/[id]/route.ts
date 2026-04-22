@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectImage, updateProjectImage } from "@/lib/db/project-images";
 import { generateImage } from "@/lib/gemini/client";
-import { DEFAULT_GEMINI_IMAGE_MODEL, getGeminiImageModelOrThrow } from "@/lib/models/registry";
+import { generateOpenAiImage } from "@/lib/openai/image-client";
+import { DEFAULT_IMAGE_MODEL, getImageModelOrThrow } from "@/lib/models/registry";
 import { ensure16x9 } from "@/lib/images/ensure-16-9";
 import { saveProjectImage } from "@/lib/images/storage";
 import { IMAGE_SLOTS, type ImageSlot } from "@/types/database";
@@ -18,14 +19,17 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const slot = body.slot != null ? String(body.slot) : null;
     const promptOverride = typeof body.prompt === "string" ? body.prompt : undefined;
-    const geminiImageModel =
-      typeof body.geminiImageModel === "string"
-        ? getGeminiImageModelOrThrow(body.geminiImageModel)
-        : DEFAULT_GEMINI_IMAGE_MODEL;
+    const requestedImageModel =
+      typeof body.imageModel === "string"
+        ? body.imageModel
+        : typeof body.geminiImageModel === "string"
+          ? body.geminiImageModel
+          : DEFAULT_IMAGE_MODEL;
+    const imageModel = getImageModelOrThrow(requestedImageModel);
 
     if (!slot || !VALID_SLOTS.has(slot as ImageSlot)) {
       return NextResponse.json(
-        { error: "Invalid or missing slot. Use 1-12 or 'thumbnail'." },
+        { error: "Invalid or missing slot. Use 1-12, 'thumbnail_cozy', or 'thumbnail_cinematic'." },
         { status: 400 }
       );
     }
@@ -43,7 +47,10 @@ export async function POST(
 
     console.log(`Generating image for slot ${slotKey}...`);
     try {
-      const buffer = await generateImage(prompt, { model: geminiImageModel });
+      const buffer =
+        imageModel.provider === "google_gemini"
+          ? await generateImage(prompt, { model: imageModel.id })
+          : await generateOpenAiImage(prompt, { model: imageModel.apiModel });
       console.log(`Generated image buffer for slot ${slotKey}, size: ${buffer.length} bytes`);
       const buffer16x9 = await ensure16x9(buffer);
       console.log(`Processed 16:9 image for slot ${slotKey}, size: ${buffer16x9.length} bytes`);
@@ -64,6 +71,8 @@ export async function POST(
         error:
           error.message?.includes("GOOGLE_GEMINI_API_KEY")
             ? "Gemini API key not configured. Set GOOGLE_GEMINI_API_KEY in .env"
+            : error.message?.includes("OPENAI_API_KEY")
+              ? "OpenAI API key not configured. Set OPENAI_API_KEY in .env"
             : error.message || "Failed to generate image",
       },
       { status: 500 }

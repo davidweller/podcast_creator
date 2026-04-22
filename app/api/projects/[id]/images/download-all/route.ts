@@ -32,7 +32,12 @@ export async function GET(
     for (const img of withImages) {
       const buffer = readProjectImage(projectId, img.slot);
       if (buffer) {
-        const name = img.slot === "thumbnail" ? "thumbnail.png" : `image-${img.slot}.png`;
+        const name =
+          img.slot === "thumbnail_cozy"
+            ? "thumbnail-cozy.png"
+            : img.slot === "thumbnail_cinematic"
+            ? "thumbnail-cinematic.png"
+            : `image-${img.slot}.png`;
         zip.file(name, buffer);
       }
     }
