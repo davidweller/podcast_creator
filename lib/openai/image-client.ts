@@ -35,7 +35,9 @@ export async function generateOpenAiImage(
     body: JSON.stringify({
       model,
       prompt,
-      size: "1536x1024",
+      // Square is ~2x faster than 1536×1024 for gpt-image-2.
+      // ensure16x9 center-crops the result to 16:9 at 1920×1080.
+      size: "1024x1024",
     }),
   });
 

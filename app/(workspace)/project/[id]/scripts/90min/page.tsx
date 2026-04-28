@@ -200,84 +200,70 @@ export default function Script90MinPage() {
 
     setApplyingImprovements(true);
     setError(null);
-    
-    const suggestions = improvements.suggestions;
-    
-    // Initialize all suggestions as pending
-    const initialStatuses = new Map<number, SuggestionStatus>();
-    for (let i = 0; i < suggestions.length; i++) {
-      initialStatuses.set(i, "pending");
-    }
-    setSuggestionStatuses(new Map(initialStatuses));
 
-    // Process each suggestion sequentially
+    const suggestions = improvements.suggestions;
+
+    // Mark all suggestions as applying at once
+    const applyingStatuses = new Map<number, SuggestionStatus>();
     for (let i = 0; i < suggestions.length; i++) {
-      // Mark current suggestion as applying and start timer
-      setApplyElapsed(0);
-      applyTimeRef.current = Date.now();
-      
-      const timerInterval = setInterval(() => {
-        if (applyTimeRef.current !== null) {
-          setApplyElapsed(Math.floor((Date.now() - applyTimeRef.current) / 1000));
-        }
-      }, 1000);
-      
-      setSuggestionStatuses(prev => {
-        const updated = new Map(prev);
-        updated.set(i, "applying");
-        return updated;
+      applyingStatuses.set(i, "applying");
+    }
+    setSuggestionStatuses(new Map(applyingStatuses));
+
+    // Start a single elapsed timer for the bulk call
+    setApplyElapsed(0);
+    applyTimeRef.current = Date.now();
+    const timerInterval = setInterval(() => {
+      if (applyTimeRef.current !== null) {
+        setApplyElapsed(Math.floor((Date.now() - applyTimeRef.current) / 1000));
+      }
+    }, 1000);
+
+    try {
+      const res = await fetch(`/api/apply-improvements/${projectId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          llmModelId: selectedLlmModelId,
+          useThinking: thinkingSupported && useThinking,
+          thinkingBudget: DEFAULT_THINKING_BUDGET,
+          suggestions,
+        }),
       });
 
-      try {
-        const res = await fetch(`/api/apply-improvement/${projectId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "90min",
-            llmModelId: selectedLlmModelId,
-            useThinking: thinkingSupported && useThinking,
-            thinkingBudget: DEFAULT_THINKING_BUDGET,
-            suggestion: suggestions[i],
-          }),
-        });
+      const data = await res.json();
 
-        const data = await res.json();
-
-        if (res.ok && data.script) {
-          // Update script with the improved version
-          setScript(data.script);
-          // Mark this suggestion as applied
-          setSuggestionStatuses(prev => {
-            const updated = new Map(prev);
-            updated.set(i, "applied");
-            return updated;
-          });
-        } else {
-          // Mark this suggestion as error but continue with others
-          setSuggestionStatuses(prev => {
-            const updated = new Map(prev);
-            updated.set(i, "error");
-            return updated;
-          });
-          console.error(`Failed to apply improvement ${i + 1}:`, data.error);
+      if (res.ok && data.script) {
+        setScript(data.script);
+        const appliedStatuses = new Map<number, SuggestionStatus>();
+        for (let i = 0; i < suggestions.length; i++) {
+          appliedStatuses.set(i, "applied");
         }
-      } catch (error) {
-        console.error(`Error applying improvement ${i + 1}:`, error);
-        setSuggestionStatuses(prev => {
-          const updated = new Map(prev);
-          updated.set(i, "error");
-          return updated;
-        });
-      } finally {
-        clearInterval(timerInterval);
-        applyTimeRef.current = null;
+        setSuggestionStatuses(new Map(appliedStatuses));
+      } else {
+        const errorStatuses = new Map<number, SuggestionStatus>();
+        for (let i = 0; i < suggestions.length; i++) {
+          errorStatuses.set(i, "error");
+        }
+        setSuggestionStatuses(new Map(errorStatuses));
+        setError(data.error || "Failed to apply improvements");
       }
+    } catch (err) {
+      console.error("Error applying improvements:", err);
+      const errorStatuses = new Map<number, SuggestionStatus>();
+      for (let i = 0; i < suggestions.length; i++) {
+        errorStatuses.set(i, "error");
+      }
+      setSuggestionStatuses(new Map(errorStatuses));
+      setError("Failed to apply improvements. Please check your API key.");
+    } finally {
+      clearInterval(timerInterval);
+      applyTimeRef.current = null;
+      setApplyElapsed(0);
     }
 
-    // All done - keep the panel visible for a moment to show completion
-    setApplyElapsed(0);
     setApplyingImprovements(false);
-    
+
     setTimeout(() => {
       setImprovements(null);
       setSuggestionStatuses(new Map());

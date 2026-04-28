@@ -74,6 +74,14 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 type ScriptSource = "90min" | "shorts" | "custom";
+type SpeechProvider = "google_cloud_tts" | "google_gemini";
+
+const GEMINI_TTS_MODELS = [
+  {
+    id: "gemini-3.1-flash-tts-preview",
+    label: "Gemini 3.1 Flash TTS (Preview)",
+  },
+];
 
 export default function SpeechPage() {
   const params = useParams();
@@ -83,6 +91,8 @@ export default function SpeechPage() {
   const [scriptText, setScriptText] = useState("");
   const [shortsText, setShortsText] = useState("");
   const [customText, setCustomText] = useState("");
+  const [provider, setProvider] = useState<SpeechProvider>("google_cloud_tts");
+  const [model, setModel] = useState(GEMINI_TTS_MODELS[0].id);
   const [voice, setVoice] = useState("Charon");
   const [language, setLanguage] = useState("en-US");
   const [speed, setSpeed] = useState(1.0);
@@ -90,11 +100,24 @@ export default function SpeechPage() {
   const [error, setError] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [generatedAt, setGeneratedAt] = useState<string | null>(null);
+  const [previewText, setPreviewText] = useState(
+    "This is a sample voice preview for CozyCrime. Adjust the voice settings and generate again to compare."
+  );
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
+  const [previewGeneratedAt, setPreviewGeneratedAt] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     loadData();
   }, [projectId]);
+
+  useEffect(() => {
+    if (provider === "google_gemini") {
+      setModel(GEMINI_TTS_MODELS[0].id);
+    }
+  }, [provider]);
 
   async function loadData() {
     try {
@@ -163,6 +186,8 @@ export default function SpeechPage() {
         body: JSON.stringify({
           scriptSource,
           customText: scriptSource === "custom" ? customText : undefined,
+          provider,
+          model: provider === "google_gemini" ? model : undefined,
           voice,
           language,
           speed,
@@ -182,6 +207,46 @@ export default function SpeechPage() {
       setError("Failed to generate speech. Please check your credentials.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function generateVoicePreview() {
+    const text = previewText.trim();
+    if (!text) {
+      setPreviewError("Please enter sample text to preview the voice.");
+      return;
+    }
+
+    setPreviewLoading(true);
+    setPreviewError(null);
+
+    try {
+      const res = await fetch(`/api/generate/speech/${projectId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scriptSource: "custom",
+          customText: text,
+          provider,
+          model: provider === "google_gemini" ? model : undefined,
+          voice,
+          language,
+          speed,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setPreviewAudioUrl(data.audioUrl + `?t=${Date.now()}`);
+        setPreviewGeneratedAt(new Date().toLocaleString());
+      } else {
+        setPreviewError(data.error || "Failed to generate voice preview.");
+      }
+    } catch (err) {
+      console.error("Failed to generate voice preview:", err);
+      setPreviewError("Failed to generate voice preview. Please check your credentials.");
+    } finally {
+      setPreviewLoading(false);
     }
   }
 
@@ -207,8 +272,8 @@ export default function SpeechPage() {
           Speech Generation
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-          Convert your script to speech using Google Cloud Text-to-Speech with Chirp 3 HD voices.
-          Output is saved as an MP3 file generated in chunks for long scripts.
+          Convert your script to speech using Google Cloud TTS or Google Gemini Flash 3.1 TTS.
+          Output audio is saved to your project and can be replayed or downloaded.
         </p>
 
         {error && (
@@ -236,6 +301,42 @@ export default function SpeechPage() {
                 No {scriptSource === "90min" ? "episode" : "shorts"} script available
               </p>
             )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Provider
+            </label>
+            <select
+              value={provider}
+              onChange={(e) => setProvider(e.target.value as SpeechProvider)}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500"
+            >
+              <option value="google_cloud_tts">Google Cloud TTS (Chirp 3 HD)</option>
+              <option value="google_gemini">Google Gemini</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Model
+            </label>
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              disabled={provider !== "google_gemini"}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {provider === "google_gemini" ? (
+                GEMINI_TTS_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))
+              ) : (
+                <option value={GEMINI_TTS_MODELS[0].id}>Not used for Google Cloud TTS</option>
+              )}
+            </select>
           </div>
 
           <div>
@@ -334,7 +435,7 @@ export default function SpeechPage() {
               onClick={downloadAudio}
               className="px-6 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
             >
-              Download MP3
+              Download Audio
             </button>
           )}
         </div>
@@ -356,6 +457,54 @@ export default function SpeechPage() {
           </audio>
         </div>
       )}
+
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
+        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50 mb-3">Voice Test</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          Paste a short sample and test the selected provider, model, voice, language, and speed before generating full script audio.
+        </p>
+
+        {previewError && (
+          <div className="mb-4 p-4 bg-red-100 dark:bg-red-950/40 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-300 rounded">
+            {previewError}
+          </div>
+        )}
+
+        <textarea
+          value={previewText}
+          onChange={(e) => setPreviewText(e.target.value)}
+          placeholder="Paste sample text to preview..."
+          className="w-full h-36 p-4 border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 font-sans text-sm text-slate-900 dark:text-slate-100 resize-y"
+        />
+
+        <div className="mt-4 flex gap-4 items-center">
+          <button
+            onClick={generateVoicePreview}
+            disabled={previewLoading || !previewText.trim()}
+            className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
+          >
+            {previewLoading ? "Generating Preview..." : "Generate Voice Preview"}
+          </button>
+          {previewLoading && (
+            <span className="text-sm text-slate-600 dark:text-slate-400">
+              Generating preview...
+            </span>
+          )}
+        </div>
+
+        {previewAudioUrl && (
+          <div className="mt-5">
+            {previewGeneratedAt && (
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+                Preview generated at: {previewGeneratedAt}
+              </p>
+            )}
+            <audio controls className="w-full" src={previewAudioUrl}>
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
+      </div>
 
       {scriptSource === "custom" && (
         <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">

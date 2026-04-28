@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProjectData } from "@/lib/db/projects";
 import { synthesizeSpeech, getAudioExtension } from "@/lib/tts/client";
+import { synthesizeSpeechWithGemini, DEFAULT_GEMINI_TTS_MODEL } from "@/lib/tts/gemini";
 import { writeFileSync, existsSync, mkdirSync } from "fs";
 import path from "path";
+
+type SpeechProvider = "google_cloud_tts" | "google_gemini";
 
 interface SpeechRequestBody {
   scriptSource: "90min" | "shorts" | "custom";
@@ -10,6 +13,8 @@ interface SpeechRequestBody {
   voice: string;
   language: string;
   speed: number;
+  provider?: SpeechProvider;
+  model?: string;
 }
 
 export async function POST(
@@ -22,6 +27,8 @@ export async function POST(
     const body: SpeechRequestBody = await request.json();
 
     const { scriptSource, customText, voice, language, speed } = body;
+    const provider = body.provider ?? "google_cloud_tts";
+    const model = body.model?.trim();
 
     if (!voice || !language) {
       return NextResponse.json(
@@ -33,6 +40,12 @@ export async function POST(
     if (speed < 0.25 || speed > 2.0) {
       return NextResponse.json(
         { error: "Speed must be between 0.25 and 2.0" },
+        { status: 400 }
+      );
+    }
+    if (provider !== "google_cloud_tts" && provider !== "google_gemini") {
+      return NextResponse.json(
+        { error: "Invalid speech provider selected." },
         { status: 400 }
       );
     }
@@ -69,20 +82,28 @@ export async function POST(
       }
     }
 
-    const audioBuffer = await synthesizeSpeech({
-      text,
-      voiceName: voice,
-      languageCode: language,
-      speakingRate: speed,
-      audioEncoding: "MP3",
-    });
+    const isGemini = provider === "google_gemini";
+    const encoding = isGemini ? "LINEAR16" : "MP3";
+    const audioBuffer = isGemini
+      ? await synthesizeSpeechWithGemini({
+          text,
+          voiceName: voice,
+          model: model || DEFAULT_GEMINI_TTS_MODEL,
+        })
+      : await synthesizeSpeech({
+          text,
+          voiceName: voice,
+          languageCode: language,
+          speakingRate: speed,
+          audioEncoding: "MP3",
+        });
 
     const audioDir = path.join(process.cwd(), "public", "audio", String(projectId));
     if (!existsSync(audioDir)) {
       mkdirSync(audioDir, { recursive: true });
     }
 
-    const extension = getAudioExtension("MP3");
+    const extension = getAudioExtension(encoding);
     const filename = `speech-${scriptSource}.${extension}`;
     const filePath = path.join(audioDir, filename);
 
@@ -94,6 +115,16 @@ export async function POST(
   } catch (error: unknown) {
     const err = error as { message?: string; code?: string };
     console.error("Error generating speech:", error);
+
+    if (err?.message?.includes("Google Gemini API key not configured")) {
+      return NextResponse.json(
+        {
+          error:
+            "Gemini API key not configured. Add GOOGLE_GEMINI_API_KEY in your environment or Settings."
+        },
+        { status: 500 }
+      );
+    }
 
     if (err?.message?.includes("Could not load the default credentials") ||
         err?.message?.includes("GOOGLE_APPLICATION_CREDENTIALS")) {
