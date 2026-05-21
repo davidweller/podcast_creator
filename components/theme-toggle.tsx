@@ -13,13 +13,19 @@ export function ThemeToggle() {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }
 
+  const ariaLabel = !mounted
+    ? "Toggle color theme"
+    : resolvedTheme === "dark"
+      ? "Switch to light mode"
+      : "Switch to dark mode";
+
   return (
     <button
       type="button"
       onClick={toggle}
       disabled={!mounted}
       className="fixed top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 bg-background/80 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-slate-100 disabled:opacity-50 dark:border-slate-600 dark:hover:bg-slate-800"
-      aria-label={resolvedTheme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={ariaLabel}
     >
       {!mounted ? (
         <span className="h-5 w-5" aria-hidden />
