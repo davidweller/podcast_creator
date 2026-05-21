@@ -5,6 +5,9 @@ import { useState, useEffect } from "react";
 import {
   DEFAULT_LLM_BY_STAGE,
   listModelsForStage,
+  clearPersistedModelChoiceKeys,
+  markModelChoiceStorageRevisionCurrent,
+  shouldRestoreSavedModelChoicesFromStorage,
 } from "@/lib/models/registry";
 
 const IMAGE_PROMPT_MODELS = listModelsForStage("imagePrompt");
@@ -22,9 +25,14 @@ export default function ImagePromptPage() {
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem(LS_IMAGE_PROMPT_MODEL);
-      if (s && IMAGE_PROMPT_MODELS.some((m) => m.id === s)) setLlmModelId(s);
-      if (localStorage.getItem(LS_IMAGE_PROMPT_THINKING) === "1") setUseThinking(true);
+      if (!shouldRestoreSavedModelChoicesFromStorage()) {
+        clearPersistedModelChoiceKeys();
+        markModelChoiceStorageRevisionCurrent();
+      } else {
+        const s = localStorage.getItem(LS_IMAGE_PROMPT_MODEL);
+        if (s && IMAGE_PROMPT_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+        if (localStorage.getItem(LS_IMAGE_PROMPT_THINKING) === "1") setUseThinking(true);
+      }
     } catch {
       /* ignore */
     }

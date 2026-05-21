@@ -6,7 +6,11 @@ import type { Project } from "@/types/database";
 import {
   DEFAULT_LLM_BY_STAGE,
   listModelsForStage,
+  clearPersistedModelChoiceKeys,
+  markModelChoiceStorageRevisionCurrent,
+  shouldRestoreSavedModelChoicesFromStorage,
 } from "@/lib/models/registry";
+import { parseTitlesJson, serializeTitlesJson } from "@/lib/social/episode-title";
 
 const SOCIAL_MODELS = listModelsForStage("social");
 const LS_SOCIAL_MODEL = "cozycrime:llm:social";
@@ -21,6 +25,7 @@ export default function DescriptionPage() {
   const [spotifyDescription, setSpotifyDescription] = useState("");
   const [socialTitle, setSocialTitle] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingTitle, setLoadingTitle] = useState(false);
   const [loadingSpotify, setLoadingSpotify] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.social);
@@ -28,9 +33,14 @@ export default function DescriptionPage() {
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem(LS_SOCIAL_MODEL);
-      if (s && SOCIAL_MODELS.some((m) => m.id === s)) setLlmModelId(s);
-      if (localStorage.getItem(LS_SOCIAL_THINKING) === "1") setUseThinking(true);
+      if (!shouldRestoreSavedModelChoicesFromStorage()) {
+        clearPersistedModelChoiceKeys();
+        markModelChoiceStorageRevisionCurrent();
+      } else {
+        const s = localStorage.getItem(LS_SOCIAL_MODEL);
+        if (s && SOCIAL_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+        if (localStorage.getItem(LS_SOCIAL_THINKING) === "1") setUseThinking(true);
+      }
     } catch {
       /* ignore */
     }
@@ -64,6 +74,8 @@ export default function DescriptionPage() {
         setDescription(data.description || "");
         setMetadata(data.metadata_json || "");
         setSpotifyDescription(data.spotify_description || "");
+        const saved = parseTitlesJson(data.titles_json).canonical;
+        if (saved) setSocialTitle(saved);
       }
 
       if (projectRes.ok) {
@@ -75,13 +87,50 @@ export default function DescriptionPage() {
     }
   }
 
-  function generateSocialTitle() {
+  async function generateSocialTitle() {
     if (!project) return;
-    const numberPart = String(project.id).padStart(3, "0");
-    const titlePart = project.title;
-    const locationEraPart = project.era_location;
-    const formatted = `${numberPart} | ${titlePart} | ${locationEraPart}`;
-    setSocialTitle(formatted);
+    setLoadingTitle(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/generate/social-title/${projectId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          llmModelId,
+          useThinking: thinkingSupported && useThinking,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSocialTitle(data.title ?? "");
+        if (data.warning) setError(data.warning);
+      } else {
+        setError(data.error || "Failed to generate title");
+      }
+    } catch (err) {
+      console.error("Failed to generate title:", err);
+      setError("Failed to generate title. Please check your API key.");
+    } finally {
+      setLoadingTitle(false);
+    }
+  }
+
+  async function saveSocialTitle(title: string) {
+    if (!title.trim()) return;
+    try {
+      await fetch(`/api/projects/${projectId}/data`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          titles_json: serializeTitlesJson({ canonical: title.trim() }),
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save title:", err);
+    }
   }
 
   async function generateAll() {
@@ -269,10 +318,10 @@ export default function DescriptionPage() {
             <button
               type="button"
               onClick={generateSocialTitle}
-              disabled={!project}
+              disabled={!project || loadingTitle}
               className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
-              Generate Title
+              {loadingTitle ? "Generating..." : "Generate Title"}
             </button>
             <button
               type="button"
@@ -290,12 +339,16 @@ export default function DescriptionPage() {
           </div>
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-          Generate a canonical episode title for this case, using the format{" "}
+          Generates a canonical episode title from research in the form{" "}
           <span className="font-mono font-semibold">
-            004 | The Cock Lane Ghost Affair: Scratching in the Dark | London, 1761
+            NNN | The [Case Name][: hook] | Place, Year
           </span>
-          . The number comes from the project ID, the middle section is the case title, and the final section is the
-          location and year(s).
+          . The episode number is the project ID (e.g. 030). The middle section uses patterns like{" "}
+          <span className="italic">The Murder of…</span>, <span className="italic">The [Place] Mystery</span>, or{" "}
+          <span className="italic">The Great … Robbery</span>, often with a short factual hook after a colon (e.g.{" "}
+          <span className="font-mono">22 Executed</span>, <span className="font-mono">Seven People Condemned</span>).
+          The final segment is place and year only (<span className="font-mono">London, 1678</span> or{" "}
+          <span className="font-mono">London-Paris, 1885</span>).
         </p>
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
@@ -306,7 +359,8 @@ export default function DescriptionPage() {
               type="text"
               value={socialTitle}
               onChange={(e) => setSocialTitle(e.target.value)}
-              placeholder="004 | The Cock Lane Ghost Affair: Scratching in the Dark | London, 1761"
+              onBlur={(e) => saveSocialTitle(e.target.value)}
+              placeholder="030 | The Murder of Sir Edmund Godfrey: 22 Executed | London, 1678"
               className="w-full rounded border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-950 shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-500 focus:border-slate-400 dark:focus:border-slate-500"
             />
           </div>

@@ -43,6 +43,7 @@ export interface ProjectImage {
   prompt: string | null;
   image_path: string | null;
   thumbnail_title: string | null;
+  thumbnail_meta_json?: string | null;
 }
 
 export const IMAGE_SLOTS: ImageSlot[] = [

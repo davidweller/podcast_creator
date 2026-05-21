@@ -67,22 +67,28 @@ These are structured so you can swap in any case/topic.
 
 COZY THUMBNAIL PROMPT
 A warm, cozy, illustrated YouTube thumbnail in a clean comic style.
-Close-up of a [character description, e.g. “middle-aged man with glasses and moustache, 1900s detective style”] on the left, with a [exaggerated emotional expression].
+Medium close-up of a [character description, e.g. "middle-aged man with glasses and moustache, 1900s detective style"] on the left, with a [exaggerated emotional expression], keeping the full head and shoulders visible.
 On the right, a softly glowing [key object, e.g. “radio tower emitting signal waves” / “open safe with a glowing diamond”].
 Use warm, inviting lighting with soft highlights and subtle shadows, slightly stylized and playful.
 Background simple and uncluttered, with a cozy evening atmosphere.
-Add large, bold, rounded text in the center or right: “[SHORT HOOK TEXT]”.
+Add large, bold, rounded text in the center or right: "[SHORT HOOK TEXT]".
+Keep the character and key object fully inside frame with clear margins; do not crop off the top of the head, chin, or key object edges.
+Ensure all text fits fully within the image boundaries with generous safe margins (at least 12% from every edge), and is never cut off or clipped.
+Avoid placing any important details in the outer edge zones.
 High contrast, clean composition, designed for YouTube thumbnail, very readable at small size.
 Do not include any logo or watermark in the generated image prompt.
 
 
 CINEMATIC THUMBNAIL PROMPT
 A dramatic, cinematic YouTube thumbnail with high contrast lighting.
-Close-up of a [character description] on the left, exaggerated expression, partially in shadow with strong directional lighting.
+Medium close-up of a [character description] on the left, exaggerated expression, partially in shadow with strong directional lighting, keeping the full head and shoulders visible.
 On the right, a visually striking [key object] illuminated with intense light (glow, spotlight, or reflections).
 Dark, moody background with depth (night scene, stormy sky, or dim interior).
 Strong contrast between light and shadow, realistic textures, cinematic colour grading.
-Add bold, large text: “[SHORT HOOK TEXT]” in a gritty or sharp font.
+Add bold, large text: "[SHORT HOOK TEXT]" in a gritty or sharp font.
+Keep the character and key object fully inside frame with clear margins; do not crop off the top of the head, chin, or key object edges.
+Ensure all text fits fully within the image boundaries with generous safe margins (at least 12% from every edge), and is never cut off or clipped.
+Avoid placing any important details in the outer edge zones.
 Composition is clean and focused, designed for maximum click-through, highly readable on mobile.
 Include subtle vignette and depth.
 

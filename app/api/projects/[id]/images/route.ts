@@ -36,11 +36,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
     const body = await request.json();
-    const { slot, prompt, thumbnail_title } = body;
+    const { slot, prompt, thumbnail_title, thumbnail_meta_json } = body;
     if (slot == null || typeof slot !== "string") {
       return NextResponse.json({ error: "Missing or invalid slot" }, { status: 400 });
     }
-    updateProjectImage(projectId, slot, { prompt, thumbnail_title });
+    updateProjectImage(projectId, slot, { prompt, thumbnail_title, thumbnail_meta_json });
     const images = getProjectImages(projectId);
     return NextResponse.json(images);
   } catch (error) {

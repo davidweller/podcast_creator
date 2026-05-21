@@ -3,12 +3,16 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import type { ProjectImage } from "@/types/database";
-import { ILLUSTRATED_SLOTS } from "@/types/database";
+import { ILLUSTRATED_SLOTS, IMAGE_SLOTS } from "@/types/database";
 import {
   DEFAULT_IMAGE_MODEL,
   DEFAULT_LLM_BY_STAGE,
   IMAGE_MODELS,
   listModelsForStage,
+  clearPersistedModelChoiceKeys,
+  markModelChoiceStorageRevisionCurrent,
+  normalizeLegacyImageModelId,
+  shouldRestoreSavedModelChoicesFromStorage,
 } from "@/lib/models/registry";
 
 const IMAGE_PROMPT_MODELS = listModelsForStage("imagePrompt");
@@ -16,6 +20,14 @@ const LS_IMAGE_PROMPT_MODEL = "cozycrime:llm:imagePrompt";
 const LS_IMAGE_PROMPT_THINKING = "cozycrime:llm:imagePrompt:thinking";
 const LS_IMAGE_MODEL = "cozycrime:image:model";
 const LS_GEMINI_IMAGE = "cozycrime:gemini:imageModel";
+
+interface ThumbnailMeta {
+  pass?: boolean;
+  score?: number;
+  strategy?: string;
+  reasons?: string[];
+  attemptCount?: number;
+}
 
 export default function ImagesPage() {
   const params = useParams();
@@ -25,9 +37,12 @@ export default function ImagesPage() {
   const [error, setError] = useState<string | null>(null);
   const [loadingPrompts, setLoadingPrompts] = useState(false);
   const [loadingThumbnailPromptSlot, setLoadingThumbnailPromptSlot] = useState<string | null>(null);
-  const [loadingSlot, setLoadingSlot] = useState<string | null>(null);
+  const [loadingSlots, setLoadingSlots] = useState<Set<string>>(new Set());
   const [loadingAll, setLoadingAll] = useState(false);
-  const [generateAllProgress, setGenerateAllProgress] = useState<number | null>(null);
+  const [generateAllProgress, setGenerateAllProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const [promptsElapsedTime, setPromptsElapsedTime] = useState(0);
   const [imagesElapsedTime, setImagesElapsedTime] = useState(0);
   const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.imagePrompt);
@@ -36,17 +51,23 @@ export default function ImagesPage() {
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem(LS_IMAGE_PROMPT_MODEL);
-      if (s && IMAGE_PROMPT_MODELS.some((m) => m.id === s)) setLlmModelId(s);
-      if (localStorage.getItem(LS_IMAGE_PROMPT_THINKING) === "1") setUseThinking(true);
-      const genericModel = localStorage.getItem(LS_IMAGE_MODEL);
-      if (genericModel && IMAGE_MODELS.some((m) => m.id === genericModel)) {
-        setImageModel(genericModel as typeof DEFAULT_IMAGE_MODEL);
+      if (!shouldRestoreSavedModelChoicesFromStorage()) {
+        clearPersistedModelChoiceKeys();
+        markModelChoiceStorageRevisionCurrent();
       } else {
-        // Backward compatibility for previously saved Gemini-only preference.
-        const legacyGemini = localStorage.getItem(LS_GEMINI_IMAGE);
-        if (legacyGemini === "gemini-2.5-flash-image") {
-          setImageModel("gemini/gemini-2.5-flash-image");
+        const s = localStorage.getItem(LS_IMAGE_PROMPT_MODEL);
+        if (s && IMAGE_PROMPT_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+        if (localStorage.getItem(LS_IMAGE_PROMPT_THINKING) === "1") setUseThinking(true);
+        const genericModel = normalizeLegacyImageModelId(
+          localStorage.getItem(LS_IMAGE_MODEL) ?? ""
+        );
+        if (genericModel && IMAGE_MODELS.some((m) => m.id === genericModel)) {
+          setImageModel(genericModel as typeof DEFAULT_IMAGE_MODEL);
+        } else {
+          const legacyGemini = localStorage.getItem(LS_GEMINI_IMAGE);
+          if (legacyGemini === "gemini-2.5-flash-image") {
+            setImageModel("gemini/gemini-2.5-flash-image");
+          }
         }
       }
     } catch {
@@ -188,18 +209,33 @@ export default function ImagesPage() {
     }
   }
 
-  async function generateOne(slot: string, prompt: string) {
+  function getThumbnailMeta(slot: string): ThumbnailMeta | null {
+    const row = images.find((i) => i.slot === slot);
+    const raw = row?.thumbnail_meta_json;
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as ThumbnailMeta;
+    } catch {
+      return null;
+    }
+  }
+
+  async function generateOne(slot: string, prompt: string, safeMode = false) {
     if (!prompt?.trim()) {
       setError(`No prompt for slot ${slot}. Please add a prompt first.`);
       return;
     }
-    setLoadingSlot(slot);
+    setLoadingSlots((prev) => {
+      const next = new Set(prev);
+      next.add(slot);
+      return next;
+    });
     setError(null);
     try {
       const res = await fetch(`/api/generate/image/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slot, prompt, imageModel }),
+        body: JSON.stringify({ slot, prompt, imageModel, safeMode }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -213,33 +249,70 @@ export default function ImagesPage() {
         setError(errorMsg);
       }
     } catch (err: any) {
-      const errorMsg = err.message || `Failed to generate image for slot ${slot}`;
+      const msg = err?.message || "";
+      const errorMsg =
+        msg === "Failed to fetch"
+          ? "Network error while waiting for the server (common if the request runs a long time, the dev server restarted, or a browser extension blocked the call). Retry after the terminal shows the request finished; try the same host you used to open the app (localhost vs LAN IP)."
+          : msg || `Failed to generate image for slot ${slot}`;
       console.error(`Error generating image for slot ${slot}:`, err);
       setError(errorMsg);
     } finally {
-      setLoadingSlot(null);
+      setLoadingSlots((prev) => {
+        const next = new Set(prev);
+        next.delete(slot);
+        return next;
+      });
     }
   }
 
   async function generateAllImages() {
+    const rowsBySlot = new Map(images.map((i) => [i.slot, i]));
+    const orderedWithPrompts = IMAGE_SLOTS.filter((slot) => {
+      const row = rowsBySlot.get(slot);
+      return row?.prompt?.trim();
+    });
+    if (orderedWithPrompts.length === 0) {
+      setError("No prompts to generate. Generate prompts first.");
+      return;
+    }
+
     setLoadingAll(true);
     setError(null);
-    setGenerateAllProgress(0);
+    setGenerateAllProgress({ current: 0, total: orderedWithPrompts.length });
+
     try {
       const res = await fetch(`/api/generate/images-all/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageModel }),
       });
-      const data = await res.json();
-      if (res.ok) {
-        setGenerateAllProgress(data.generated ?? 0);
-        await loadImages();
-      } else {
-        setError(data.error || "Failed to generate images");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError((data as { error?: string }).error || "Failed to generate images");
+        return;
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to generate images");
+
+      const generated = typeof data.generated === "number" ? data.generated : 0;
+      const results = Array.isArray(data.results) ? data.results : [];
+      const failures = results
+        .filter((r: { ok?: boolean; slot?: string; error?: string }) => !r.ok && r.error !== "No prompt")
+        .map((r: { slot?: string; error?: string }) => `${r.slot ?? "unknown"}: ${r.error ?? "failed"}`);
+
+      await loadImages();
+      setGenerateAllProgress({ current: orderedWithPrompts.length, total: orderedWithPrompts.length });
+      setThumbnailBust((prev) => ({
+        ...prev,
+        thumbnail_cozy: Date.now(),
+        thumbnail_cinematic: Date.now(),
+      }));
+
+      if (failures.length > 0) {
+        setError(
+          generated === 0
+            ? failures.join(" · ")
+            : `Generated ${generated} of ${orderedWithPrompts.length}. Failures: ${failures.join(" · ")}`
+        );
+      }
     } finally {
       setLoadingAll(false);
       setGenerateAllProgress(null);
@@ -299,7 +372,7 @@ export default function ImagesPage() {
       <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">Images</h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-          12 illustrated scene images plus cozy and cinematic YouTube thumbnails. Style: period-accurate, Rick and Morty–esque illustrated. Generate prompts with your chosen LLM, then generate images with your selected model (Gemini or ChatGPT Images 2.0).
+          12 illustrated scene images plus cozy and cinematic YouTube thumbnails. Style: period-accurate, Rick and Morty–esque illustrated. Defaults: Claude Sonnet 4.6 for prompt LLM and ChatGPT Images 2.0 (gpt-image-2) for image generation; you can switch models in the dropdowns below.
         </p>
 
         <div className="mb-4 flex flex-wrap gap-6 items-end">
@@ -346,7 +419,7 @@ export default function ImagesPage() {
             <select
               value={imageModel}
               onChange={(e) => setImageModel(e.target.value as typeof DEFAULT_IMAGE_MODEL)}
-              disabled={loadingAll || loadingSlot !== null}
+              disabled={loadingAll || loadingSlots.size > 0}
               className="text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-w-[12rem]"
             >
               {[...new Set(IMAGE_MODELS.map((m) => m.provider))].map((provider) => (
@@ -384,7 +457,11 @@ export default function ImagesPage() {
             disabled={loadingAll || images.every((i) => !i.prompt?.trim())}
             className="px-6 py-2 bg-emerald-700 text-white rounded hover:bg-emerald-800 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"
           >
-            {loadingAll ? (generateAllProgress != null ? `Generating ${generateAllProgress}/${ILLUSTRATED_SLOTS.length}… (${formatTime(imagesElapsedTime)})` : `Generating… (${formatTime(imagesElapsedTime)})`) : "Generate all images"}
+            {loadingAll
+              ? generateAllProgress != null
+                ? `Generating ${generateAllProgress.current}/${generateAllProgress.total}… (${formatTime(imagesElapsedTime)})`
+                : `Generating… (${formatTime(imagesElapsedTime)})`
+              : "Generate all images"}
           </button>
           <button
             onClick={downloadAllImages}
@@ -402,9 +479,18 @@ export default function ImagesPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {thumbnailVariants.map((variant) => {
             const row = images.find((i) => i.slot === variant.slot);
+            const meta = getThumbnailMeta(variant.slot);
+            const hasSafetyWarning = Boolean(meta && meta.pass === false);
             return (
               <div key={variant.slot} className="space-y-4 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100">{variant.label}</h4>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-semibold text-slate-900 dark:text-slate-100">{variant.label}</h4>
+                  {hasSafetyWarning && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
+                      Framing risk (score {meta?.score ?? "?"})
+                    </span>
+                  )}
+                </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Overlay text (2-4 words)</label>
                   <input
@@ -447,10 +533,17 @@ export default function ImagesPage() {
                     </button>
                     <button
                       onClick={() => row?.prompt && generateOne(variant.slot, row.prompt)}
-                      disabled={loadingSlot === variant.slot || !row?.prompt?.trim()}
+                      disabled={loadingSlots.has(variant.slot) || !row?.prompt?.trim()}
                       className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 dark:hover:bg-slate-600 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-sm"
                     >
-                      {loadingSlot === variant.slot ? "Generating..." : `Generate ${variant.label.toLowerCase()}`}
+                      {loadingSlots.has(variant.slot) ? "Generating..." : `Generate ${variant.label.toLowerCase()}`}
+                    </button>
+                    <button
+                      onClick={() => row?.prompt && generateOne(variant.slot, row.prompt, true)}
+                      disabled={loadingSlots.has(variant.slot) || !row?.prompt?.trim()}
+                      className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-sm"
+                    >
+                      Regenerate safer
                     </button>
                     {row?.image_path && (
                       <button
@@ -462,6 +555,11 @@ export default function ImagesPage() {
                     )}
                   </div>
                 </div>
+                {hasSafetyWarning && (
+                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                    {meta?.reasons?.[0] || "The thumbnail may have clipped edge content. Try Regenerate safer."}
+                  </p>
+                )}
                 <div>
                   {row?.image_path ? (
                     <img
@@ -522,10 +620,10 @@ export default function ImagesPage() {
                 <div className="flex-shrink-0 flex flex-col items-end gap-2">
                   <button
                     onClick={() => generateOne(slot, prompt)}
-                    disabled={loadingSlot === slot || loadingAll || !prompt.trim()}
+                    disabled={loadingSlots.has(slot) || loadingAll || !prompt.trim()}
                     className="px-4 py-2 bg-slate-800 text-white rounded hover:bg-slate-700 dark:hover:bg-slate-600 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed text-sm whitespace-nowrap w-full md:w-auto"
                   >
-                    {loadingSlot === slot ? "…" : "Generate"}
+                    {loadingSlots.has(slot) ? "…" : "Generate"}
                   </button>
                   {hasImage && (
                     <button

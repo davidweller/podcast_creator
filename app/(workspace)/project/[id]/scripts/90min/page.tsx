@@ -8,13 +8,23 @@ import { getScriptStats90 } from "@/lib/script-stats";
 import {
   DEFAULT_LLM_BY_STAGE,
   listModelsForStage,
+  clearPersistedModelChoiceKeys,
+  markModelChoiceStorageRevisionCurrent,
+  shouldRestoreSavedModelChoicesFromStorage,
 } from "@/lib/models/registry";
+import {
+  DEFAULT_SCRIPT_PROMPT_STYLE,
+  SCRIPT_PROMPT_STYLES,
+  type ScriptPromptStyle,
+} from "@/lib/prompts/script-styles";
 
 const ESTIMATE_SCRIPT_GEN = "3–8 min";
+const ESTIMATE_CARLIN_SCRIPT_GEN = "≈15–40 min";
 
 const SCRIPT_MODELS = listModelsForStage("script");
 const LS_SCRIPT_MODEL = "cozycrime:llm:script";
 const LS_SCRIPT_THINKING = "cozycrime:llm:script:thinking";
+const LS_SCRIPT_PROMPT_STYLE = "cozycrime:promptStyle:script";
 const DEFAULT_THINKING_BUDGET = 10000;
 
 const ANALYSIS_PHASES = [
@@ -53,14 +63,30 @@ export default function Script90MinPage() {
     DEFAULT_LLM_BY_STAGE.script
   );
   const [useThinking, setUseThinking] = useState(false);
+  const [selectedPromptStyle, setSelectedPromptStyle] =
+    useState<ScriptPromptStyle>(DEFAULT_SCRIPT_PROMPT_STYLE);
+  const [carlinProgress, setCarlinProgress] = useState<{
+    index: number;
+    total: number;
+    label: string;
+    min: number;
+    max: number;
+  } | null>(null);
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem(LS_SCRIPT_MODEL);
-      if (s && SCRIPT_MODELS.some((m) => m.id === s)) {
-        setSelectedLlmModelId(s);
+      if (!shouldRestoreSavedModelChoicesFromStorage()) {
+        clearPersistedModelChoiceKeys();
+        markModelChoiceStorageRevisionCurrent();
+      } else {
+        const s = localStorage.getItem(LS_SCRIPT_MODEL);
+        if (s && SCRIPT_MODELS.some((m) => m.id === s)) {
+          setSelectedLlmModelId(s);
+        }
+        if (localStorage.getItem(LS_SCRIPT_THINKING) === "1") setUseThinking(true);
       }
-      if (localStorage.getItem(LS_SCRIPT_THINKING) === "1") setUseThinking(true);
+      const st = localStorage.getItem(LS_SCRIPT_PROMPT_STYLE);
+      if (st === "original" || st === "carlin") setSelectedPromptStyle(st);
     } catch {
       /* ignore */
     }
@@ -70,10 +96,11 @@ export default function Script90MinPage() {
     try {
       localStorage.setItem(LS_SCRIPT_MODEL, selectedLlmModelId);
       localStorage.setItem(LS_SCRIPT_THINKING, useThinking ? "1" : "0");
+      localStorage.setItem(LS_SCRIPT_PROMPT_STYLE, selectedPromptStyle);
     } catch {
       /* ignore */
     }
-  }, [selectedLlmModelId, useThinking]);
+  }, [selectedLlmModelId, useThinking, selectedPromptStyle]);
 
   const selectedEntry = SCRIPT_MODELS.find((m) => m.id === selectedLlmModelId);
   const thinkingSupported = selectedEntry?.supportsThinking ?? false;
@@ -116,13 +143,139 @@ export default function Script90MinPage() {
     setLoading(true);
     setError(null);
     setImprovements(null);
+    setCarlinProgress(null);
 
     try {
+      if (selectedPromptStyle === "carlin") {
+        const res = await fetch(`/api/generate/script/${projectId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "90min",
+            promptStyle: "carlin",
+            llmModelId: selectedLlmModelId,
+            useThinking: thinkingSupported && useThinking,
+            thinkingBudget: DEFAULT_THINKING_BUDGET,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}) as Record<string, unknown>);
+          setError(
+            typeof data?.error === "string"
+              ? data.error
+              : `Failed to generate script (${res.status})`
+          );
+          return;
+        }
+
+        const ct = res.headers.get("content-type") ?? "";
+        if (!ct.includes("ndjson")) {
+          try {
+            const data = await res.json();
+            if ((data as { script?: string }).script) {
+              setScript((data as { script: string }).script);
+              setGeneratedAt(new Date().toLocaleDateString());
+            } else {
+              setError(
+                (data as { error?: string }).error ?? "Unexpected response from server"
+              );
+            }
+          } catch {
+            setError("Unexpected response from server");
+          }
+          return;
+        }
+
+        const reader = res.body?.getReader();
+        if (!reader) {
+          setError("Streaming response not supported in this browser.");
+          return;
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let streamed = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          let nl: number;
+          while ((nl = buffer.indexOf("\n")) >= 0) {
+            const rawLine = buffer.slice(0, nl);
+            buffer = buffer.slice(nl + 1);
+
+            const line = rawLine.trim();
+            if (!line) continue;
+
+            let evt: Record<string, unknown>;
+            try {
+              evt = JSON.parse(line);
+            } catch {
+              console.warn("[Carlin NDJSON] skip malformed line:", line.slice(0, 80));
+              continue;
+            }
+
+            const t = evt.type;
+            if (t === "section_start") {
+              setCarlinProgress({
+                index: Number(evt.index) || 1,
+                total: Number(evt.total) || 7,
+                label: String(evt.label ?? ""),
+                min: Number(evt.min ?? 0),
+                max: Number(evt.max ?? 0),
+              });
+            } else if (t === "chunk" && typeof evt.text === "string") {
+              streamed += evt.text;
+              setScript(streamed);
+            } else if (t === "done") {
+              if (typeof evt.script === "string") streamed = evt.script;
+              setScript(streamed);
+              setGeneratedAt(new Date().toLocaleDateString());
+              setHasUnsavedChanges(false);
+              setCarlinProgress(null);
+            } else if (t === "error") {
+              setError(
+                typeof evt.message === "string"
+                  ? evt.message
+                  : "Script generation failed"
+              );
+              setCarlinProgress(null);
+            }
+          }
+        }
+
+        buffer += decoder.decode();
+
+        const tail = buffer.trim();
+        if (tail) {
+          try {
+            const evt = JSON.parse(tail) as Record<string, unknown>;
+            if (evt.type === "done" && typeof evt.script === "string") {
+              setScript(evt.script);
+              setGeneratedAt(new Date().toLocaleDateString());
+              setHasUnsavedChanges(false);
+              setCarlinProgress(null);
+            } else if (evt.type === "error" && typeof evt.message === "string") {
+              setError(evt.message);
+              setCarlinProgress(null);
+            }
+          } catch {
+            /* ignore incomplete tail */
+          }
+        }
+
+        return;
+      }
+
       const res = await fetch(`/api/generate/script/${projectId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "90min",
+          promptStyle: "original",
           llmModelId: selectedLlmModelId,
           useThinking: thinkingSupported && useThinking,
           thinkingBudget: DEFAULT_THINKING_BUDGET,
@@ -140,6 +293,7 @@ export default function Script90MinPage() {
     } catch (error) {
       console.error("Failed to generate script:", error);
       setError("Failed to generate script. Please check your API key.");
+      setCarlinProgress(null);
     } finally {
       setLoading(false);
     }
@@ -398,7 +552,13 @@ export default function Script90MinPage() {
       <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
         <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-50 mb-2">Episode script (about 60 min)</h3>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-          10,800-11,700 words • 5 phases (Descending Spiral)
+          {selectedPromptStyle === "original" ? (
+            <>10,800-11,700 words • 5 phases (Descending Spiral)</>
+          ) : (
+            <>
+              Approx. 9,000-10,900 words • 7 staged sections (Carlin Style) • about 60 min
+            </>
+          )}
         </p>
 
         {error && (
@@ -434,6 +594,29 @@ export default function Script90MinPage() {
                       </option>
                     ))}
                   </optgroup>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="prompt-style-select"
+                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+              >
+                Prompt style:
+              </label>
+              <select
+                id="prompt-style-select"
+                value={selectedPromptStyle}
+                onChange={(e) =>
+                  setSelectedPromptStyle(e.target.value as ScriptPromptStyle)
+                }
+                disabled={loading}
+                className="text-sm border border-slate-300 dark:border-slate-600 rounded px-2 py-1.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:cursor-not-allowed min-w-[11rem]"
+              >
+                {SCRIPT_PROMPT_STYLES.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -474,9 +657,22 @@ export default function Script90MinPage() {
             )}
           </div>
           {loading && (
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Elapsed: {formatElapsed(elapsedSeconds)} • Approx. {ESTIMATE_SCRIPT_GEN} remaining
-            </p>
+            <>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Elapsed: {formatElapsed(elapsedSeconds)} • Approx.{" "}
+                {selectedPromptStyle === "carlin"
+                  ? ESTIMATE_CARLIN_SCRIPT_GEN
+                  : ESTIMATE_SCRIPT_GEN}{" "}
+                remaining
+              </p>
+              {selectedPromptStyle === "carlin" && carlinProgress && (
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                  Section {carlinProgress.index}/{carlinProgress.total}:{" "}
+                  {carlinProgress.label} • target {carlinProgress.min.toLocaleString()}
+                  -{carlinProgress.max.toLocaleString()} words
+                </p>
+              )}
+            </>
           )}
           {script && (
             <div className="flex gap-2">

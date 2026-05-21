@@ -37,7 +37,7 @@ function ensureHookInPrompt(prompt: string, overlay: string): string {
   if (prompt.toLowerCase().includes(overlay.toLowerCase())) {
     return prompt;
   }
-  const suffix = `\n\nAdd large, bold hook text "${overlay}" rendered prominently in the image, center-right, high-contrast against the background.`;
+  const suffix = `\n\nAdd large, bold hook text "${overlay}" rendered prominently in the image, center-right within safe margins (at least 12% from all edges), high-contrast against the background, and never clipped.`;
   return prompt.trim() + suffix;
 }
 

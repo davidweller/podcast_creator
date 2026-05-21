@@ -2,10 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProjectImage, updateProjectImage } from "@/lib/db/project-images";
 import { generateImage } from "@/lib/gemini/client";
 import { generateOpenAiImage } from "@/lib/openai/image-client";
-import { DEFAULT_IMAGE_MODEL, getImageModelOrThrow } from "@/lib/models/registry";
+import {
+  DEFAULT_IMAGE_MODEL,
+  getImageModelOrThrow,
+  normalizeLegacyImageModelId,
+} from "@/lib/models/registry";
 import { ensure16x9 } from "@/lib/images/ensure-16-9";
+import { generateThumbnailWithRetries } from "@/lib/images/thumbnail-pipeline";
 import { saveProjectImage } from "@/lib/images/storage";
 import { IMAGE_SLOTS, type ImageSlot } from "@/types/database";
+
+/** Image generation (OpenAI GPT image models) can run for many minutes (matches extended OpenAI client timeouts). */
+export const maxDuration = 800;
 
 const VALID_SLOTS = new Set<ImageSlot>(IMAGE_SLOTS);
 
@@ -19,12 +27,15 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const slot = body.slot != null ? String(body.slot) : null;
     const promptOverride = typeof body.prompt === "string" ? body.prompt : undefined;
-    const requestedImageModel =
+    const safeMode = body.safeMode === true;
+    const rawImageModel =
       typeof body.imageModel === "string"
         ? body.imageModel
         : typeof body.geminiImageModel === "string"
           ? body.geminiImageModel
-          : DEFAULT_IMAGE_MODEL;
+          : "";
+    const requestedImageModel =
+      normalizeLegacyImageModelId(rawImageModel.trim()) || DEFAULT_IMAGE_MODEL;
     const imageModel = getImageModelOrThrow(requestedImageModel);
 
     if (!slot || !VALID_SLOTS.has(slot as ImageSlot)) {
@@ -47,19 +58,47 @@ export async function POST(
 
     console.log(`Generating image for slot ${slotKey}...`);
     try {
-      const buffer =
+      const isThumbnail = slotKey === "thumbnail_cozy" || slotKey === "thumbnail_cinematic";
+      const sourceGenerator = async (effectivePrompt: string) =>
         imageModel.provider === "google_gemini"
-          ? await generateImage(prompt, { model: imageModel.id })
-          : await generateOpenAiImage(prompt, { model: imageModel.apiModel });
-      console.log(`Generated image buffer for slot ${slotKey}, size: ${buffer.length} bytes`);
-      const buffer16x9 = await ensure16x9(buffer);
-      console.log(`Processed 16:9 image for slot ${slotKey}, size: ${buffer16x9.length} bytes`);
-      const relativePath = saveProjectImage(projectId, slotKey, buffer16x9);
+          ? generateImage(effectivePrompt, { model: imageModel.id })
+          : generateOpenAiImage(effectivePrompt, {
+              model: imageModel.apiModel,
+              purpose: isThumbnail ? "thumbnail" : "scene",
+            });
+      let finalBuffer: Buffer;
+      let metaJson: string | null = null;
+      if (isThumbnail) {
+        const thumbnailResult = await generateThumbnailWithRetries({
+          prompt,
+          strictMode: safeMode,
+          maxRetries: safeMode ? 3 : 2,
+          generateSourceImage: sourceGenerator,
+        });
+        finalBuffer = thumbnailResult.imageBuffer;
+        metaJson = JSON.stringify(thumbnailResult.meta);
+        console.log(
+          `Thumbnail quality for slot ${slotKey}: score=${thumbnailResult.meta.score}, pass=${thumbnailResult.meta.pass}, attempts=${thumbnailResult.meta.attemptCount}, strategy=${thumbnailResult.meta.strategy}`
+        );
+      } else {
+        const buffer = await sourceGenerator(prompt);
+        console.log(`Generated image buffer for slot ${slotKey}, size: ${buffer.length} bytes`);
+        finalBuffer = await ensure16x9(buffer, { mode: "crop" });
+      }
+      console.log(`Processed 16:9 image for slot ${slotKey}, size: ${finalBuffer.length} bytes`);
+      const relativePath = saveProjectImage(projectId, slotKey, finalBuffer);
       console.log(`Saved image for slot ${slotKey} to: ${relativePath}`);
-      updateProjectImage(projectId, slotKey, { image_path: relativePath });
+      updateProjectImage(projectId, slotKey, {
+        image_path: relativePath,
+        thumbnail_meta_json: metaJson,
+      });
       console.log(`Updated database for slot ${slotKey}`);
 
-      return NextResponse.json({ slot: slotKey, image_path: relativePath });
+      return NextResponse.json({
+        slot: slotKey,
+        image_path: relativePath,
+        thumbnail_meta_json: metaJson,
+      });
     } catch (genError: any) {
       console.error(`Error generating image for slot ${slotKey}:`, genError);
       throw genError;

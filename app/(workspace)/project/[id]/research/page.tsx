@@ -6,6 +6,9 @@ import { useDebouncedCallback } from "use-debounce";
 import {
   DEFAULT_LLM_BY_STAGE,
   listModelsForStage,
+  clearPersistedModelChoiceKeys,
+  markModelChoiceStorageRevisionCurrent,
+  shouldRestoreSavedModelChoicesFromStorage,
 } from "@/lib/models/registry";
 
 const RESEARCH_MODELS = listModelsForStage("research");
@@ -27,9 +30,14 @@ export default function ResearchPage() {
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem(LS_RESEARCH_MODEL);
-      if (s && RESEARCH_MODELS.some((m) => m.id === s)) setLlmModelId(s);
-      if (localStorage.getItem(LS_RESEARCH_THINKING) === "1") setUseThinking(true);
+      if (!shouldRestoreSavedModelChoicesFromStorage()) {
+        clearPersistedModelChoiceKeys();
+        markModelChoiceStorageRevisionCurrent();
+      } else {
+        const s = localStorage.getItem(LS_RESEARCH_MODEL);
+        if (s && RESEARCH_MODELS.some((m) => m.id === s)) setLlmModelId(s);
+        if (localStorage.getItem(LS_RESEARCH_THINKING) === "1") setUseThinking(true);
+      }
     } catch {
       /* ignore */
     }

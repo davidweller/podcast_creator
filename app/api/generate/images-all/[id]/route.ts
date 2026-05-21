@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { getProjectImages, updateProjectImage } from "@/lib/db/project-images";
 import { generateImage } from "@/lib/gemini/client";
 import { generateOpenAiImage } from "@/lib/openai/image-client";
-import { DEFAULT_IMAGE_MODEL, getImageModelOrThrow } from "@/lib/models/registry";
+import {
+  DEFAULT_IMAGE_MODEL,
+  getImageModelOrThrow,
+  normalizeLegacyImageModelId,
+} from "@/lib/models/registry";
 import { ensure16x9 } from "@/lib/images/ensure-16-9";
+import { generateThumbnailWithRetries } from "@/lib/images/thumbnail-pipeline";
 import { saveProjectImage } from "@/lib/images/storage";
-import { IMAGE_SLOTS } from "@/types/database";
+import { IMAGE_SLOTS, type ImageSlot } from "@/types/database";
 
-const DELAY_MS = 1500;
+/** Batch image generation can exceed default serverless / proxy limits. */
+export const maxDuration = 800;
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+const MAX_CONCURRENT_GENERATIONS = 4;
 
 export async function POST(
   request: NextRequest,
@@ -21,12 +25,14 @@ export async function POST(
     const { id } = await params;
     const projectId = parseInt(id);
     const body = await request.json().catch(() => ({}));
-    const requestedImageModel =
+    const rawImageModel =
       typeof body.imageModel === "string"
         ? body.imageModel
         : typeof body.geminiImageModel === "string"
           ? body.geminiImageModel
-          : DEFAULT_IMAGE_MODEL;
+          : "";
+    const requestedImageModel =
+      normalizeLegacyImageModelId(rawImageModel.trim()) || DEFAULT_IMAGE_MODEL;
     const imageModel = getImageModelOrThrow(requestedImageModel);
     const images = getProjectImages(projectId);
     console.log(`Processing ${images.length} image slots for project ${projectId}`);
@@ -45,31 +51,84 @@ export async function POST(
       });
     console.log(`Slots with prompts: ${slotsWithPrompts.length} (${slotsWithPrompts.slice(0, 10).join(", ")}${slotsWithPrompts.length > 10 ? "..." : ""})`);
     
-    for (let i = 0; i < IMAGE_SLOTS.length; i++) {
-      const slot = IMAGE_SLOTS[i];
+    const generationSlots: ImageSlot[] = [];
+    const slotResultIndex = new Map<ImageSlot, number>();
+
+    for (const slot of IMAGE_SLOTS) {
       const row = imagesBySlot.get(slot);
       const prompt = row?.prompt?.trim();
       if (!prompt) {
-        results.push({ slot, ok: false, error: "No prompt" });
+        const idx = results.push({ slot, ok: false, error: "No prompt" }) - 1;
+        slotResultIndex.set(slot, idx);
         console.log(`Skipping slot ${slot}: no prompt`);
         continue;
       }
-      try {
-        const buffer =
-          imageModel.provider === "google_gemini"
-            ? await generateImage(prompt, { model: imageModel.id })
-            : await generateOpenAiImage(prompt, { model: imageModel.apiModel });
-        const buffer16x9 = await ensure16x9(buffer);
-        const relativePath = saveProjectImage(projectId, slot, buffer16x9);
-        updateProjectImage(projectId, slot, { image_path: relativePath });
-        results.push({ slot, ok: true });
-      } catch (err: any) {
-        results.push({ slot, ok: false, error: err.message || "Generation failed" });
-      }
-      if (i < IMAGE_SLOTS.length - 1) {
-        await delay(DELAY_MS);
-      }
+      const idx = results.push({ slot, ok: false, error: "Queued" }) - 1;
+      slotResultIndex.set(slot, idx);
+      generationSlots.push(slot);
     }
+
+    let nextSlotIndex = 0;
+    const workerCount = Math.min(MAX_CONCURRENT_GENERATIONS, generationSlots.length);
+
+    const runWorker = async () => {
+      while (true) {
+        const currentIndex = nextSlotIndex++;
+        if (currentIndex >= generationSlots.length) break;
+
+        const slot = generationSlots[currentIndex];
+        const row = imagesBySlot.get(slot);
+        const prompt = row?.prompt?.trim();
+        const resultIndex = slotResultIndex.get(slot);
+
+        if (!prompt || resultIndex == null) continue;
+
+        try {
+          const isThumbnail = slot === "thumbnail_cozy" || slot === "thumbnail_cinematic";
+          const sourceGenerator = async (effectivePrompt: string) =>
+            imageModel.provider === "google_gemini"
+              ? generateImage(effectivePrompt, { model: imageModel.id })
+              : generateOpenAiImage(effectivePrompt, {
+                  model: imageModel.apiModel,
+                  purpose: isThumbnail ? "thumbnail" : "scene",
+                });
+          let finalBuffer: Buffer;
+          let metaJson: string | null = null;
+          let warning: string | undefined;
+          if (isThumbnail) {
+            const thumbnailResult = await generateThumbnailWithRetries({
+              prompt,
+              generateSourceImage: sourceGenerator,
+            });
+            finalBuffer = thumbnailResult.imageBuffer;
+            metaJson = JSON.stringify(thumbnailResult.meta);
+            if (!thumbnailResult.meta.pass) {
+              warning = `Low framing safety score (${thumbnailResult.meta.score}) after retries`;
+            }
+          } else {
+            const buffer = await sourceGenerator(prompt);
+            finalBuffer = await ensure16x9(buffer, { mode: "crop" });
+          }
+          const relativePath = saveProjectImage(projectId, slot, finalBuffer);
+          updateProjectImage(projectId, slot, {
+            image_path: relativePath,
+            thumbnail_meta_json: metaJson,
+          });
+          results[resultIndex] = { slot, ok: true };
+          if (warning) {
+            results[resultIndex].error = warning;
+          }
+        } catch (err: any) {
+          results[resultIndex] = {
+            slot,
+            ok: false,
+            error: err?.message || "Generation failed",
+          };
+        }
+      }
+    };
+
+    await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
 
     const generated = results.filter((r) => r.ok).length;
     const failed = results.filter((r) => !r.ok);

@@ -63,6 +63,8 @@ THUMBNAIL WORKFLOW (apply for each variant):
 8. Do NOT request any logo or watermark in the thumbnail prompt. The exact Cozy Crime logo is composited server-side after generation.
 9. Do NOT add any sentences telling the image model to avoid text; the hook text is required.
 10. The returned "prompt" must be the fully filled-in template, ready to send to Gemini.
+11. Keep all critical content (face, key object, and hook text) inside a 12% safe margin from every edge.
+12. Do not place important details in outer edge zones where post-processing could clip them.
 
 COZY TEMPLATE (fill this in verbatim for thumbnail_cozy):
 ---
@@ -78,6 +80,8 @@ OVERLAY TEXT FIELD:
 - Also return the chosen hook as "overlay_text" for each variant.
 - "overlay_text" must be byte-for-byte identical to the hook string you inserted in place of [SHORT HOOK TEXT] inside "prompt".
 - 2 to 4 words, uppercase, no trailing punctuation beyond "!" or "?" if needed for tone.
+- Keep all critical content (face, key object, and hook text) inside a 12% safe margin from every edge.
+- Do not place important details in outer edge zones where post-processing could clip them.
 
 =============================================================
 OUTPUT FORMAT
@@ -122,6 +126,8 @@ STRICT RULES:
 - Do NOT request any logo or watermark in the prompt. The exact Cozy Crime logo is added by the app after generation.
 - The returned "prompt" must be the fully filled-in template, ready to send to Gemini.
 - "overlay_text" must be byte-for-byte identical to the hook string you inserted in place of [SHORT HOOK TEXT].
+- Keep all critical content (face, key object, and hook text) inside a 12% safe margin from every edge.
+- Do not place important details in outer edge zones where post-processing could clip them.
 
 ${variant === "cozy" ? "COZY" : "CINEMATIC"} TEMPLATE (fill this in verbatim):
 ---

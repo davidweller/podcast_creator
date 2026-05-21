@@ -17,7 +17,81 @@ export function getDatabase(): Database.Database {
     return db;
   }
 
-  db = new Database(DB_PATH);
+  // #region agent log
+  fetch("http://127.0.0.1:7650/ingest/b5d64e2f-1d56-4ff4-9b2a-5201e1076c1a", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "33d17f",
+    },
+    body: JSON.stringify({
+      sessionId: "33d17f",
+      runId: "pre-fix",
+      hypothesisId: "A-B-C",
+      location: "lib/db/schema.ts:getDatabase",
+      message: "Opening SQLite before native load",
+      data: {
+        nodeVersion: process.version,
+        nodeModuleVersion: process.versions.modules,
+        execPath: process.execPath,
+        dbPath: DB_PATH,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  try {
+    db = new Database(DB_PATH);
+  } catch (err) {
+    // #region agent log
+    fetch("http://127.0.0.1:7650/ingest/b5d64e2f-1d56-4ff4-9b2a-5201e1076c1a", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "33d17f",
+      },
+      body: JSON.stringify({
+        sessionId: "33d17f",
+        runId: "pre-fix",
+        hypothesisId: "A",
+        location: "lib/db/schema.ts:getDatabase",
+        message: "SQLite native module load failed",
+        data: {
+          nodeVersion: process.version,
+          nodeModuleVersion: process.versions.modules,
+          errorCode: (err as NodeJS.ErrnoException).code,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    throw err;
+  }
+
+  // #region agent log
+  fetch("http://127.0.0.1:7650/ingest/b5d64e2f-1d56-4ff4-9b2a-5201e1076c1a", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "33d17f",
+    },
+    body: JSON.stringify({
+      sessionId: "33d17f",
+      runId: "pre-fix",
+      hypothesisId: "A",
+      location: "lib/db/schema.ts:getDatabase",
+      message: "SQLite native module loaded",
+      data: {
+        nodeVersion: process.version,
+        nodeModuleVersion: process.versions.modules,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
   db.pragma("journal_mode = WAL");
 
   // Create tables
@@ -61,6 +135,7 @@ export function getDatabase(): Database.Database {
       prompt TEXT,
       image_path TEXT,
       thumbnail_title TEXT,
+      thumbnail_meta_json TEXT,
       PRIMARY KEY (project_id, slot),
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     );
@@ -105,6 +180,13 @@ export function getDatabase(): Database.Database {
   const hasShortsGeneratedAt = statusTableInfo.some((col) => col.name === "shorts_generated_at");
   if (!hasShortsGeneratedAt) {
     db.exec("ALTER TABLE project_status ADD COLUMN shorts_generated_at TEXT");
+  }
+
+  // Migration: add thumbnail metadata payload to project_images.
+  const imageTableInfo = db.prepare("PRAGMA table_info(project_images)").all() as { name: string }[];
+  const hasThumbnailMeta = imageTableInfo.some((col) => col.name === "thumbnail_meta_json");
+  if (!hasThumbnailMeta) {
+    db.exec("ALTER TABLE project_images ADD COLUMN thumbnail_meta_json TEXT");
   }
 
   return db;

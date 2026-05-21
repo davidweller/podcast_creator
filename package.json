@@ -2,12 +2,16 @@
   "name": "cozycrime",
   "version": "1.0.0",
   "description": "Cozy Crime Creator Suite - Transform historical research into publish-ready scripts",
+  "engines": {
+    "node": "^22.0.0"
+  },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/run-dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "validate:prompts": "tsx scripts/validate-prompts.ts"
+    "validate:prompts": "tsx scripts/validate-prompts.ts",
+    "test:thumbnail": "tsx scripts/test-thumbnail-pipeline.ts"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +35,7 @@
     "sharp": "^0.34.5",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3",
+    "undici": "^7.25.0",
     "use-debounce": "^10.1.0"
   },
   "devDependencies": {
