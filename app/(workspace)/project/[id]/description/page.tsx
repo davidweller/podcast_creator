@@ -11,6 +11,7 @@ import {
   shouldRestoreSavedModelChoicesFromStorage,
 } from "@/lib/models/registry";
 import { parseTitlesJson, serializeTitlesJson } from "@/lib/social/episode-title";
+import { extractPracticalTagSet } from "@/lib/social/parse-tags";
 
 const SOCIAL_MODELS = listModelsForStage("social");
 const LS_SOCIAL_MODEL = "cozycrime:llm:social";
@@ -22,11 +23,9 @@ export default function DescriptionPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [description, setDescription] = useState("");
   const [metadata, setMetadata] = useState("");
-  const [spotifyDescription, setSpotifyDescription] = useState("");
   const [socialTitle, setSocialTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingTitle, setLoadingTitle] = useState(false);
-  const [loadingSpotify, setLoadingSpotify] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [llmModelId, setLlmModelId] = useState(DEFAULT_LLM_BY_STAGE.social);
   const [useThinking, setUseThinking] = useState(false);
@@ -73,7 +72,6 @@ export default function DescriptionPage() {
         const data = await dataRes.json();
         setDescription(data.description || "");
         setMetadata(data.metadata_json || "");
-        setSpotifyDescription(data.spotify_description || "");
         const saved = parseTitlesJson(data.titles_json).canonical;
         if (saved) setSocialTitle(saved);
       }
@@ -153,42 +151,13 @@ export default function DescriptionPage() {
         setDescription(data.description ?? "");
         setMetadata(data.metadata ?? "");
       } else {
-        setError(data.error || "Failed to generate description and metadata");
+        setError(data.error || "Failed to generate description and tags");
       }
     } catch (error) {
       console.error("Failed to generate:", error);
       setError("Failed to generate. Please check your API key.");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function generateSpotify() {
-    setLoadingSpotify(true);
-    setError(null);
-
-    try {
-      const res = await fetch(`/api/generate/spotify-description/${projectId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          llmModelId,
-          useThinking: thinkingSupported && useThinking,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setSpotifyDescription(data.spotify_description ?? "");
-      } else {
-        setError(data.error || "Failed to generate Spotify description");
-      }
-    } catch (error) {
-      console.error("Failed to generate Spotify description:", error);
-      setError("Failed to generate. Please check your API key.");
-    } finally {
-      setLoadingSpotify(false);
     }
   }
 
@@ -208,37 +177,10 @@ export default function DescriptionPage() {
     URL.revokeObjectURL(url);
   }
 
-  function extractSection(
-    source: string,
-    startMarker: string,
-    endMarkers: string[]
-  ): string {
-    if (!source) return "";
-    const start = source.indexOf(startMarker);
-    if (start === -1) return "";
-
-    let end = source.length;
-    for (const marker of endMarkers) {
-      const idx = source.indexOf(marker, start + startMarker.length);
-      if (idx !== -1 && idx < end) {
-        end = idx;
-      }
-    }
-
-    return source.slice(start, end).trim();
-  }
-
-  const tagsText = extractSection(metadata, "7. Practical tag set", [
-    "8. Thumbnail overlay text",
-    "9. Final recommended upload package",
-  ]);
-
-  const thumbnailText = extractSection(metadata, "8. Thumbnail overlay text", [
-    "9. Final recommended upload package",
-  ]);
+  const tagsText = extractPracticalTagSet(metadata);
 
   function downloadTags() {
-    const content = tagsText || metadata;
+    const content = tagsText;
     if (!content) {
       alert("No tags to download");
       return;
@@ -253,24 +195,6 @@ export default function DescriptionPage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
-
-  function downloadSpotifyDescription() {
-    if (!spotifyDescription) {
-      alert("No Spotify description to download");
-      return;
-    }
-    const blob = new Blob([spotifyDescription], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "spotify-description.txt";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  const hasAny = description || metadata || spotifyDescription;
 
   return (
     <div className="space-y-6">
@@ -377,7 +301,7 @@ export default function DescriptionPage() {
               disabled={loading}
               className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
-              {loading ? "Generating..." : "Generate Description & Package"}
+              {loading ? "Generating..." : "Generate Description & Tags"}
             </button>
             <button
               type="button"
@@ -401,7 +325,7 @@ export default function DescriptionPage() {
             </pre>
           ) : (
             <p className="text-sm text-slate-500 dark:text-slate-400 italic">
-              No YouTube description yet. Click &quot;Generate Description &amp; Package&quot; to create one.
+              No YouTube description yet. Click &quot;Generate Description &amp; Tags&quot; to create one.
             </p>
           )}
         </div>
@@ -418,18 +342,17 @@ export default function DescriptionPage() {
                 disabled={loading}
               className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
-              {loading ? "Generating..." : "Regenerate Tags"}
+              {loading ? "Generating..." : "Regenerate"}
             </button>
             <button
               type="button"
               onClick={() => {
-                const text = tagsText || metadata;
-                if (!text) return;
-                navigator.clipboard.writeText(text).catch((err) => {
+                if (!tagsText) return;
+                navigator.clipboard.writeText(tagsText).catch((err) => {
                   console.error("Failed to copy tags:", err);
                 });
               }}
-              disabled={!tagsText && !metadata}
+              disabled={!tagsText}
               className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
               >
                 Copy
@@ -437,95 +360,15 @@ export default function DescriptionPage() {
             </div>
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-            Practical upload tags for this single video, pulled from the social media packaging output.
+            Comma-separated YouTube upload tags for this video.
           </p>
           <div className="max-h-[300px] overflow-y-auto border border-slate-200 dark:border-slate-700 rounded p-4 bg-slate-50 dark:bg-slate-950/50">
             <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900 dark:text-slate-100">
-              {tagsText || metadata}
+              {tagsText}
             </pre>
           </div>
         </div>
       )}
-
-      {metadata && (
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
-          <div className="flex items-center justify-between mb-4 gap-3">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Thumbnail Overlays</h3>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={generateAll}
-                disabled={loading}
-              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
-            >
-              {loading ? "Generating..." : "Regenerate Overlays"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const text = thumbnailText || metadata;
-                if (!text) return;
-                navigator.clipboard.writeText(text).catch((err) => {
-                  console.error("Failed to copy thumbnail overlays:", err);
-                });
-              }}
-              disabled={!thumbnailText && !metadata}
-              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-            Concise text options for YouTube thumbnail overlays, staying calm, atmospheric, and sleep-safe.
-          </p>
-          <div className="max-h-[300px] overflow-y-auto border border-slate-200 dark:border-slate-700 rounded p-4 bg-slate-50 dark:bg-slate-950/50">
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900 dark:text-slate-100">
-              {thumbnailText || metadata}
-            </pre>
-          </div>
-        </div>
-      )}
-
-      <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-transparent dark:border-slate-700">
-        <div className="flex items-center justify-between mb-4 gap-3">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-50">Spotify Description</h3>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={generateSpotify}
-              disabled={loadingSpotify}
-              className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
-            >
-              {loadingSpotify ? "Generating..." : "Generate Spotify Description"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (!spotifyDescription) return;
-                navigator.clipboard.writeText(spotifyDescription).catch((err) => {
-                  console.error("Failed to copy Spotify description:", err);
-                });
-              }}
-              disabled={!spotifyDescription}
-              className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded hover:bg-slate-300 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed text-sm font-medium transition-colors"
-            >
-              Copy
-            </button>
-          </div>
-        </div>
-        <div className="max-h-[500px] overflow-y-auto border border-slate-200 dark:border-slate-700 rounded p-4 bg-slate-50 dark:bg-slate-950/50">
-          {spotifyDescription ? (
-            <pre className="whitespace-pre-wrap font-sans text-sm text-slate-900 dark:text-slate-100">
-              {spotifyDescription}
-            </pre>
-          ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400 italic">
-              No Spotify description yet. Click &quot;Generate Spotify Description&quot; to create one.
-            </p>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

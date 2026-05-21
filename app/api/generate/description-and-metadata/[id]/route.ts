@@ -4,8 +4,21 @@ import { completeLlmText } from "@/lib/llm/unified";
 import { parseLlmCompletionOptions } from "@/lib/llm/parse-selection";
 import {
   PROMPT_DESCRIPTION_AND_METADATA,
-  DESCRIPTION_METADATA_DELIMITER,
+  DESCRIPTION_METADATA_DELIMITERS,
 } from "@/lib/prompts/description-and-metadata";
+
+function splitDescriptionAndTags(response: string): { description: string; metadata: string } {
+  for (const delimiter of DESCRIPTION_METADATA_DELIMITERS) {
+    const idx = response.indexOf(delimiter);
+    if (idx >= 0) {
+      return {
+        description: response.slice(0, idx).trim(),
+        metadata: response.slice(idx + delimiter.length).trim(),
+      };
+    }
+  }
+  return { description: response.trim(), metadata: "" };
+}
 
 export async function POST(
   request: NextRequest,
@@ -27,7 +40,7 @@ export async function POST(
     let prompt = `${PROMPT_DESCRIPTION_AND_METADATA}\n\nResearch:\n${projectData.research_text}`;
 
     if (projectData.script_90min) {
-      prompt += `\n\nScript (for timestamps):\n${projectData.script_90min}`;
+      prompt += `\n\nScript (for tone and detail):\n${projectData.script_90min}`;
     }
 
     const { llmModelId, useThinking, thinkingBudget } =
@@ -42,20 +55,7 @@ export async function POST(
       thinkingBudget,
     });
 
-    const delimiter = DESCRIPTION_METADATA_DELIMITER;
-    const delimiterIndex = response.indexOf(delimiter);
-
-    let description: string;
-    let metadata: string;
-
-    if (delimiterIndex >= 0) {
-      description = response.slice(0, delimiterIndex).trim();
-      metadata = response.slice(delimiterIndex + delimiter.length).trim();
-    } else {
-      // Fallback: treat whole response as description if delimiter missing
-      description = response.trim();
-      metadata = "";
-    }
+    const { description, metadata } = splitDescriptionAndTags(response);
 
     updateProjectData(projectId, {
       description,

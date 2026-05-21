@@ -1,15 +1,24 @@
 /**
  * description-and-metadata.ts
  *
- * Combined prompt: YouTube description + titles & metadata in one generation.
- * Output format: description text, then delimiter, then titles & metadata text.
+ * Combined prompt: YouTube description + practical upload tags in one generation.
+ * Output format: description text, then delimiter, then tags only.
  *
  * Tone rules are imported from cozy-crime-constants.ts.
  */
 
 import { DESCRIPTION_TONE_RULES } from "./cozy-crime-constants";
 
-export const DESCRIPTION_METADATA_DELIMITER = "\n\n---TITLES AND METADATA---\n\n";
+/** Legacy delimiter (older generations); parser accepts both. */
+export const DESCRIPTION_METADATA_DELIMITER_LEGACY = "\n\n---TITLES AND METADATA---\n\n";
+
+export const DESCRIPTION_TAGS_DELIMITER = "\n\n---TAGS---\n\n";
+
+/** Delimiters tried in order when splitting description from tags. */
+export const DESCRIPTION_METADATA_DELIMITERS = [
+  DESCRIPTION_TAGS_DELIMITER,
+  DESCRIPTION_METADATA_DELIMITER_LEGACY,
+] as const;
 
 export const PROMPT_DESCRIPTION_AND_METADATA = `You are a YouTube packaging strategist specialising in cozy crime, bedtime mystery, and sleep-story content.
 
@@ -34,11 +43,9 @@ Generate BOTH of the following in a single response, using the exact delimiter s
 
 ---
 
-PART 1 — YOUTUBE DESCRIPTION (OUTPUT USED AS DESCRIPTION FIELD)
+YOUTUBE DESCRIPTION (first part of your response — used as the public description field)
 
-Write a complete YouTube description for this single video. Use this exact structure and fill in the bracketed placeholders from the research and script.
-
-OPENING (3 paragraphs — fill in from the case)
+Write the complete YouTube description for this single video. Do not include section labels such as "PART 1", "OPENING", or similar headings in the output. Use this structure and fill in the bracketed placeholders from the research and script.
 
 Paragraph 1:
 Tonight's Cozy Crime story explores [short intriguing summary of the case].
@@ -51,13 +58,6 @@ The story leads through [locations, historical context, witnesses, or evidence],
 
 Closing line (include verbatim):
 Cozy Crime tells slow, atmospheric crime stories designed for relaxation, quiet listening, and sleep.
-
-Then add this separator and section header:
-━━━━━━━━━━━━━━━━━━━━
-
-TIMESTAMPS
-
-If a script is provided, create chapter timestamps in standard YouTube format (00:00 Chapter name). Adapt the chapter labels to the actual script; you may use a structure similar to: Introduction, The Setting, The Crime, Early Theories, The Investigation, Strange Clues, Competing Theories, What May Have Happened, Closing Reflections — or whatever fits the episode.
 
 Then add this separator and section:
 ━━━━━━━━━━━━━━━━━━━━
@@ -75,24 +75,6 @@ TOPICS IN THIS EPISODE
 Then add this separator and section (verbatim):
 ━━━━━━━━━━━━━━━━━━━━
 
-TAGS
-
-cozy crime
-true crime story
-unsolved mystery
-historical crime
-sleep story
-bedtime story
-crime history
-relaxing storytelling
-calm history podcast
-mystery storytelling
-historical mysteries
-sleep podcast
-
-Then add this separator and section (verbatim):
-━━━━━━━━━━━━━━━━━━━━
-
 ABOUT COZY CRIME
 
 Every story of crime told on Cozy Crime begins with careful historical research and a deep respect for the people and places involved. We act as directors and editors of the process, using AI tools to assist with research and early drafting while we shape the narrative and verify the details before it becomes a finished episode.
@@ -105,65 +87,42 @@ The images shown are AI-generated illustrations created to convey mood and setti
 
 Thank you for spending time in quiet history with us.
 
-Then add this separator and hashtags (verbatim):
-━━━━━━━━━━━━━━━━━━━━
-
-#cozycrime #sleepstories #truecrime #history #mystery
+Do not include timestamps, a TAGS section, or hashtags at the end of the description.
 
 Then output this exact line on its own:
----TITLES AND METADATA---
+---TAGS---
 
 ---
 
-PART 2 — TITLES, KEYWORDS & PACKAGING METADATA
+PRACTICAL TAG SET (second part of your response — YouTube upload tags only)
 
-For this exact video, provide:
+Output only this section. Start with the heading exactly as shown, then the tags on the following lines.
 
-1. Strongest primary keyword target — One primary keyword phrase you are aiming this video at.
+7. Practical tag set
 
-2. Secondary keyword opportunities — 5 to 10 additional keyword phrases that are realistic for a smaller cozy crime channel.
+Provide a comma-separated list of 15 to 25 tags mixing:
+- topic tags (case, setting, era),
+- format tags (bedtime story, cozy mystery, sleep story),
+- and audience-intent tags (relaxing mystery, fall asleep, gentle storytelling).
 
-3. Traffic focus — A short recommendation on whether this video should primarily target search, browse, or suggested traffic, and why, based on the material.
+Do not output keywords analysis, title options, hashtags, thumbnail overlay text, traffic recommendations, or upload summaries.
 
-4. Titles:
-   - 12 to 15 title options: calm, elegant, atmospheric, and sleep-friendly. They should balance intrigue with reassurance.
-   - Then clearly mark: "BEST TITLE:" followed by the single strongest title choice.
-
-5. Description (for reference) — Repeat or slightly adapt the best YouTube description if helpful for context.
-
-6. Hashtags — 3 to 5 best hashtags for this video (repeat or refine from Part 1 if needed).
-
-7. Practical tag set — A comma-separated list of 15 to 25 tags mixing:
-   - topic tags (case, setting, era),
-   - format tags (bedtime story, cozy mystery, sleep story),
-   - and audience-intent tags (relaxing mystery, fall asleep, gentle storytelling).
-
-8. Thumbnail overlay text:
-   - 10 to 15 concise overlay text options (maximum 3 to 5 words each) that remain calm, atmospheric, and sleep-safe.
-   - Then clearly mark: "BEST THUMBNAIL TEXT:" followed by the single best overlay choice.
-
-9. Final recommended upload package:
-   - Bring everything together in a short, practical summary specifying: primary keyword, traffic focus, best title, description reference (from Part 1), hashtags, tag set, and best thumbnail text.
-
-Constraints:
+Constraints for tags:
 - Maintain ${DESCRIPTION_TONE_RULES}
 - No clickbait or sensational true-crime language.
 - No exclamation marks.
-- No algorithm-talk ("content," "the algorithm," "SEO," etc.) in titles or public-facing copy. These may appear only in your internal reasoning, never in the viewer-facing text.
 
-Generate both PART 1 (description) and PART 2 (titles, keywords, and packaging metadata) for the following video, using the structure above:`;
+Generate the YouTube description (first), then the practical tag set (second), for the following video:`;
 
 
 /**
  * Standalone description prompt (without metadata).
  * Retained for contexts where only the description is needed.
- * Uses the same YouTube description template as Part 1 of PROMPT_DESCRIPTION_AND_METADATA.
+ * Uses the same YouTube description template as the description section of PROMPT_DESCRIPTION_AND_METADATA.
  */
 export const PROMPT_DESCRIPTION = `You are writing a YouTube description for a Cozy Crime channel episode. The channel presents historical crime as calm, literary storytelling intended for sleep, background listening, and gentle curiosity.
 
-You will be given research about a historical crime case and optionally a script. Write a complete YouTube description using this exact structure and fill in the bracketed placeholders from the research and script.
-
-OPENING (3 paragraphs)
+You will be given research about a historical crime case and optionally a script. Write a complete YouTube description using this exact structure and fill in the bracketed placeholders from the research and script. Do not include section labels such as "OPENING" in the output.
 
 Paragraph 1:
 Tonight's Cozy Crime story explores [short intriguing summary of the case].
@@ -179,12 +138,6 @@ Cozy Crime tells slow, atmospheric crime stories designed for relaxation, quiet 
 
 ━━━━━━━━━━━━━━━━━━━━
 
-TIMESTAMPS
-
-If a script is provided, create chapter timestamps in standard YouTube format (00:00 Chapter name). Adapt the chapter labels to the actual script.
-
-━━━━━━━━━━━━━━━━━━━━
-
 TOPICS IN THIS EPISODE
 
 • [crime type]
@@ -194,23 +147,6 @@ TOPICS IN THIS EPISODE
 • [mystery theme]
 
 (5 bullet points filled from this episode.)
-
-━━━━━━━━━━━━━━━━━━━━
-
-TAGS
-
-cozy crime
-true crime story
-unsolved mystery
-historical crime
-sleep story
-bedtime story
-crime history
-relaxing storytelling
-calm history podcast
-mystery storytelling
-historical mysteries
-sleep podcast
 
 ━━━━━━━━━━━━━━━━━━━━
 
@@ -226,9 +162,7 @@ The images shown are AI-generated illustrations created to convey mood and setti
 
 Thank you for spending time in quiet history with us.
 
-━━━━━━━━━━━━━━━━━━━━
-
-#cozycrime #sleepstories #truecrime #history #mystery
+Do not include timestamps, a TAGS section, or hashtags at the end.
 
 ${DESCRIPTION_TONE_RULES}
 

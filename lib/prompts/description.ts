@@ -2,17 +2,14 @@
  * description.ts
  *
  * Standalone YouTube description prompt. Uses DESCRIPTION_TONE_RULES from
- * cozy-crime-constants.ts. Structure aligned with description-and-metadata.ts
- * (same YouTube description template: opening, timestamps, topics, tags, about).
+ * cozy-crime-constants.ts. Structure aligned with description-and-metadata.ts.
  */
 
 import { DESCRIPTION_TONE_RULES } from "./cozy-crime-constants";
 
 export const PROMPT_DESCRIPTION = `You are writing a YouTube description for a Cozy Crime channel episode. The channel presents historical crime as calm, literary storytelling intended for sleep, background listening, and gentle curiosity.
 
-You will be given research about a historical crime case and optionally a script. Write a complete YouTube description using this exact structure and fill in the bracketed placeholders from the research and script.
-
-OPENING (3 paragraphs)
+You will be given research about a historical crime case and optionally a script. Write a complete YouTube description using this exact structure and fill in the bracketed placeholders from the research and script. Do not include section labels such as "OPENING" in the output.
 
 Paragraph 1:
 Tonight's Cozy Crime story explores [short intriguing summary of the case].
@@ -28,12 +25,6 @@ Cozy Crime tells slow, atmospheric crime stories designed for relaxation, quiet 
 
 ━━━━━━━━━━━━━━━━━━━━
 
-TIMESTAMPS
-
-If a script is provided, create chapter timestamps in standard YouTube format (00:00 Chapter name). Adapt the chapter labels to the actual script.
-
-━━━━━━━━━━━━━━━━━━━━
-
 TOPICS IN THIS EPISODE
 
 • [crime type]
@@ -43,23 +34,6 @@ TOPICS IN THIS EPISODE
 • [mystery theme]
 
 (5 bullet points filled from this episode.)
-
-━━━━━━━━━━━━━━━━━━━━
-
-TAGS
-
-cozy crime
-true crime story
-unsolved mystery
-historical crime
-sleep story
-bedtime story
-crime history
-relaxing storytelling
-calm history podcast
-mystery storytelling
-historical mysteries
-sleep podcast
 
 ━━━━━━━━━━━━━━━━━━━━
 
@@ -75,9 +49,7 @@ The images shown are AI-generated illustrations created to convey mood and setti
 
 Thank you for spending time in quiet history with us.
 
-━━━━━━━━━━━━━━━━━━━━
-
-#cozycrime #sleepstories #truecrime #history #mystery
+Do not include timestamps, a TAGS section, or hashtags at the end.
 
 ${DESCRIPTION_TONE_RULES}
 
