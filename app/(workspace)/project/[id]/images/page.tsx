@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import type { ProjectImage } from "@/types/database";
-import { ILLUSTRATED_SLOTS, IMAGE_SLOTS } from "@/types/database";
+import { ILLUSTRATED_SLOTS, IMAGE_SLOTS, type ImageSlot } from "@/types/database";
 import {
   DEFAULT_IMAGE_MODEL,
   DEFAULT_LLM_BY_STAGE,
@@ -20,6 +20,9 @@ const LS_IMAGE_PROMPT_MODEL = "cozycrime:llm:imagePrompt";
 const LS_IMAGE_PROMPT_THINKING = "cozycrime:llm:imagePrompt:thinking";
 const LS_IMAGE_MODEL = "cozycrime:image:model";
 const LS_GEMINI_IMAGE = "cozycrime:gemini:imageModel";
+
+/** Parallel single-slot requests so the UI can show per-image progress. */
+const IMAGE_BATCH_CONCURRENCY = 3;
 
 interface ThumbnailMeta {
   pass?: boolean;
@@ -280,32 +283,67 @@ export default function ImagesPage() {
     setError(null);
     setGenerateAllProgress({ current: 0, total: orderedWithPrompts.length });
 
-    try {
-      const res = await fetch(`/api/generate/images-all/${projectId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageModel }),
+    const failures: string[] = [];
+    let completed = 0;
+    let nextIndex = 0;
+
+    const runOne = async (slot: ImageSlot) => {
+      const row = rowsBySlot.get(slot);
+      const prompt = row?.prompt?.trim();
+      if (!prompt) return;
+
+      setLoadingSlots((prev) => {
+        const next = new Set(prev);
+        next.add(slot);
+        return next;
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError((data as { error?: string }).error || "Failed to generate images");
-        return;
+
+      try {
+        const res = await fetch(`/api/generate/image/${projectId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slot, prompt, imageModel, batchMode: true }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          failures.push(`${slot}: ${(data as { error?: string }).error || "failed"}`);
+        } else if (slot === "thumbnail_cozy" || slot === "thumbnail_cinematic") {
+          setThumbnailBust((prev) => ({ ...prev, [slot]: Date.now() }));
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "";
+        failures.push(
+          `${slot}: ${
+            msg === "Failed to fetch"
+              ? "network error (server may still be working — refresh after the terminal logs completion)"
+              : msg || "failed"
+          }`
+        );
+      } finally {
+        setLoadingSlots((prev) => {
+          const next = new Set(prev);
+          next.delete(slot);
+          return next;
+        });
+        completed += 1;
+        setGenerateAllProgress({ current: completed, total: orderedWithPrompts.length });
+        await loadImages();
       }
+    };
 
-      const generated = typeof data.generated === "number" ? data.generated : 0;
-      const results = Array.isArray(data.results) ? data.results : [];
-      const failures = results
-        .filter((r: { ok?: boolean; slot?: string; error?: string }) => !r.ok && r.error !== "No prompt")
-        .map((r: { slot?: string; error?: string }) => `${r.slot ?? "unknown"}: ${r.error ?? "failed"}`);
+    const worker = async () => {
+      while (true) {
+        const index = nextIndex++;
+        if (index >= orderedWithPrompts.length) break;
+        await runOne(orderedWithPrompts[index]);
+      }
+    };
 
-      await loadImages();
-      setGenerateAllProgress({ current: orderedWithPrompts.length, total: orderedWithPrompts.length });
-      setThumbnailBust((prev) => ({
-        ...prev,
-        thumbnail_cozy: Date.now(),
-        thumbnail_cinematic: Date.now(),
-      }));
+    try {
+      const workerCount = Math.min(IMAGE_BATCH_CONCURRENCY, orderedWithPrompts.length);
+      await Promise.all(Array.from({ length: workerCount }, () => worker()));
 
+      const generated = orderedWithPrompts.length - failures.length;
       if (failures.length > 0) {
         setError(
           generated === 0
@@ -444,6 +482,12 @@ export default function ImagesPage() {
           </div>
         )}
 
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          Image generation is slow by design: each scene is a separate API call (often 1–5 minutes on
+          gpt-image-2). Thumbnails may retry for framing quality. &quot;Generate all images&quot; runs up to{" "}
+          {IMAGE_BATCH_CONCURRENCY} at a time and updates progress per slot — a full set of 14 can take
+          20–45+ minutes. For quicker runs, try Nano Banana (Gemini) in the model dropdown.
+        </p>
         <div className="flex flex-wrap gap-4">
           <button
             onClick={generateAllPrompts}

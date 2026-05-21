@@ -28,6 +28,7 @@ export async function POST(
     const slot = body.slot != null ? String(body.slot) : null;
     const promptOverride = typeof body.prompt === "string" ? body.prompt : undefined;
     const safeMode = body.safeMode === true;
+    const batchMode = body.batchMode === true;
     const rawImageModel =
       typeof body.imageModel === "string"
         ? body.imageModel
@@ -56,7 +57,10 @@ export async function POST(
       );
     }
 
-    console.log(`Generating image for slot ${slotKey}...`);
+    const startedAt = Date.now();
+    console.log(
+      `[image] start project=${projectId} slot=${slotKey} model=${imageModel.id} batch=${batchMode}`
+    );
     try {
       const isThumbnail = slotKey === "thumbnail_cozy" || slotKey === "thumbnail_cinematic";
       const sourceGenerator = async (effectivePrompt: string) =>
@@ -72,7 +76,7 @@ export async function POST(
         const thumbnailResult = await generateThumbnailWithRetries({
           prompt,
           strictMode: safeMode,
-          maxRetries: safeMode ? 3 : 2,
+          maxRetries: safeMode ? 3 : batchMode ? 1 : 2,
           generateSourceImage: sourceGenerator,
         });
         finalBuffer = thumbnailResult.imageBuffer;
@@ -93,6 +97,7 @@ export async function POST(
         thumbnail_meta_json: metaJson,
       });
       console.log(`Updated database for slot ${slotKey}`);
+      console.log(`[image] done project=${projectId} slot=${slotKey} in ${Date.now() - startedAt}ms`);
 
       return NextResponse.json({
         slot: slotKey,

@@ -33,9 +33,13 @@ export async function POST(
           : "";
     const requestedImageModel =
       normalizeLegacyImageModelId(rawImageModel.trim()) || DEFAULT_IMAGE_MODEL;
+    const batchMode = body.batchMode === true;
     const imageModel = getImageModelOrThrow(requestedImageModel);
     const images = getProjectImages(projectId);
-    console.log(`Processing ${images.length} image slots for project ${projectId}`);
+    const batchStartedAt = Date.now();
+    console.log(
+      `Processing ${images.length} image slots for project ${projectId} (model=${imageModel.id}, batchMode=${batchMode})`
+    );
 
     const results: { slot: string; ok: boolean; error?: string }[] = [];
     const imagesBySlot = new Map(images.map((img) => [img.slot, img]));
@@ -83,6 +87,7 @@ export async function POST(
 
         if (!prompt || resultIndex == null) continue;
 
+        const slotStartedAt = Date.now();
         try {
           const isThumbnail = slot === "thumbnail_cozy" || slot === "thumbnail_cinematic";
           const sourceGenerator = async (effectivePrompt: string) =>
@@ -98,6 +103,7 @@ export async function POST(
           if (isThumbnail) {
             const thumbnailResult = await generateThumbnailWithRetries({
               prompt,
+              maxRetries: batchMode ? 1 : 2,
               generateSourceImage: sourceGenerator,
             });
             finalBuffer = thumbnailResult.imageBuffer;
@@ -118,6 +124,9 @@ export async function POST(
           if (warning) {
             results[resultIndex].error = warning;
           }
+          console.log(
+            `[image] done project=${projectId} slot=${slot} in ${Date.now() - slotStartedAt}ms`
+          );
         } catch (err: any) {
           results[resultIndex] = {
             slot,
@@ -135,6 +144,9 @@ export async function POST(
     if (failed.length > 0) {
       console.log(`Failed slots: ${failed.map((r) => `${r.slot} (${r.error})`).join(", ")}`);
     }
+    console.log(
+      `[image] batch complete project=${projectId} generated=${generated}/${generationSlots.length} in ${Date.now() - batchStartedAt}ms`
+    );
     return NextResponse.json({ generated, total: IMAGE_SLOTS.length, results, failed: failed.length > 0 ? failed : undefined });
   } catch (error: any) {
     console.error("Error generating all images:", error);
