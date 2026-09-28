@@ -46,3 +46,7 @@ next-env.d.ts
 
 # Generated narration WAVs are large (often >100MB); keep local only
 public/audio/**/*.wav
+
+# Local build output and large media (added 2026-09-28)
+.cursor/
+public/audio/
